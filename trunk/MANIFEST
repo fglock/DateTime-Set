@@ -24,5 +24,6 @@ t/15time_zone.t
 lib/DateTime/Set.pm
 lib/DateTime/Span.pm
 lib/DateTime/SpanSet.pm
+lib/Set/Infinite/_recurrence.pm
 
 META.yml                                Module meta-data (added by MakeMaker)
