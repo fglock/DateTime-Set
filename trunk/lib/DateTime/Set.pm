@@ -144,7 +144,7 @@ sub from_recurrence {
     $param{span} = new DateTime::Span( %args ) if keys %args;
     # otherwise, it is unbounded
     $param{span}->{set} = Set::Infinite->new( NEG_INFINITY, INFINITY )
-        unless exists $param{span};
+        unless exists $param{span}->{set};
     my $self = {};
     if (exists $param{next}) {
         $self->{set} = _recurrence_callback( $param{span}->{set}, $param{next} );  
