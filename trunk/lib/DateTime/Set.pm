@@ -63,6 +63,27 @@ sub set_time_zone {
     return $self;
 }
 
+sub set {
+    my $self = shift;
+    my %args = validate( @_,
+                         { locale => { type => SCALAR | OBJECT,
+                                       default => undef },
+                         }
+                       );
+
+    my $result = $self->{set}->iterate(
+        sub {
+            my %tmp = %{ $_[0]->{list}[0] };
+            $tmp{a} = $tmp{a}->clone->set( %args ) if ref $tmp{a};
+            $tmp{b} = $tmp{a};
+            \%tmp;
+        }
+    );
+
+    $self->{set} = $result;
+    return $self;
+}
+
 sub from_recurrence {
     my $class = shift;
     # note: not using validate() because this is too complex...
@@ -394,10 +415,6 @@ sub as_list {
     return @result;
 }
 
-# Set::Infinite methods
-
-my $max_iterate = 20;
-
 sub intersection {
     my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
@@ -697,6 +714,10 @@ If the old time zone was a floating time zone, then no adjustments to
 the local time are made, except to account for leap seconds.  If the
 new time zone is floating, then the I<UTC> time is adjusted in order
 to leave the local time untouched.
+
+=item * set( locale => .. )
+
+This method can be used to change the C<locale> of a date time set.
 
 =item * min / max
 

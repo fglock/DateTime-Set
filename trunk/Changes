@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- added set( locale => .. ) to DateTime::Set
+
 0.1203  2003-09-26
 - Added docs to Set::Infinite::_recurrence;
   split into a separate file such that it doesn't mix the pods

@@ -1,5 +1,8 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
+- tests for set( locale => .. );
+  implement set( locale => .. ) in Span and SpanSet
+
 - implement as_list() in DT::SpanSet.pm
 
 - discuss functions like 
