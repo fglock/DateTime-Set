@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 23;
+plan tests => 25;
 
 use DateTime;
 use DateTime::Duration;
@@ -38,6 +38,7 @@ my $months = DateTime::Set->from_recurrence(
 # contains datetime, unbounded set
 {
     my $t0 = $t2->clone->truncate( to => 'month' );
+    my $t0_set = DateTime::Set->from_datetimes( dates => [ $t0 ] );
     is( $months->contains( $t1 ), 0, "does not contain datetime" );
     is( $months->contains( $t1, $t0 ), 0, "does not contain datetime list" );
     is( $months->contains( $t0 ), 1, "contains datetime" );
@@ -45,6 +46,11 @@ my $months = DateTime::Set->from_recurrence(
     is( $months->intersects( $t1 ), 0, "does not intersect datetime" );
     is( $months->intersects( $t1, $t0 ), 1, "intersects datetime list" );
     is( $months->intersects( $t0 ), 1, "intersects datetime" );
+
+    ok( ! defined $months->contains( $months ) , 
+        "contains - can't do it with both unbounded sets, returns undef" );
+        
+    is( $t0_set->intersects( $months ), 1, "intersects unbounded set" );
 }
 
 # "START"

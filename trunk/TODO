@@ -1,5 +1,19 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
+2004-06-25
+
+- cleanup the examples in POD that use
+            return $_[0] if $_[0]->is_infinite;
+  and explain when and why to use this.
+- add tests for all examples given.
+
+- add tests for using datetimes with UTC/floating (local, etc.) time zones:
+    -> as parameters for next()
+    -> as set elements.
+- these tests should be reusable by the DateTime::Event packages.
+
+-----------------
+
 - Test for errors, in case the "next/previous" 
   recurrence spec is not followed (detect infinite loop).
 

@@ -7,7 +7,6 @@ package DateTime::SpanSet;
 use strict;
 
 use DateTime::Set;
-# use DateTime::SpanSet;
 use DateTime::Infinite;
 
 use Carp;
@@ -111,7 +110,6 @@ sub from_spans {
 }
 
 sub from_set_and_duration {
-    # die "from_set_and_duration() not implemented yet";
     # set => $dt_set, days => 1
     my $class = shift;
     my %args = @_;
@@ -427,14 +425,12 @@ sub complement {
     return $tmp;
 }
 
-sub min { 
-    my $tmp = $_[0]->{set}->min;
-    ref($tmp) ? $tmp->clone : $tmp; 
+sub min {
+    return DateTime::Set::_fix_datetime( $_[0]->{set}->min );
 }
 
 sub max { 
-    my $tmp = $_[0]->{set}->max;
-    ref($tmp) ? $tmp->clone : $tmp; 
+    return DateTime::Set::_fix_datetime( $_[0]->{set}->max );
 }
 
 # returns a DateTime::Span
@@ -560,7 +556,9 @@ to leave the local time untouched.
 
 The method returns a new object.
 
-=item * min / max
+=item * min
+
+=item * max
 
 First or last dates in the set.  These methods may return C<undef> if
 the set is empty.  It is also possible that these methods may return a
@@ -643,7 +641,11 @@ unless you limit it with a span.  Please note that this is explicitly
 not an empty list, since an empty list is a valid return value for
 empty sets!
 
-=item * union / intersection / complement
+=item * union
+
+=item * intersection
+
+=item * complement
 
 Set operations may be performed not only with C<DateTime::SpanSet>
 objects, but also with C<DateTime>, C<DateTime::Set> and
@@ -676,7 +678,9 @@ See diagram below:
 
   intersected_spans   [....]   [....]   [....]
 
-=item * intersects / contains
+=item * intersects
+
+=item * contains
 
 These set functions return a boolean value.
 

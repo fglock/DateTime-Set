@@ -260,29 +260,13 @@ sub complement {
 }
 
 sub start { 
-    my $tmp = $_[0]->{set}->min;
-    if ( ref($tmp) ) {
-        $tmp = $tmp->clone;
-    } 
-    else
-    {
-        $tmp = new DateTime::Infinite::Past if $tmp == NEG_INFINITY;
-    }
-    $tmp;
+    return DateTime::Set::_fix_datetime( $_[0]->{set}->min );
 }
 
 *min = \&start;
 
 sub end { 
-    my $tmp = $_[0]->{set}->max;
-    if ( ref($tmp) ) {
-        $tmp = $tmp->clone;
-    } 
-    else
-    {
-        $tmp = new DateTime::Infinite::Future if $tmp == INFINITY;
-    }
-    $tmp;
+    return DateTime::Set::_fix_datetime( $_[0]->{set}->max );
 }
 
 *max = \&end;
@@ -315,7 +299,10 @@ sub duration {
     # TODO: shouldn't need this:
 
     $@ = undef;  # clear the eval() error message
-    return INFINITY;
+
+    return DateTime::Infinite::Future->new -
+           DateTime::Infinite::Past->new;
+    # return INFINITY;
 }
 *size = \&duration;
 
@@ -420,7 +407,9 @@ scalar containing infinity.
 
 Also available as C<size()>.
 
-=item * start / end
+=item * start
+
+=item * end
 
 First or last dates in the span.  
 
@@ -437,15 +426,23 @@ in this case C<$dt> is not a set element - but it is a set boundary.
 # scalar containing either negative infinity
 # or positive infinity.
 
-=item * start_is_closed / end_is_closed
+=item * start_is_closed
+
+=item * end_is_closed
 
 Returns true if the first or last dates belong to the span ( begin <= x <= end ).
 
-=item * start_is_open / end_is_open
+=item * start_is_open
+
+=item * end_is_open
 
 Returns true if the first or last dates are excluded from the span ( begin < x < end ).
 
-=item * union / intersection / complement
+=item * union
+
+=item * intersection
+
+=item * complement
 
 Set operations may be performed not only with C<DateTime::Span>
 objects, but also with C<DateTime::Set> and C<DateTime::SpanSet>
@@ -457,7 +454,9 @@ object.
     $set = $span->intersection( $set2 );  # like "AND", "while"
     $set = $span->complement;             # like "NOT", "negate", "invert"
 
-=item * intersects / contains
+=item * intersects
+
+=item * contains
 
 These set functions return a boolean value.
 

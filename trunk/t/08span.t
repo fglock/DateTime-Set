@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 3;
+plan tests => 7;
 
 use DateTime;
 use DateTime::Duration;
@@ -40,6 +40,17 @@ use DateTime::Set;
         "Span should contain datetime in between start and end" );
 }
 
+{
+    # infinite span
+    my $span = DateTime::Span->from_datetimes( start => DateTime->today )->union(
+               DateTime::Span->from_datetimes( end => DateTime->today ) );
+
+    isa_ok( $span, "DateTime::SpanSet" , "union of spans gives a spanset" );
+
+    ok( $span->min->is_infinite, "infinite start" );
+    ok( $span->max->is_infinite, "infinite end" );
+    is( $span->duration->seconds , DateTime::Set::INFINITY, "infinite duration" );
+}
 
 1;
 

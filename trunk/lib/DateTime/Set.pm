@@ -19,6 +19,26 @@ BEGIN {
     $VERSION = '0.1601';
 }
 
+
+sub _fix_datetime {
+    # internal function -
+    # (not a class method)
+    #
+    # checks that the parameter is an object, and
+    # also protects the object against mutation
+    
+    return $_[0]
+        unless defined $_[0];      # error
+    return $_[0]->clone
+        if ref( $_[0] );           # "immutable" datetime
+    return DateTime::Infinite::Future->new 
+        if $_[0] == INFINITY;      # Inf
+    return DateTime::Infinite::Past->new
+        if $_[0] == NEG_INFINITY;  # -Inf
+    return $_[0];                  # error
+}
+
+
 sub iterate {
     my ( $self, $callback ) = @_;
     my $class = ref( $self );
@@ -106,131 +126,90 @@ sub set {
 
 sub from_recurrence {
     my $class = shift;
-    # note: not using validate() because this is too complex...
+
     my %args = @_;
     my %param;
+    
     # Parameter renaming, such that we can use either
     #   recurrence => xxx   or   next => xxx, previous => xxx
-    $param{next} = delete $args{recurrence}  or
-    $param{next} = delete $args{next};
-    $param{previous} = $args{previous}  and  delete $args{previous};
+    $param{next} = delete $args{recurrence} || delete $args{next};
+    $param{previous} = delete $args{previous};
 
     ## $param{detect_bounded} = delete $args{detect_bounded} or 0;
 
-    $param{span} = $args{span}  and  delete $args{span};
+    $param{span} = delete $args{span};
     # they might be specifying a span using begin / end
     $param{span} = DateTime::Span->new( %args ) if keys %args;
 
     my $self = {};
-    if ($param{next} || $param{previous}) 
+    
+    die "Not enough arguments in from_recurrence()"
+        unless $param{next} || $param{previous}; 
+
+    if ( ! $param{previous} ) 
     {
-
-        if ( ! $param{previous} ) 
-        {
-            my $data = {};
-            $param{previous} =
-                sub {
-                    # "objectify" infinity
-                    if ( ! ref( $_[0] ) )
-                    {
-                        if ( $_[0] == NEG_INFINITY ) {
-                            $_[0] = DateTime::Infinite::Past->new; 
-                        }
-                        elsif ( $_[0] == INFINITY ) {
-                            $_[0] = DateTime::Infinite::Future->new 
-                        }
-                    }
-                    _callback_previous ( $_[0], $param{next}, $data );
-                }
-        }
-        else
-        {
-            my $previous = $param{previous};
-            $param{previous} =
-                sub {
-                    # "objectify" infinity
-                    if ( ! ref( $_[0] ) )
-                    {
-                        if ( $_[0] == NEG_INFINITY ) {
-                            $_[0] = DateTime::Infinite::Past->new; 
-                        }
-                        elsif ( $_[0] == INFINITY ) {
-                            $_[0] = DateTime::Infinite::Future->new 
-                        }
-                    }
-                    $previous->( $_[0]->clone );
-                }
-        }
-
-        if ( ! $param{next} ) 
-        {
-            my $data = {};
-            $param{next} =
-                sub {
-                    # "objectify" infinity
-                    if ( ! ref( $_[0] ) )
-                    {
-                        if ( $_[0] == NEG_INFINITY ) {
-                            $_[0] = DateTime::Infinite::Past->new; 
-                        }
-                        elsif ( $_[0] == INFINITY ) {
-                            $_[0] = DateTime::Infinite::Future->new 
-                        }
-                    }
-                    _callback_next ( $_[0], $param{previous}, $data );
-                }
-        }
-        else
-        {
-            my $next = $param{next};
-            $param{next} =
-                sub {
-                    # "objectify" infinity
-                    if ( ! ref( $_[0] ) )
-                    {
-                        if ( $_[0] == NEG_INFINITY ) {
-                            $_[0] = DateTime::Infinite::Past->new; 
-                        }
-                        elsif ( $_[0] == INFINITY ) {
-                            $_[0] = DateTime::Infinite::Future->new 
-                        }
-                    }
-                    $next->( $_[0]->clone );
-                }
-        }
-
-        my ( $min, $max );
-        ## if ( $param{detect_bounded} )
-        {
-            $max = $param{previous}->( DateTime::Infinite::Future->new );
-            $min = $param{next}->( DateTime::Infinite::Past->new );
-            $max = INFINITY if $max->is_infinite;
-            $min = NEG_INFINITY if $min->is_infinite;
-        }
-        
-        # else
-        # {
-        #    $max = INFINITY;
-        #    $min = NEG_INFINITY;
-        # }
-        
-        my $base_set = Set::Infinite::_recurrence->new( $min, $max );
-        $base_set = $base_set->intersection( $param{span}->{set} )
-             if $param{span};
-        # warn "base set is $base_set\n";
-
         my $data = {};
-        $self->{set} = 
+        $param{previous} =
+                sub {
+                    _callback_previous ( _fix_datetime( $_[0] ), $param{next}, $data );
+                }
+    }
+    else
+    {
+        my $previous = $param{previous};
+        $param{previous} =
+                sub {
+                    $previous->( _fix_datetime( $_[0] ) );
+                }
+    }
+
+    if ( ! $param{next} ) 
+    {
+        my $data = {};
+        $param{next} =
+                sub {
+                    _callback_next ( _fix_datetime( $_[0] ), $param{previous}, $data );
+                }
+    }
+    else
+    {
+        my $next = $param{next};
+        $param{next} =
+                sub {
+                    $next->( _fix_datetime( $_[0] ) );
+                }
+    }
+
+    my ( $min, $max );
+    ## if ( $param{detect_bounded} )
+    {
+        $max = $param{previous}->( DateTime::Infinite::Future->new );
+        $min = $param{next}->( DateTime::Infinite::Past->new );
+        $max = INFINITY if $max->is_infinite;
+        $min = NEG_INFINITY if $min->is_infinite;
+    }
+        
+    # else
+    # {
+    #    $max = INFINITY;
+    #    $min = NEG_INFINITY;
+    # }
+        
+    my $base_set = Set::Infinite::_recurrence->new( $min, $max );
+    $base_set = $base_set->intersection( $param{span}->{set} )
+         if $param{span};
+         
+    # warn "base set is $base_set\n";
+
+    my $data = {};
+    $self->{set} = 
             $base_set->_recurrence(
                 $param{next}, 
                 $param{previous},
                 $data,
-            );
-        bless $self, $class;
-    }
-    else {
-        die "Not enough arguments in from_recurrence()";
-    }
+        );
+    bless $self, $class;
+    
     return $self;
 }
 
@@ -276,8 +255,6 @@ sub clone {
 # This is used to simulate a 'previous' callback,
 # when then 'previous' argument in 'from_recurrence' is missing.
 #
-use DateTime::Infinite;
-
 sub _callback_previous {
     my ($value, $callback_next, $callback_info) = @_; 
     my $previous = $value->clone;
@@ -571,31 +548,11 @@ sub complement {
 }
 
 sub min { 
-    my $tmp = $_[0]->{set}->min;
-    if ( ref($tmp) ) 
-    {
-        $tmp = $tmp->clone;
-    } 
-    else
-    {
-        $tmp = new DateTime::Infinite::Past 
-            if defined $tmp && $tmp == NEG_INFINITY;
-    }
-    $tmp;
+    return _fix_datetime( $_[0]->{set}->min );
 }
 
 sub max { 
-    my $tmp = $_[0]->{set}->max;
-    if ( ref($tmp) ) 
-    {
-        $tmp = $tmp->clone;
-    } 
-    else
-    {
-        $tmp = new DateTime::Infinite::Future 
-            if defined $tmp && $tmp == INFINITY;
-    }
-    $tmp;
+    return _fix_datetime( $_[0]->{set}->max );
 }
 
 # returns a DateTime::Span
@@ -875,7 +832,9 @@ This method can be used to change the C<locale> of a date time set.
 The original set C<locale> is not modified. 
 The method returns a new set object.
 
-=item * min / max
+=item * min
+
+=item * max
 
 The first and last dates in the set.  These methods may return
 C<undef> if the set is empty.  It is also possible that these methods
@@ -946,7 +905,11 @@ not a scalar C<zero>, since a zero count is a valid return value for
 empty sets!
 
 
-=item * union / intersection / complement
+=item * union
+
+=item * intersection 
+
+=item * complement
 
 These set operation methods can accept a C<DateTime> list, 
 a C<DateTime::Set>, a C<DateTime::Span>, or a C<DateTime::SpanSet> 
@@ -968,7 +931,9 @@ I<set difference> between the sets.
 
 All other operations will always return a C<DateTime::Set>.
 
-=item * intersects / contains
+=item * intersects
+
+=item * contains
 
 These set operations result in a boolean value.
 
@@ -978,7 +943,13 @@ These set operations result in a boolean value.
 These methods can accept a C<DateTime> list, a C<DateTime::Set>,
 a C<DateTime::Span>, or a C<DateTime::SpanSet> object as an argument.
 
-=item * previous / next / current / closest
+=item * previous
+
+=item * next
+
+=item * current
+
+=item * closest
 
   my $dt = $set->next( $dt );
   my $dt = $set->previous( $dt );

@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+- fixed max/min of an infinite SpanSet
+- added test for infinite duration
+
+- from_recurrence() code cleanup
+
 - parameter checking: The 'dates' argument to from_datetimes() 
   must be a list of DateTime objects
 
