@@ -526,9 +526,9 @@ Creates a new set specified via a "recurrence" callback.
 
 The C<span> parameter is optional. It must be a C<DateTime::Span> object.
 
-The span can also be specified using C<begin> / C<after> and C<end> /
-C<before> parameters, as in the C<DateTime::Span> constructor.  In
-this case, if there is a C<span> parameter it will be ignored.
+The span can also be specified using C<begin> / C<after> and C<before>
+/ C<end> parameters, as in the C<DateTime::Span> constructor.  In this
+case, if there is a C<span> parameter it will be ignored.
 
     $months = DateTime::Set->from_recurrence(
         after => $dt_now,
@@ -536,6 +536,28 @@ this case, if there is a C<span> parameter it will be ignored.
             $_[0]->truncate( to => 'month' )->add( months => 1 )
         },
     );
+
+The recurrence will be passed a single parameter, a DateTime.pm
+object.  The recurrence must generate the I<next> event before or
+after that object.  There is no guarantee as to what the object will
+be set to, only that it will be greater or lesser than the last object
+passed to the recurrence.
+
+For example, if you wanted a recurrence that generated datetimes in
+increments of 30 seconds would look like this:
+
+  sub every_30_seconds {
+      my $dt = shift;
+
+      if ( $dt->second < 30 ) {
+          $dt->add( seconds => 30 - $dt->second );
+      } else {
+          $dt->add( seconds => 60 - $dt->second );
+      }
+  }
+
+Of course, this recurrence ignores leap seconds, but we'll leave that
+as an exercise for the reader ;)
 
 =item * empty_set
 
