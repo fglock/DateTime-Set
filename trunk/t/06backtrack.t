@@ -38,51 +38,51 @@ my $recurr_months = DateTime::Set->from_recurrence(
     recurrence => $month_callback,
     start => $t1,
 );
-ok( test($recurr_months) eq '1810-09-01 1810-10-01 1810-11-01',
-        "months = ".test($recurr_months) );
+is( test($recurr_months), '1810-09-01 1810-10-01 1810-11-01',
+    "months" );
 
 # --------- test a more complex recurrence
 
-   my $day_15_callback = sub {
-            my $after = $_[0]->day >= 15;
-            $_[0]->set( day => 15 );
-            $_[0]->truncate( to => 'day' );
-            $_[0]->add( months => 1 ) if $after;
-            return $_[0];
-        };
-    my $recurr_day_15 = DateTime::Set->from_recurrence( 
-        recurrence => $day_15_callback, 
-        start => $t1,
-    );
-    ok( test($recurr_day_15) eq '1810-09-15 1810-10-15 1810-11-15',
-        "recurr day 15 = ".test($recurr_day_15) );
+my $day_15_callback = sub {
+        my $after = $_[0]->day >= 15;
+        $_[0]->set( day => 15 );
+        $_[0]->truncate( to => 'day' );
+        $_[0]->add( months => 1 ) if $after;
+        return $_[0];
+    };
+my $recurr_day_15 = DateTime::Set->from_recurrence( 
+    recurrence => $day_15_callback, 
+    start => $t1,
+);
+is( test($recurr_day_15), '1810-09-15 1810-10-15 1810-11-15',
+    "recurr day 15" );
 
 # ---------- test operations with recurrences
 
-    my $recurr_day_1_15 = $recurr_day_15 ->union( $recurr_months );
-    ok( test($recurr_day_1_15) eq '1810-09-01 1810-09-15 1810-10-01',
-        "union of recurrences: recurr day 1,15 = ".test($recurr_day_1_15) );
+my $recurr_day_1_15 = $recurr_day_15 ->union( $recurr_months );
+is( test($recurr_day_1_15), '1810-09-01 1810-09-15 1810-10-01',
+    "union of recurrences: recurr day 1,15" );
 
 # ---------- test add() to a recurrence
 
 my $days_15 = $recurr_months->add( days => 14 );
-ok( test($days_15) eq '1810-09-15 1810-10-15 1810-11-15',
-        "days_15 = ".test($days_15) );
+is( test($days_15), '1810-09-15 1810-10-15 1810-11-15',
+    "days_15" );
 
 # check that $recurr_months is still there
-ok( test($recurr_months) eq '1810-09-01 1810-10-01 1810-11-01',
-        "months is still there = ".test($recurr_months) );
+is( test($recurr_months), '1810-09-01 1810-10-01 1810-11-01',
+    "months is still there" );
 
 my $days_20 = $recurr_months->add( days => 19 );
-ok( test($days_20) eq '1810-09-20 1810-10-20 1810-11-20',
-        "days_20 = ".test($days_20) );
+is( test($days_20), '1810-09-20 1810-10-20 1810-11-20',
+    "days_20" );
 
 # ---------- test operations with recurrences + add
 
 my $days_15_and_20 = $days_15 ->union( $days_20 );
 
-ok( test($days_15_and_20) eq '1810-09-15 1810-09-20 1810-10-15',
-        "days_15_and_20 = ".test($days_15_and_20) );
+is( test($days_15_and_20), '1810-09-15 1810-09-20 1810-10-15',
+    "days_15_and_20" );
 
 1;
 
