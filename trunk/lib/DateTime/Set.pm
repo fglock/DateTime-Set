@@ -545,6 +545,12 @@ DateTime::Set - Datetime sets and set math
     $set2 = DateTime::Set->from_datetimes( dates => [ $date1, $date2 ] );
     #  set2 = 2002-03-11, and 2003-04-12
 
+    $date3 = DateTime->new( year => 2003, month => 4, day => 1 );
+    print $set2->next( $date3 )->ymd;      # 2003-04-12
+    print $set2->previous( $date3 )->ymd;  # 2002-03-11
+    print $set2->current( $date3 )->ymd;   # 2002-03-11
+    print $set2->closest( $date3 )->ymd;   # 2003-04-12
+
     # a 'monthly' recurrence:
     $set = DateTime::Set->from_recurrence( 
         recurrence => sub {
@@ -657,6 +663,7 @@ time, and holidays.
 Creates a new empty set.
 
     $set = DateTime::Set->empty_set;
+    print "empty set" unless defined $set->max;
 
 =item * clone
 
@@ -673,7 +680,7 @@ but you want to keep the previous value:
 This method adds the specified duration added to every element of the set.
 
     $dtd = new DateTime::Duration( year => 1 );
-    $new_set = $set->add_duration( $dtd );
+    $set->add_duration( $dtd );
 
 The original set is modified. The method returns the set object.
 
@@ -693,7 +700,7 @@ before calling C<add_duration>.
 
 This method is syntactic sugar around the C<add_duration()> method.
 
-    $meetings_2004 = $meetings_2003->add( years => 1 );
+    $meetings_2004 = $meetings_2003->clone->add( years => 1 );
 
 =item * subtract_duration( $duration_object )
 
@@ -744,6 +751,12 @@ These methods can be used to iterate over the dates in a set.
 
     $iter = $set1->iterator;
     while ( $dt = $iter->next ) {
+        print $dt->ymd;
+    }
+
+    # iterate backwards
+    $iter = $set1->iterator;
+    while ( $dt = $iter->previous ) {
         print $dt->ymd;
     }
 
@@ -827,8 +840,9 @@ a C<DateTime::Span>, or a C<DateTime::SpanSet> object as an argument.
 =item * previous / next / current / closest
 
   my $dt = $set->next( $dt );
-
   my $dt = $set->previous( $dt );
+  my $dt = $set->current( $dt );
+  my $dt = $set->closest( $dt );
 
 These methods are used to find a set member relative to a given
 datetime.
