@@ -701,6 +701,7 @@ sub count {
 
     my $set = $self->clone;
     $set = $set->intersection( $span ) if $span;
+    return undef if $set->{set}->is_too_complex;
     return $set->{set}->count;
 }
 
@@ -922,11 +923,14 @@ Returns a list of C<DateTime> objects.
   my @dt = $set->as_list( span => $span );
 
 Just as with the C<iterator()> method, the C<as_list()> method can be
-limited by a span.  If a set is specified as a recurrence and has no
+limited by a span.  
+
+If a set is specified as a recurrence and has no
 fixed begin and end datetimes, then C<as_list> will return C<undef>
 unless you limit it with a span.  Please note that this is explicitly
 not an empty list, since an empty list is a valid return value for
 empty sets!
+
 
 =item * count
 
@@ -935,9 +939,14 @@ Returns a count of C<DateTime> objects in the set.
   my $n = $set->count( span => $span );
 
 Just as with the C<iterator()> method, the C<count()> method can be
-limited by a span.  If a set is specified as a recurrence and has no
-fixed begin and end datetimes, then C<count> will return the C<infinity>
-scalar, unless you limit it with a span.
+limited by a span.  
+
+If a set is specified as a recurrence and has no
+fixed begin and end datetimes, then C<count> will return C<undef>,
+unless you limit it with a span. Please note that this is explicitly
+not a scalar C<zero>, since a zero count is a valid return value for
+empty sets!
+
 
 =item * union / intersection / complement
 

@@ -62,7 +62,7 @@ is( $res, '1810-08-01',
     "max()" );
 }
 
-is( $months->count, INFINITY, "count" );
+is( $months->count, undef, "count" );
 
 # "START+END"
 $months = DateTime::Set->from_recurrence(

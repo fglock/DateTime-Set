@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- count returns 'undef' for infinite sets.
+
 0.09    2003-08-18
 - added DT::Set count() 
 - fixed DT::SpanSet duration()
