@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 6;
+plan tests => 7;
 
 use DateTime;
 use DateTime::Duration;
@@ -47,6 +47,24 @@ my $month_callback = sub {
     $res = $res->datetime if ref($res);
     ok( $res eq '1810-09-01T01:00:00',
         "min() - got $res" );
+
+  TODO: {
+    local $TODO = "backtracking add()";
+    # BACKTRACKING
+    my $span = new DateTime::Span( 
+        start => new DateTime( 
+            year => 1810, month => 9, day => 1, hour => 0, minute => 30 ),
+        end => new DateTime(
+            year => 1810, month => 9, day => 1, hour => 1, minute => 30 ),
+    );
+    my $set = $months->intersection( $span );
+    my $res = $set->min;
+    $res = $res->datetime if ref($res);
+    $res = 'undef' unless $res;
+    ok( $res eq '1810-09-01T01:00:00',  
+        "span intersection - got ".$res );
+  }
+
 }
 
 {
