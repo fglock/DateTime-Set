@@ -1,8 +1,11 @@
 Changes for DateTime::Set
 
-0.00_22
+0.01  2003-04-19
+
 - implemented DateTime::SpanSet->from_sets and
   DateTime::SpanSet->from_set_and_duration
+
+- first "official" release.
 
 0.00_21
 
