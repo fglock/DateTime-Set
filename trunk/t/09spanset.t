@@ -12,6 +12,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 sub str { ref($_[0]) ? $_[0]->datetime : $_[0] }
+sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
 
 #======================================================================
 # SPANSET TESTS
@@ -29,13 +30,11 @@ my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $end_
 
 my $iter = $s1->iterator;
 
-my $res = $iter->next;
-$res = $res->min->datetime . ".." . $res->max->datetime;
+my $res = span_str( $iter->next );
 ok( $res eq '1810-09-20T00:00:00..1811-10-21T00:00:00',
     "got $res" );
 
-my $res = $iter->next;
-$res = $res->min->datetime . ".." . $res->max->datetime;
+$res = span_str( $iter->next );
 ok( $res eq '1812-11-22T00:00:00..1813-12-23T00:00:00',
     "got $res" );
 
@@ -45,18 +44,15 @@ $s1 = DateTime::SpanSet->from_sets( start_set => $end_set, end_set => $start_set
 
 my $iter = $s1->iterator;
 
-my $res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq NEG_INFINITY.'..1810-09-20T00:00:00',
     "got $res" );
 
-my $res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq '1811-10-21T00:00:00..1812-11-22T00:00:00',
     "got $res" );
 
-my $res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
     "got $res" );
 
@@ -74,13 +70,11 @@ my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $end_
 
 my $iter = $s1->iterator;
 
-my $res = $iter->next;
-$res = $res->min->datetime . ".." . $res->max->datetime;
+$res = span_str( $iter->next );
 ok( $res eq '1810-09-20T00:00:00..1811-10-21T00:00:00',
     "got $res" );
 
-my $res = $iter->next;
-$res = $res->min->datetime . ".." . $res->max->datetime;
+$res = span_str( $iter->next );
 ok( $res eq '1811-10-21T00:00:00..1812-11-22T00:00:00',
     "got $res" );
 }
@@ -99,28 +93,23 @@ my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $star
 
 my $iter = $s1->iterator;
 
-my $res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq NEG_INFINITY.'..1810-09-20T00:00:00',
     "got $res" );
 
-$res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq '1810-09-20T00:00:00..1811-10-21T00:00:00',
     "got $res" );
 
-$res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq '1811-10-21T00:00:00..1812-11-22T00:00:00',
     "got $res" );
 
-$res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq '1812-11-22T00:00:00..1813-12-23T00:00:00',
     "got $res" );
 
-$res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
     "got $res" );
 
@@ -142,8 +131,8 @@ my $start_set = DateTime::Set->from_recurrence(
 
 # test is the recurrence works properly
 my $set_iter = $start_set->iterator;
-my $res = $set_iter->next;
-$res = str($res);
+
+$res = str( $set_iter->next );
 ok( $res eq '1810-09-20T00:00:00',
     "recurrence works properly - got $res" );
 $res = str( $set_iter->next );
@@ -153,14 +142,12 @@ ok( $res eq '1810-09-21T00:00:00',
 my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $start_set );
 my $iter = $s1->iterator;
 
-$res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 ok( $res eq '-inf..1810-09-20T00:00:00',
     "start_set == end_set recurrence works properly - got $res" );
 
 eval <<'_TODO';
-$res = $iter->next;
-$res = str($res->min) . ".." . str($res->max);
+$res = span_str( $iter->next );
 _TODO
 ok( $res eq '1810-09-20T00:00:00..1810-09-21T00:00:00',
     "start_set == end_set recurrence works properly - got $res" );
