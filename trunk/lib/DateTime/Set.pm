@@ -35,7 +35,7 @@ sub add_duration {
     my $result = $self->{set}->iterate( 
         sub {
             my $min = $_[0]->min;
-            return $min + $dur if ref($min);
+            return $min->clone->add_duration( $dur ) if ref($min);
             $min;
         }
     );
@@ -51,10 +51,9 @@ sub set_time_zone {
 
     my $result = $self->{set}->iterate( 
         sub {
-            my %tmp = %{ $_[0]->{list}[0] };
-            $tmp{a} = $tmp{a}->clone->set_time_zone( $tz ) if ref $tmp{a};
-            $tmp{b} = $tmp{a};  
-            \%tmp;
+            my $min = $_[0]->min;
+            return $min->clone->set_time_zone( $tz ) if ref $min;
+            $min;
         }
     );
 
@@ -73,10 +72,9 @@ sub set {
 
     my $result = $self->{set}->iterate(
         sub {
-            my %tmp = %{ $_[0]->{list}[0] };
-            $tmp{a} = $tmp{a}->clone->set( %args ) if ref $tmp{a};
-            $tmp{b} = $tmp{a};
-            \%tmp;
+            my $min = $_[0]->min;
+            return $min->clone->set( %args ) if ref $min;
+            $min;
         }
     );
 
@@ -686,6 +684,8 @@ This object method returns a replica of the given object.
 This method returns a new set which is the same as the existing set
 with the specified duration added to every element of the set.
 
+The original set is not modified. The method returns the set object.
+
 =item * add
 
     $meetings_2004 = $meetings_2003->add( years => 1 );
@@ -697,6 +697,8 @@ This method is syntactic sugar around the C<add_duration()> method.
 When given a C<DateTime::Duration> object, this method simply calls
 C<invert()> on that object and passes that new duration to the
 C<add_duration> method.
+
+The original set is not modified. The method returns the set object.
 
 =item * subtract( DateTime::Duration->new parameters )
 
@@ -715,9 +717,13 @@ the local time are made, except to account for leap seconds.  If the
 new time zone is floating, then the I<UTC> time is adjusted in order
 to leave the local time untouched.
 
+The original set C<time zone> is modified. The method returns the set object.
+
 =item * set( locale => .. )
 
 This method can be used to change the C<locale> of a date time set.
+
+The original set C<locale> is modified. The method returns the set object.
 
 =item * min / max
 
