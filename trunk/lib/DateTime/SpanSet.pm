@@ -14,9 +14,6 @@ use vars qw( @ISA $VERSION );
 
 # $VERSION = '0.00_13';
 
-use constant INFINITY     =>       100 ** 100 ** 100 ;
-use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
-
 sub new {
     my $class = shift;
     my %args = validate( @_,
