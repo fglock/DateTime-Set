@@ -98,10 +98,13 @@ my $month_callback = sub {
     ok( $res eq '1810-09-01',
         "min() - got $res" );
 
+diag( " after " . $t1->datetime );
+
     $res = $months->clone->add_duration( $dur )
            ->intersection(
                DateTime::Span->from_datetimes( after => $t1 )
-           )->min;
+           );
+    $res = $res->min;
     $res = $res->datetime if ref($res);
     ok( $res eq '1810-09-01T01:00:00',
         "min() - got $res" );

@@ -10,17 +10,14 @@ use DateTime::Span;
 use Set::Infinite 0.5307;
 use Set::Infinite::_recurrence;
 
-use vars qw( $VERSION $neg_nanosecond $forever );
+use vars qw( $VERSION );
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
     $VERSION = '0.1401';
-    $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
-
-$forever = Set::Infinite::_recurrence->new( NEG_INFINITY, INFINITY );
 
 sub iterate {
     my ( $self, $callback ) = @_;
@@ -122,7 +119,7 @@ sub from_recurrence {
         {
             $param{current} =
                 sub {
-                    ref $_[0] ? _callback_current ( $_[0], $param{next} ) : $_[0];
+                    ref $_[0] ? _callback_current ( $_[0], $param{next}, $param{previous} ) : $_[0];
                 }
         }
         else
@@ -134,8 +131,15 @@ sub from_recurrence {
                 }
         }
 
+        my $max = $param{previous}->( DateTime::Infinite::Future->new );
+        my $min = $param{next}->( DateTime::Infinite::Past->new );
+        $max = INFINITY if $max->is_infinite;
+        $min = NEG_INFINITY if $min->is_infinite;
+        my $base_set = Set::Infinite::_recurrence->new( $min, $max );
+        # warn "base set is $base_set\n";
+
         $self->{set} = 
-            $forever->_recurrence(
+            $base_set->_recurrence(
                 $param{next}, 
                 $param{current},
                 $param{previous} 
@@ -185,11 +189,10 @@ sub clone {
 
 # default callback that returns the 
 # "current" value (greater or equal) in a callback recurrence.
-# Does not change $_[0]
 #
 sub _callback_current {
-    # ($value, $callback_next)
-    return $_[1]->( $_[0] + $neg_nanosecond );
+    my ($value, $callback_next, $callback_previous ) = @_;
+    return $callback_next->( $callback_previous->( $value ) );
 }
 
 # default callback that returns the 
@@ -204,10 +207,7 @@ sub _callback_previous {
     my ($value, $callback_next, $callback_info) = @_; 
     my $previous = $value->clone;
 
-    # warn "# previous parameter is ". $previous->datetime;
-    # warn "# previous isa ". ref( $previous )."\n";
-    return DateTime::Infinite::Future->new 
-        if UNIVERSAL::isa( $previous, 'DateTime::Infinite::Future' );
+    return $value if $value->is_infinite;
 
     my $freq = $callback_info->{freq};
     unless (defined $freq) 
@@ -250,8 +250,7 @@ sub _callback_next {
     my ($value, $callback_previous, $callback_info) = @_; 
     my $next = $value->clone;
 
-    return DateTime::Infinite::Past->new
-        if UNIVERSAL::isa( $next, 'DateTime::Infinite::Past' );
+    return $value if $value->is_infinite;
 
     my $freq = $callback_info->{freq};
     unless (defined $freq) 
@@ -564,7 +563,8 @@ DateTime::Set - Datetime sets and set math
     # a 'monthly' recurrence:
     $set = DateTime::Set->from_recurrence( 
         recurrence => sub {
-            $_[0]->truncate( to => 'month' )->add( months => 1 )
+            return $_[0] if $_[0]->is_infinite;
+            return $_[0]->truncate( to => 'month' )->add( months => 1 )
         },
         span => $date_span1,    # optional span
     );
@@ -620,7 +620,8 @@ Creates a new set specified via a "recurrence" callback.
     $months = DateTime::Set->from_recurrence( 
         span => $dt_span_this_year,    # optional span
         recurrence => sub { 
-            $_[0]->truncate( to => 'month' )->add( months => 1 ) 
+            return $_[0] if $_[0]->is_infinite;
+            return $_[0]->truncate( to => 'month' )->add( months => 1 ) 
         }, 
     );
 
@@ -633,28 +634,38 @@ case, if there is a C<span> parameter it will be ignored.
     $months = DateTime::Set->from_recurrence(
         after => $dt_now,
         recurrence => sub {
-            $_[0]->truncate( to => 'month' )->add( months => 1 )
+            return $_[0] if $_[0]->is_infinite;
+            return $_[0]->truncate( to => 'month' )->add( months => 1 );
         },
     );
 
 The recurrence will be passed a single parameter, a DateTime.pm
-object.  The recurrence must generate the I<next> event 
+object.  The recurrence must return the I<next> event 
 after that object.  There is no guarantee as to what the object will
 be set to, only that it will be greater than the object
 passed to the recurrence.
+
+The recurrence function must return a valid DateTime object.
+
+The function must work if given C<DateTime::Infinite::Future> and 
+C<DateTime::Infinite::Past> parameters.
+
+It is ok to modify C<$_[0]> inside the recurrence function.
+There are no side-effects.
 
 For example, if you wanted a recurrence that generated datetimes in
 increments of 30 seconds would look like this:
 
   sub every_30_seconds {
       my $dt = shift;
+      return $dt if $dt->is_infinite;
 
       $dt->truncate( to => 'seconds' );
 
       if ( $dt->second < 30 ) {
-          $dt->add( seconds => 30 - $dt->second );
+          return $dt->add( seconds => 30 - $dt->second );
       } else {
-          $dt->add( seconds => 60 - $dt->second );
+          return $dt->add( seconds => 60 - $dt->second );
       }
   }
 
@@ -663,6 +674,28 @@ as an exercise for the reader ;)
 
 It is also possible to create a recurrence by specifying either or both
 'next' and 'previous' callbacks.
+
+Callbacks can return C<DateTime::Infinite::Future> and 
+C<DateTime::Infinite::Past> objects, in order to define I<bounded recurrences>.
+In this case, both 'next' and 'previous' callbacks must be defined:
+
+    # "monthly from $dt until forever"
+
+    my $months = DateTime::Set->from_recurrence(
+        next => sub {
+            $_[0]->truncate( to => 'month' );
+            $_[0]->add( months => 1 );
+            return $_[0] if $_[0] >= $dt;
+            return $dt->clone;
+        },
+        previous => sub {
+            my $param = $_[0]->clone;
+            $_[0]->truncate( to => 'month' );
+            $_[0]->subtract( months => 1 ) if $_[0] == $param;
+            return $_[0] if $_[0] >= $dt;
+            return DateTime::Infinite::Past->new;
+        },
+    );
 
 See also C<DateTime::Event::Recurrence> and the other C<DateTime::Event::*>
 modules for generating specialized recurrences, such as sunrise and sunset

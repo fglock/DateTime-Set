@@ -78,16 +78,20 @@ is( ref($res), 'DateTime::Infinite::Future',
             # warn "next of ". $_[0]->datetime;
             $_[0]->truncate( to => 'month' );
             $_[0]->add( months => 1 );
+            # warn " got ".$_[0]->datetime."\n" if $_[0] <= $t1;
             return $_[0] if $_[0] <= $t1;
+            # warn " got Future\n";
             return DateTime::Infinite::Future->new;
         };
     my $_previous_month = sub {
             # warn "previous of ". $_[0]->datetime;
+            # warn " got ".$t1->datetime."\n" if $_[0] > $t1;
+            return $t1->clone if $_[0] > $t1;
             my $dt = $_[0]->clone;
             $_[0]->truncate( to => 'month' );
             $_[0]->subtract( months => 1 ) if $_[0] == $dt;
-            return $_[0] if $_[0] <= $t1;
-            return $t1->clone;
+            # warn " got ".$_[0]->datetime."\n";
+            return $_[0];
         };
 
 my $months = DateTime::Set->from_recurrence(
