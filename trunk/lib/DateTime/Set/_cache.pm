@@ -60,7 +60,7 @@ sub from_cache {
     {
         unless ( exists ( $p{hash}{key} ) ) 
         {
-            $p{hash}{key} = $class->empty_set;  # "auto-vivification"
+            return undef;  # no "auto-vivification"
         }
         $self = $p{hash}{key}->clone;
     }
@@ -84,6 +84,18 @@ sub cache {
     if ( exists( $self->next ) )
     {
         $p{set} = $self->clone;
+
+        # TODO: "hash_function" and "inverse_hash_function" 
+        #       should be method parameters
+        $p{hash_function} = 
+             sub { 
+                 $_[0]->year 
+             };
+        $p{inverse_hash_function} = 
+             sub { 
+                 new DateTime( year => $_[0] )
+             };
+
         return DateTime::Set->from_recurrence(
             next =>     sub { _cache_next( $_[0], \%p ) },
             previous => sub { _cache_previous( $_[0], \%p ) },
@@ -95,12 +107,33 @@ sub cache {
 }
 
 sub _cache_next {
-    # TODO!
+    my ( $self, $p ) = @_;
+    my $self_key = $p->{hash_function}->( $self );
+    my $cache_key = $p->{key} . "-" . $self_key;
+    my $class = ref($self);
+    my $cache_set = $class->from_cache( %$p, key => $cache_key );
+    unless ( defined $cache_set ) 
+    {
+        my $start = $p->{inverse_hash_function}->( $self_key );
+        # TODO - set the cache value
+
+    }
+    # TODO - get "next" from $cache_set
     die "_cache_next not implemented";
 }
 
 sub _cache_previous {
-    # TODO!
+    my ( $self, $p ) = @_;
+    my $self_key = $p->{hash_function}->( $self );
+    my $cache_key = $p->{key} . "-" . $self_key;
+    my $class = ref($self);
+    my $cache_set = $class->from_cache( %$p, key => $cache_key );
+    unless ( defined $cache_set )
+    {
+        my $start = $p->{inverse_hash_function}->( $self_key );
+        # TODO - set the cache value
+    }
+    # TODO - get "previous" from $cache_set
     die "_cache_previous not implemented";
 }
 
@@ -157,7 +190,7 @@ Retrieves a set (non-recurrence) from a cache.
 
 "key" is optional.
 
-If the "key" is not defined, it returns an empty set.
+If the "key" is not defined, it returns C<undef> instead of a set.
 
 C<from_cache> will die if the cached set is a recurrence.
 
@@ -170,6 +203,9 @@ Associates a cache to a recurrence set.
      $cached_set = $recurrence_set->cache( hash => \%cache, key => 'my_set' );
 
 "key" is optional.
+
+If both "cache" and "hash" are specified, then the elements retrieved
+from the cache are stored in the hash, for faster access.
 
 =back
 
