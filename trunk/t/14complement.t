@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 use strict;
 
 use Test::More;
@@ -45,7 +47,7 @@ ok( $res eq '1810-10-01',
 
 my $iter1 = $months->iterator;
 my $first = $iter1->next;
-my $next_months = $months->complement( $first );
+$next_months = $months->complement( $first );
 my $iter2 = $next_months->iterator;
 $res = $iter2->next;
 $res = $res->ymd if ref($res);

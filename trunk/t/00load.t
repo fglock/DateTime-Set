@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 # $Header$
 
 use Test::More;

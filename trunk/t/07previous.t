@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 use strict;
 
 use Test::More;
@@ -18,7 +20,7 @@ sub test {
     my @res;
     for (1..3) {
         my $tmp = $iterator->previous;
-        my $tmp = $tmp->ymd if UNIVERSAL::can( $tmp, 'ymd' );
+        $tmp = $tmp->ymd if UNIVERSAL::can( $tmp, 'ymd' );
         push @res, $tmp if defined $tmp;
     }
     return join( ' ', @res );
