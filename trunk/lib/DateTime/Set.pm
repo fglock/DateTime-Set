@@ -160,24 +160,24 @@ sub from_datetimes {
     my %args = validate( @_,
                          { dates => 
                            { type => ARRAYREF,
-                             optional => 1,
                            },
                          }
                        );
     my $self = {};
-    if (exists $args{dates}) {
-        $self->{set} = Set::Infinite->new;
-        # possible optimization: sort dates and use "push"
-        for( @{ $args{dates} } ) {
-            $self->{set} = $self->{set}->union( $_->clone );
-        }
+    $self->{set} = Set::Infinite->new;
+    # possible optimization: sort dates and use "push"
+    for( @{ $args{dates} } ) {
+        $self->{set} = $self->{set}->union( $_->clone );
     }
-    else {
-        # no arguments => return an empty set (or should die?)
-        $self->{set} = Set::Infinite->new;
-    }
+
     bless $self, $class;
     return $self;
+}
+
+sub empty_set {
+    my $class = shift;
+
+    return bless { set => Set::Infinite->new }, $class;
 }
 
 sub clone { 
@@ -557,10 +557,6 @@ Wednesday between 2003-03-05 and 2004-01-07".
 
 =over 4
 
-=item * new
-
-Creates a new empty set.
-
 =item * from_datetimes
 
 Creates a new set from a list of dates.
@@ -591,6 +587,10 @@ In this case, if there is a C<span> parameter it will be ignored.
             $_[0]->truncate( to => 'month' )->add( months => 1 )
         },
     );
+
+=item * empty_set
+
+Creates a new empty set.
 
 =item * add
 
