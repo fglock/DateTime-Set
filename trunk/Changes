@@ -1,7 +1,7 @@
 Changes for DateTime::Set
 
 0.1405  2004-03-15
-- New method: intersected_spans
+- New method: DateTime::SpanSet::intersected_spans
   Suggested by Reinhold May
   Name suggested by Dave Rolsky
 
