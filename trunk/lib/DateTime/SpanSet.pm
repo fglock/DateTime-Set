@@ -82,7 +82,7 @@ sub iterator {
     my %args = @_;
     my $span;
     $span = delete $args{span};
-    $span = DateTime::Span->from_datetimes( %args ) if %args;
+    $span = DateTime::Span->new( %args ) if %args;
 
     return $self->intersection( $span ) if $span;
     return $self->clone;
