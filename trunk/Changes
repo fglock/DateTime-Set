@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- methods that accepted a DT object, now accept a list of DT objects.
+  Suggested by Ben Bennet, I think.
 - added _callback_next - "previous-only recurrences"
 
 0.0805

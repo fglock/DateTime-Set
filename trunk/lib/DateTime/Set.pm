@@ -526,10 +526,11 @@ sub as_list {
 my $max_iterate = 20;
 
 sub intersection {
-    my ($set1, $set2) = @_;
+    my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
     my $tmp = $class->empty_set();
-    $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
+        unless $set2->can( 'union' );
 
     # optimization - use function composition if both sets are recurrences
     if ( $set1->{next} && $set2->{next} ) 
@@ -582,26 +583,26 @@ sub intersection {
 }
 
 sub intersects {
-    my ($set1, $set2) = @_;
+    my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
-    $set2 = $class->from_datetimes( dates => [ $set2 ] ) 
+    $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
         unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
 
 sub contains {
-    my ($set1, $set2) = @_;
+    my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
-    $set2 = $class->from_datetimes( dates => [ $set2 ] ) 
+    $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
         unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
 
 sub union {
-    my ($set1, $set2) = @_;
+    my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
     my $tmp = $class->empty_set();
-    $set2 = $class->from_datetimes( dates => [ $set2 ] ) 
+    $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
         unless $set2->can( 'union' );
 
     if ( $set1->{next} && $set2->{next} )
@@ -636,12 +637,12 @@ sub union {
 }
 
 sub complement {
-    my ($set1, $set2) = @_;
+    my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
     my $tmp = $class->empty_set();
     if (defined $set2) 
     {
-        $set2 = $class->from_datetimes( dates => [ $set2 ] ) 
+        $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
             unless $set2->can( 'union' );
         # TODO: "compose complement";
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
@@ -649,8 +650,8 @@ sub complement {
     else 
     {
         $tmp->{set} = $set1->{set}->complement;
+        bless $tmp, 'DateTime::SpanSet';
     }
-    bless $tmp, 'DateTime::SpanSet' unless $_[1];
     return $tmp;
 }
 
@@ -915,9 +916,9 @@ empty sets!
 
 =item * union / intersection / complement
 
-Set operations may be performed not only with C<DateTime::Set>
-objects, but also with C<DateTime::Span>, C<DateTime::SpanSet>,
-and C<DateTime> objects.
+These set operation methods can accept a C<DateTime> list, 
+a C<DateTime::Set>, a C<DateTime::Span>, or a C<DateTime::SpanSet> 
+object as an argument.
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
@@ -941,8 +942,8 @@ These set operations result in a boolean value.
     if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
     if ( $set1->contains( $dt ) ) { ...    # like "is-fully-inside"
 
-These methods can accept a C<DateTime>, C<DateTime::Set>,
-C<DateTime::Span>, or C<DateTime::SpanSet> object as an argument.
+These methods can accept a C<DateTime> list, a C<DateTime::Set>,
+a C<DateTime::Span>, or a C<DateTime::SpanSet> object as an argument.
 
 =item * previous / next / current / closest
 

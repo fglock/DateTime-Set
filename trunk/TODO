@@ -1,9 +1,5 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
-- modify intersection() and other methods that accept a DT object,
-  to accept a list of DT objects.  
-  Suggested by Ben Bennet, I think.
-
 - all methods should accept/return DT::Infinity objects
   instead of infinity-scalars.
   Modify docs and tests accordingly.
@@ -22,7 +18,7 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
 - implement faster DT::Set::complement(), 
   using 'function composition'
 
-- move all 'set-specific' code to Set::Infinite::Callback ?
+- move all 'set-specific' code to Set::Infinite::Callback 
 
 - functions like before(), after(), during() might be useful
   in DT::Span
