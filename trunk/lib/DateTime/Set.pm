@@ -283,58 +283,32 @@ sub _setup_infinite_recurrence {
 
 sub _setup_finite_recurrence {
     my ( $set, $callback_next, $callback_current, $callback_previous ) = @_;
-
     # this is a finite recurrence - generate it.
-    # warn "RECURR: FINITE recurrence";
     my $min = $set->min;
     return unless defined $min;
-
-    # This is the same algorithm, but it fails some tests
-    # $min = $callback_current->( $min );
-
-    # start at 'less-than-min', because next(min) would return 
-    # 'bigger-than-min', and we want 'bigger-or-equal-to-min'
-    $min = $min->clone->subtract( nanoseconds => 1 );
-
-    # TODO: this should work !!!
-    # This gives an error when the set doesn't have a 'previous' value
-    # $min = $callback_previous->( $min->clone );
-    # if ( ! defined $min ) {
-    #    $min = $callback_next->( NEG_INFINITY );
-    # }
-
     my $max = $set->max;
-    # warn "_recurrence_callback called with ".$min->ymd."..".$max->ymd;
-
-    # $min = $callback_previous->( $callback_next->( $min->clone ) );
-    # my $result = $set->new( $min );
-    # return $result if $min >= $max;
-
-    # my $result = $set->new( $min );
-    # warn "return " if $min > $max;
-    # return $result if $min > $max;
-
-    my $result = $set->new();
-
+    $min = $callback_current->( $min );
+    my $result = $set->new( $min->clone );
+    return $result if $min > $max;
     do {
-        # warn " generate from ".$min->ymd;
         $min = $callback_next->( $min );
-        # warn " generate got ".$min->ymd;
         $result = $result->union( $min->clone )
             if defined $min;
     } while ( defined $min && $min <= $max );
-
     return $result;
 }
 
-# returns the "current" value in a callback recurrence.
+# default callback that returns the 
+# "current" value in a callback recurrence.
+#
 sub _callback_current {
     my ($value, $callback_next) = @_;
     my $tmp = $value->clone->subtract( nanoseconds => 1 );
     return $callback_next->( $tmp );
 }
 
-# returns the "previous" value in a callback recurrence.
+# default callback that returns the 
+# "previous" value in a callback recurrence.
 #
 # This is used to simulate a 'previous' callback,
 # when then 'previous' argument in 'from_recurrence' is missing.
