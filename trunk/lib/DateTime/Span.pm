@@ -20,7 +20,7 @@ use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 # note: the constructor must clone its DateTime parameters, such that
 # the set elements become immutable
-sub new {
+sub from_datetimes {
     my $class = shift;
     my %args = validate( @_,
                          { start =>
@@ -79,7 +79,7 @@ sub new {
     return $self;
 }
 
-*from_datetimes = \&new;
+*new = \&from_datetimes;
 
 sub from_datetime_and_duration {
     my $self = shift;
@@ -254,7 +254,7 @@ DateTime::Span - Date/time spans
 
     $date1 = DateTime->new( year => 2002, month => 3, day => 11 );
     $date2 = DateTime->new( year => 2003, month => 4, day => 12 );
-    $set2 = DateTime::Span->new( start => $date1, end => $date2 );
+    $set2 = DateTime::Span->from_datetimes( start => $date1, end => $date2 );
     #  set2 = 2002-03-11 until 2003-04-12
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
@@ -277,7 +277,7 @@ DateTime::Span is a module for date/time spans or time-ranges.
 
 =over 4
 
-=item * new 
+=item * from_datetimes
 
 Creates a new span. 
 
@@ -306,21 +306,6 @@ You cannot give both a "start" and "after" argument, nor can you give
 both an "end" and "before" argument.  Either of these conditions cause
 will cause the C<new()> method to die.
 
-=back
-
-=item * from_datetimes
-
-Creates a new span. Same as C<new>.
-
-   $dates = DateTime::Set->from_datetimes( start => $dt1, end => $dt2 );
-   $dates = DateTime::Set->from_datetimes( after => $dt1, before => $dt2 );
-   $dates = DateTime::Set->from_datetimes( start => $dt1, before => $dt2 );
-   $dates = DateTime::Set->from_datetimes( after => $dt1, end => $dt2 );
-   $dates = DateTime::Set->from_datetimes( start => $dt1 );
-   $dates = DateTime::Set->from_datetimes( end => $dt2 );
-   $dates = DateTime::Set->from_datetimes( after => $dt1 );
-   $dates = DateTime::Set->from_datetimes( before => $dt2 );
-
 =item * from_datetime_and_duration
 
 Creates a new span.
@@ -337,6 +322,8 @@ The new "end of the set" is I<open> by default.
 Return a DateTime::Duration object that represents the length of the
 span.
 
+This is the sum of the durations of all spans.
+
 =item * start / end
 
 First or last dates in the span.
@@ -348,12 +335,6 @@ Return true if the first or last dates belong to the span ( begin <= x <= end ).
 =item * start_is_open / end_is_open
 
 Return true if the first or last dates are out of the span ( begin < x < end ).
-
-=item * duration
-
-The duration of the span, as a DateTime::Duration.
-
-This is the sum of the durations of all spans.
 
 =item * union / intersection / complement
 
@@ -370,6 +351,8 @@ These set functions result in a boolean value.
 
     if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
     if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
+
+=back
 
 =head1 SUPPORT
 
