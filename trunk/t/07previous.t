@@ -45,8 +45,7 @@ is( test($recurr_months), '1810-08-01 1810-07-01 1810-06-01',
     "months" );
 
 
-TODO: {
-    local $TODO = 'the test is ok, expected is wrong';
+{
 
 # --------- test a more complex recurrence
 
@@ -59,36 +58,36 @@ my $day_15_callback = sub {
     };
 my $recurr_day_15 = DateTime::Set->from_recurrence( 
      recurrence => $day_15_callback, 
-     end => $t1,
+     end => $t1, # 1810-08-22
 );
-is( test($recurr_day_15), '1810-09-15 1810-08-15 1810-07-15',
+is( test($recurr_day_15), '1810-08-15 1810-07-15 1810-06-15',
     "recurr day 15" );
 
 # ---------- test operations with recurrences
 
 my $recurr_day_1_15 = $recurr_day_15 ->union( $recurr_months );
-is( test($recurr_day_1_15), '1810-09-15 1810-09-01 1810-08-15',
+is( test($recurr_day_1_15), '1810-08-15 1810-08-01 1810-07-15',
     "union of recurrences: recurr day 1,15" );
 
 # ---------- test add() to a recurrence
 
 my $days_15 = $recurr_months->add( days => 14 );
-is( test($days_15), '1810-09-15 1810-08-15 1810-07-15',
+is( test($days_15), '1810-08-15 1810-07-15 1810-06-15',
     "days_15" );
 
 # check that $recurr_months is still there
-is( test($recurr_months), '1810-09-01 1810-08-01 1810-07-01',
+is( test($recurr_months), '1810-08-01 1810-07-01 1810-06-01',
     "months is still there" );
 
 my $days_20 = $recurr_months->add( days => 19 );
-is( test($days_20), '1810-09-20 1810-08-20 1810-07-20',
+is( test($days_20), '1810-08-20 1810-07-20 1810-06-20',
     "days_20" );
 
 # ---------- test operations with recurrences + add
 
 my $days_15_and_20 = $days_15 ->union( $days_20 );
 
-is( test($days_15_and_20), '1810-09-20 1810-09-15 1810-08-20',
+is( test($days_15_and_20), '1810-08-20 1810-08-15 1810-07-20',
     "days_15_and_20" );
 
 }

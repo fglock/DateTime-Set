@@ -37,9 +37,9 @@ use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
         'next day is 2000-10-03' );
 }
 
-# SKIP:
 {
-    # skip 'needs working previous-only recurrence sets', 2;
+    # previous-only recurrence
+
     my $set =
         DateTime::Set->from_recurrence
                 ( previous =>

@@ -11,8 +11,9 @@ use DateTime::SpanSet;
 
 use Carp;
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
-use Set::Infinite '0.44';
-$Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
+
+# use Set::Infinite '0.44';
+# $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -47,7 +48,7 @@ sub from_spans {
                          }
                        );
     my $self = {};
-    my $set = Set::Infinite->new();
+    my $set = Set::Infinite::_recurrence->new();
     $set = $set->union( $_->{set} ) for @{ $args{spans} };
     $self->{set} = $set;
     bless $self, $class;
@@ -90,7 +91,7 @@ sub from_sets {
 sub empty_set {
     my $class = shift;
 
-    return bless { set => Set::Infinite->new }, $class;
+    return bless { set => Set::Infinite::_recurrence->new }, $class;
 }
 
 sub clone { 
@@ -204,9 +205,8 @@ sub duration { my $dur = $_[0]->{set}->size; defined $dur ? $dur : INFINITY }
 *size = \&duration;
 
 # unsupported Set::Infinite methods
-
-sub offset { die "offset() not supported"; }
-sub quantize { die "quantize() not supported"; }
+# sub offset { die "offset() not supported"; }
+# sub quantize { die "quantize() not supported"; }
 
 1;
 

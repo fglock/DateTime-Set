@@ -10,8 +10,8 @@ use DateTime::Set;
 use DateTime::SpanSet;
 
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
-use Set::Infinite '0.44';
-$Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
+# use Set::Infinite '0.44';
+# $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use constant INFINITY     => DateTime::INFINITY;
 use constant NEG_INFINITY => DateTime::NEG_INFINITY;
@@ -83,7 +83,7 @@ sub from_datetimes {
     if ( $start > $end ) {
         die "Span cannot start after the end in DateTime::Span->from_datetimes\n";
     }
-    $set = Set::Infinite->new( $start, $end );
+    $set = Set::Infinite::_recurrence->new( $start, $end );
     if ( $start != $end ) {
         # remove start, such that we have ">" instead of ">="
         $set = $set->complement( $start ) if $open_start;  
@@ -284,9 +284,8 @@ sub duration { my $dur = $_[0]->end - $_[0]->start; defined $dur ? $dur : INFINI
 *size = \&duration;
 
 # unsupported Set::Infinite methods
-
-sub offset { die "offset() not supported"; }
-sub quantize { die "quantize() not supported"; }
+# sub offset { die "offset() not supported"; }
+# sub quantize { die "quantize() not supported"; }
 
 1;
 
