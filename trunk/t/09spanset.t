@@ -31,11 +31,11 @@ my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $end_
 my $iter = $s1->iterator;
 
 my $res = span_str( $iter->next );
-ok( $res eq '1810-09-20T00:00:00..1811-10-21T00:00:00',
+is( $res, '1810-09-20T00:00:00..1811-10-21T00:00:00',
     "got $res" );
 
 $res = span_str( $iter->next );
-ok( $res eq '1812-11-22T00:00:00..1813-12-23T00:00:00',
+is( $res, '1812-11-22T00:00:00..1813-12-23T00:00:00',
     "got $res" );
 
 # reverse with start/end dates
@@ -45,15 +45,15 @@ $s1 = DateTime::SpanSet->from_sets( start_set => $end_set, end_set => $start_set
 my $iter = $s1->iterator;
 
 $res = span_str( $iter->next );
-ok( $res eq NEG_INFINITY.'..1810-09-20T00:00:00',
+is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
     "got $res" );
 
 $res = span_str( $iter->next );
-ok( $res eq '1811-10-21T00:00:00..1812-11-22T00:00:00',
+is( $res, '1811-10-21T00:00:00..1812-11-22T00:00:00',
     "got $res" );
 
 $res = span_str( $iter->next );
-ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
+is( $res, '1813-12-23T00:00:00..'.INFINITY,
     "got $res" );
 
 # special case: end == start
@@ -71,11 +71,11 @@ my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $end_
 my $iter = $s1->iterator;
 
 $res = span_str( $iter->next );
-ok( $res eq '1810-09-20T00:00:00..1811-10-21T00:00:00',
+is( $res, '1810-09-20T00:00:00..1811-10-21T00:00:00',
     "got $res" );
 
 $res = span_str( $iter->next );
-ok( $res eq '1811-10-21T00:00:00..1812-11-22T00:00:00',
+is( $res, '1811-10-21T00:00:00..1812-11-22T00:00:00',
     "got $res" );
 }
 
@@ -94,23 +94,23 @@ my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $star
 my $iter = $s1->iterator;
 
 $res = span_str( $iter->next );
-ok( $res eq NEG_INFINITY.'..1810-09-20T00:00:00',
+is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
     "got $res" );
 
 $res = span_str( $iter->next );
-ok( $res eq '1810-09-20T00:00:00..1811-10-21T00:00:00',
+is( $res, '1810-09-20T00:00:00..1811-10-21T00:00:00',
     "got $res" );
 
 $res = span_str( $iter->next );
-ok( $res eq '1811-10-21T00:00:00..1812-11-22T00:00:00',
+is( $res, '1811-10-21T00:00:00..1812-11-22T00:00:00',
     "got $res" );
 
 $res = span_str( $iter->next );
-ok( $res eq '1812-11-22T00:00:00..1813-12-23T00:00:00',
+is( $res, '1812-11-22T00:00:00..1813-12-23T00:00:00',
     "got $res" );
 
 $res = span_str( $iter->next );
-ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
+is( $res, '1813-12-23T00:00:00..'.INFINITY,
     "got $res" );
 
 }
@@ -131,10 +131,10 @@ ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
     my $set_iter = $start_set->iterator;
 
     $res = str( $set_iter->next );
-    ok( $res eq '1810-09-20T00:00:00',
+    is( $res, '1810-09-20T00:00:00',
         "recurrence works properly - got $res" );
     $res = str( $set_iter->next );
-    ok( $res eq '1810-09-21T00:00:00',
+    is( $res, '1810-09-21T00:00:00',
         "recurrence works properly - got $res" );
 
 # create spanset
@@ -142,15 +142,15 @@ ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
     my $iter = $s1->iterator;
 
     $res = span_str( $iter->next );
-    ok( $res eq '-inf..1810-09-20T00:00:00',
+    is( $res, '-inf..1810-09-20T00:00:00',
         "start_set == end_set recurrence works properly - got $res" );
 
     $res = span_str( $iter->next );
-    ok( $res eq '1810-09-20T00:00:00..1810-09-21T00:00:00',
+    is( $res, '1810-09-20T00:00:00..1810-09-21T00:00:00',
         "start_set == end_set recurrence works properly - got $res" );
 
     $res = span_str( $iter->next );
-    ok( $res eq '1810-09-21T00:00:00..1810-09-22T00:00:00',
+    is( $res, '1810-09-21T00:00:00..1810-09-22T00:00:00',
         "start_set == end_set recurrence works properly - got $res" );
 }
 
@@ -171,11 +171,11 @@ ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
     my $iter = $span_set->iterator;
 
     $res = span_str( $iter->next );
-    ok( $res eq '1810-09-20T00:00:00..1810-09-20T01:00:00',
+    is( $res, '1810-09-20T00:00:00..1810-09-20T01:00:00',
         "start_set == end_set recurrence works properly - got $res" );
 
     $res = span_str( $iter->next );
-    ok( $res eq '1810-09-21T00:00:00..1810-09-21T01:00:00',
+    is( $res, '1810-09-21T00:00:00..1810-09-21T01:00:00',
         "start_set == end_set recurrence works properly - got $res" );
 }
 
