@@ -151,7 +151,7 @@ sub intersection {
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
 
     # intersection() can generate something more complex than a span.
-    bless $tmp, 'Date::SpanSet';
+    bless $tmp, 'DateTime::SpanSet';
 
     return $tmp;
 }
@@ -180,7 +180,7 @@ sub union {
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
  
     # union() can generate something more complex than a span.
-    bless $tmp, 'Date::SpanSet';
+    bless $tmp, 'DateTime::SpanSet';
 
     # # We have to check it's internal structure to find out.
     # if ( $#{ $tmp->{set}->{list} } != 0 ) {
@@ -203,7 +203,7 @@ sub complement {
     }
 
     # complement() can generate something more complex than a span.
-    bless $tmp, 'Date::SpanSet';
+    bless $tmp, 'DateTime::SpanSet';
 
     # # We have to check it's internal structure to find out.
     # if ( $#{ $tmp->{set}->{list} } != 0 ) {
