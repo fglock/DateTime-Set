@@ -1,5 +1,11 @@
 Changes for DateTime::Set
 
+0.0805
+- optimizes intersection of recurrence with span
+
+0.0802
+- internal 'S::I' recurrence class
+
 - small fix in DT::Set clone()
 - DateTime::Set uses DateTime infinity constants; 
   max and min now return DateTime::Infinite::Future/Past objects.

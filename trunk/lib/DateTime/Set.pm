@@ -2,6 +2,147 @@
 # This program is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
 
+package Set::Infinite::_recurrence;
+
+use strict;
+
+use constant INFINITY     =>       100 ** 100 ** 100 ;
+use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
+
+use vars qw( @ISA $PRETTY_PRINT );
+
+@ISA = qw( Set::Infinite );
+
+BEGIN {
+    $PRETTY_PRINT = 1;   # enable Set::Infinite debug
+}
+
+# $si->_recurrence(
+#     \&callback_next, \&callback_current, \&callback_previous )
+#
+# Generates "recurrences" from a callback.
+# These recurrences are simple lists of dates.
+#
+# The recurrence generation is based on an idea from Dave Rolsky.
+#
+sub _recurrence { 
+    my $set = shift;
+    my ( $callback_next, $callback_current, $callback_previous ) = @_;
+    if ( $#{ $set->{list} } != 0 )
+    {
+        return $set->iterate( 
+            sub { 
+                $_[0]->_recurrence( 
+                    $callback_next, $callback_current, $callback_previous ) 
+            } );
+    }
+    # $set is a span
+    my ($min, $min_open) = $set->min_a;
+    my ($max, $max_open) = $set->max_a;
+    if ( ref $min )
+    {
+        if ( $min_open )
+        {
+            $min = $callback_next->( $min->clone );
+        }
+        else
+        {
+            $min = $callback_current->( $min );
+        }
+    }
+    if ( ref $max )
+    {
+        if ( $max_open )
+        {
+            $max = $callback_previous->( $max->clone );
+        }
+        else
+        {
+            $max = $callback_current->( $max );
+            $max = $callback_previous->( $max ) if $max > $set->max;
+        }
+    }
+    return $set->new( $min ) if $min == $max;
+
+    if ($min != NEG_INFINITY && $max != INFINITY) 
+    {
+        # print STDERR " finite \n";
+
+        my $result = $set->new();
+        my $next = $min;
+        while(1) 
+        {
+            last if $next > $max;
+            push @{ $result->{list} }, { a => $next, b => $next };
+            $next = $callback_next->( $next->clone );
+        } 
+        return $result;
+    }
+
+    # return a "_function", such that we can backtrack later.
+    my $func = $set->new( $min, $max )->
+                     _function( '_recurrence', @_ );
+    my $next;
+    my $previous;
+    # set up first() and min()
+
+    # TODO: make a special case in last/first when result == set 
+    # such as: do $#first = 1 ?
+
+    if ($min == INFINITY || $min == NEG_INFINITY) 
+    {
+        # $func->copy prevents circular references
+        $func->{first} = [ $set->new( $min ), $func->copy ];
+    }
+    else 
+    {
+        $func->{min} = [ $min, 1 ];
+        $next = $callback_next->( $min->clone );
+        $func->{first} = [ 
+            $set->new( $min ), 
+            $set->new( $next, $max )->
+                  _function( '_recurrence', @_ )
+        ];
+    }
+    # set up last() and max()
+    if ($max == INFINITY || $max == NEG_INFINITY) 
+    {
+        # $func->copy prevents circular references
+        $func->{last} = [ $set->new( $max ), $func->copy ];
+    }
+    else 
+    {
+        $func->{max} = [ $max, 1 ];
+        $previous = $callback_previous->( $max->clone );
+        $func->{last} = [
+            $set->new( $max ),
+            $set->new( $min, $previous )->
+                  _function( '_recurrence', @_ )
+        ];
+    }
+    return $func;
+}
+
+sub intersection
+{
+    my ($s1, $s2) = (shift,shift);
+    if ( $s1->is_too_complex && 
+         $s1->{method} eq '_recurrence' ) 
+    {
+        unless( ref($s1) eq ref($s2) )
+        {
+            $s2 = $s1->new( $s2, @_ );
+            @_ = ();
+        }
+        unless( $s2->is_too_complex ) 
+        {
+            my $inter = $s1->{parent} ->intersection( $s2 );
+            return $inter->_recurrence( @{ $s1->{param} } );
+        }
+    }
+    return $s1->SUPER::intersection( $s2, @_ );
+}
+
 package DateTime::Set;
 
 use strict;
@@ -11,38 +152,15 @@ use DateTime 0.12;  # this is for version checking only
 use DateTime::Duration;
 use DateTime::Span;
 use Set::Infinite 0.49;  
-$Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( $VERSION $neg_nanosecond );
-
-$VERSION = '0.08';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
-
 BEGIN {
+    $VERSION = '0.0805';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
-}
-
-# _add_callback( $set_infinite, $datetime_duration )
-# Internal function
-#
-# Adds a value to a DateTime in a set.
-#
-# this is an internal callback - it is not an object method!
-# Used by: add()
-#
-sub _add_callback {
-    my $set = shift;   # $set is a Set::Infinite object
-    my $dt = shift;    # $dt is a DateTime::Duration
-    my $min = $set->min;
-    if ( ref($min) ) {
-        $min = $min->clone;
-        $min->add_duration( $dt ) if ref($min);
-    }
-    my $result = $set->new( $min );
-    return $result;
 }
 
 sub add { shift->add_duration( DateTime::Duration->new(@_) ) }
@@ -54,15 +172,18 @@ sub subtract_duration { return $_[0]->add_duration( $_[1]->inverse ) }
 sub add_duration {
     my ( $self, $dur ) = @_;
 
-    # $dur should be cloned because if the set is a
-    # recurrence then the callback will not be used
-    # immediately - then $dur must be "immutable".
-
-    my $result = $self->{set}->iterate( \&_add_callback, $dur->clone );
-
-    ### this code would enable 'subroutine method' behaviour
-    # $self->{set} = $result;
-    # return $self;
+    $dur = $dur->clone;  # $dur must be "immutable"
+    my $result = $self->{set}->iterate( 
+        sub {
+            my $min = $_[0]->min;
+            if ( ref($min) )
+            {
+                $min = $min->clone;
+                $min->add_duration( $dur ) if ref($min);
+            }
+            return $_[0]->new( $min );
+        }
+    );
 
     ### this code enables 'function method' behaviour
     my $set = $self->clone;
@@ -83,11 +204,6 @@ sub set_time_zone {
     ### this code enables 'subroutine method' behaviour
     $self->{set} = $result;
     return $self;
-
-    ### this code enables 'function method' behaviour
-    # my $set = $self->clone;
-    # $set->{set} = $result;
-    # return $set;
 }
 
 # note: the constructors must clone its DateTime parameters, such that
@@ -106,10 +222,6 @@ sub from_recurrence {
     $param{span} = $args{span}  and  delete $args{span};
     # they might be specifying a span using begin / end
     $param{span} = DateTime::Span->new( %args ) if keys %args;
-
-    # otherwise, it is unbounded
-    # $param{span}->{set} = Set::Infinite->new( NEG_INFINITY, INFINITY )
-    #     unless exists $param{span}->{set};
 
     my $self = {};
     if ($param{next} || $param{previous}) {
@@ -133,11 +245,13 @@ sub from_recurrence {
         $self->{current} =  $param{current}  if $param{current};
         $self->{previous} = $param{previous} if $param{previous};
 
-        $self->{set} = _recurrence_callback( 
-            Set::Infinite->new( NEG_INFINITY, INFINITY ), 
-            $param{next}, 
-            $param{current},
-            $param{previous} );
+        $self->{set} = Set::Infinite::_recurrence->
+            new( NEG_INFINITY, INFINITY )->
+            _recurrence(
+                $param{next}, 
+                $param{current},
+                $param{previous} 
+            );
         bless $self, $class;
 
         return $self->intersection( $param{span} )
@@ -158,9 +272,10 @@ sub from_datetimes {
                          }
                        );
     my $self = {};
-    $self->{set} = Set::Infinite->new;
+    $self->{set} = Set::Infinite::_recurrence->new;
     # possible optimization: sort dates and use "push"
-    for( @{ $args{dates} } ) {
+    for( @{ $args{dates} } ) 
+    {
         $self->{set} = $self->{set}->union( $_->clone );
     }
 
@@ -171,143 +286,13 @@ sub from_datetimes {
 sub empty_set {
     my $class = shift;
 
-    return bless { set => Set::Infinite->new }, $class;
+    return bless { set => Set::Infinite::_recurrence->new }, $class;
 }
 
 sub clone { 
     my $self = bless { %{ $_[0] } }, ref $_[0];
     $self->{set} = $_[0]->{set}->copy;
     return $self;
-}
-
-# _recurrence_callback( 
-#     $set_infinite, \&callback_next, \&callback_current, \&callback_previous )
-#
-# Internal function
-#
-# Generates "recurrences" from a callback.
-# These recurrences are simple lists of dates.
-#
-# this is an internal callback - it is not an object method!
-# Used by: new( next => )
-#
-# The recurrence generation is based on an idea from Dave Rolsky.
-#
-sub _recurrence_callback {
-    # warn "_recurrence args: @_";
-    # note: $_[0] is a Set::Infinite object
-    my ( $set, $callback_next, $callback_current, $callback_previous ) = @_;    
-
-    # test for the special case when we have an infinite recurrence
-
-    if ($set->min == NEG_INFINITY ||
-        $set->max == INFINITY) {
-
-        return _setup_infinite_recurrence( 
-            $set, $callback_next, $callback_current, $callback_previous );
-    }
-    else {
-
-        return _setup_finite_recurrence( 
-            $set, $callback_next, $callback_current, $callback_previous );
-    }
-}
-
-sub _setup_infinite_recurrence {
-    my ( $set, $callback_next, $callback_current, $callback_previous ) = @_;
-
-    # warn "_recurrence called with inf argument";
-
-    # these should never happen, but we have to test anyway:
-    return $set->new( NEG_INFINITY ) 
-        if $set->min == NEG_INFINITY && $set->max == NEG_INFINITY;
-    return $set->new( INFINITY ) 
-        if $set->min == INFINITY && $set->max == INFINITY;
-
-    # return an internal "_function", such that we can 
-    # backtrack and solve the equation later.
-    $set = $set->copy;  # prevent circular references
-    my $func = $set->_function( 'iterate', 
-        sub {
-            _recurrence_callback( 
-               $_[0], $callback_next, $callback_current, $callback_previous );
-        }
-    );
-
-    # -- begin hack
-
-    # This code will be removed, as soon as Set::Infinite can deal 
-    # directly with this type of set generation.
-    # Since this is a Set::Infinite "custom" function, the iterator 
-    # will need some help.
-
-    # Here we are setting up the first() cache directly,
-    # because Set::Infinite has no hint of how to do it.
-    if ($set->min == INFINITY || $set->min == NEG_INFINITY) {
-        # warn "RECURR: start in ".$set->min;
-        # $func->copy make it recursive without circular references
-        $func->{first} = [ $set->new( $set->min ), $func->copy ];
-    }
-    else {
-        my $min = $set->min;
-        $min = $callback_current->( $min->clone );
-        $func->{min} = [ $min, 1 ];
-
-        my $next = $callback_next->( $min->clone );
-        my $next_set = $set->intersection( $next->clone, INFINITY );
-
-        my @first = ( 
-            $set->new( $min->clone ), 
-            $next_set->_function( 'iterate',
-                sub {
-                    _recurrence_callback( 
-                        $_[0], $callback_next, $callback_current, $callback_previous );
-                } ) );
-        $func->{first} = \@first;
-    }
-
-    # Now are setting up the last() cache directly
-    if ($set->max == INFINITY || $set->max == NEG_INFINITY) {
-        # warn "RECURR: end in ".$set->max;
-        # $func->copy make it recursive without circular references
-        $func->{last} = [ $set->new( $set->max ), $func->copy ];
-    }
-    else {
-        my $max = $set->max;
-        $max = $callback_current->( $max->clone );
-        $max = $callback_previous->( $max->clone ) unless $max == $set->max;
-        $func->{max} = [ $max, 1 ];
- 
-        my $previous = $callback_previous->( $max->clone );
-        my $previous_set = $set->intersection( NEG_INFINITY, $previous->clone );
-        my @last = (
-            $set->new( $max->clone ),
-            $previous_set->_function( 'iterate',
-                sub {
-                    _recurrence_callback( 
-                        $_[0], $callback_next, $callback_current, $callback_previous );
-                } ) );
-        $func->{last} = \@last;
-    }
-
-    # -- end hack
-
-    return $func;
-}
-
-sub _setup_finite_recurrence {
-    my ( $set, $callback_next, $callback_current, $callback_previous ) = @_;
-    # this is a finite recurrence - generate it.
-    my $min = $set->min;
-    return unless defined $min;
-    my $max = $set->max;
-    $min = $callback_current->( $min );
-    my $result = $set->new();
-    while (1) {
-        return $result if ! defined $min || $min > $max;
-        $result = $result->union( $min->clone );
-        $min = $callback_next->( $min );
-    };
 }
 
 # default callback that returns the 
@@ -330,36 +315,30 @@ sub _callback_previous {
     my $previous = $value->clone;
 
     my $freq = $callback_info->{freq};
-    unless (defined $freq) { 
+    unless (defined $freq) 
+    { 
         # This is called just once, to setup the recurrence frequency
-        # The program will warn() if it this is not working properly.
-
         my $previous = $callback_next->( $value->clone );
         my $next =     $callback_next->( $previous->clone );
-
         $freq = 2 * ( $previous - $next );
-
         # save it for future use with this same recurrence
         $callback_info->{freq} = $freq;
-
-        # my @freq = $freq->deltas;
-        # warn "freq 2 is @freq";
     }
 
     $previous->add_duration( $freq );  
-    # warn "callback is $callback";
-    # warn "current is ".$value->ymd." previous is ".$previous->ymd;
     $previous = $callback_next->( $previous );
-    # warn " previous got ".$previous->ymd;
-    if ($previous >= $value) {
-        # This error might happen if the event frequency oscilates widely
+    if ($previous >= $value) 
+    {
+        # This error happens if the event frequency oscilates widely
         # (more than 100% of difference from one interval to next)
         my @freq = $freq->deltas;
         print STDERR "_callback_previous: Delta components are: @freq\n";
-        warn "_callback_previous: iterator can't find a previous value, got ".$previous->ymd." before ".$value->ymd;
+        warn "_callback_previous: iterator can't find a previous value, got ".
+            $previous->ymd." before ".$value->ymd;
     }
     my $previous1;
-    while (1) {
+    while (1) 
+    {
         $previous1 = $previous->clone;
         $previous = $callback_next->( $previous );
         return $previous1 if $previous >= $value;
@@ -386,12 +365,14 @@ sub next {
     my $self = shift;
     return undef unless ref( $self->{set} );
 
-    if ( @_ ) {
+    if ( @_ ) 
+    {
         if ( $self->{next} )
         {
             return $self->{next}->( $_[0]->clone );
         }
-        else {
+        else 
+        {
             my $span = DateTime::Span->from_datetimes( after => $_[0] );
             return $self->intersection( $span )->next;
         }
@@ -409,12 +390,14 @@ sub previous {
     my $self = shift;
     return undef unless ref( $self->{set} );
 
-    if ( @_ ) {
+    if ( @_ ) 
+    {
         if ( exists $self->{previous} ) 
         {
             return $self->{previous}->( $_[0]->clone );
         }
-        else {
+        else 
+        {
             my $span = DateTime::Span->from_datetimes( before => $_[0] );
             return $self->intersection( $span )->previous;
         }
@@ -465,18 +448,24 @@ sub as_list {
     $span = delete $args{span};
     $span = DateTime::Span->new( %args ) if %args;
 
-    my $set = $self->{set};
-    $set = $set->intersection( $span->{set} ) if $span;
+    my $set = $self->clone;
+    $set = $set->intersection( $span ) if $span;
 
-    return undef if $set->is_too_complex;  # undef = no begin/end
-    return if $set->is_null;  # nothing = empty
+    # Note: removing this line means we may end up in an infinite loop!
+    return undef if $set->{set}->is_too_complex;  # undef = no begin/end
+ 
+    # return if $set->{set}->is_null;  # nothing = empty
     my @result;
     # we should extract _copies_ of the set elements,
     # such that the user can't modify the set indirectly
-    for ( @{ $set->{list}  } ) {
-        push @result, $_->{a}->clone
-            if ref( $_->{a} );   # we don't want to return INFINITY value
-    }
+
+    my $iter = $set->iterator;
+    while ( my $dt = $iter->next ) 
+    {
+        push @result, $dt
+            if ref( $dt );   # we don't want to return INFINITY value
+    };
+
     return @result;
 }
 
@@ -543,14 +532,16 @@ sub intersection {
 sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $class->from_datetimes( dates => [ $set2 ] ) 
+        unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
 
 sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $class->from_datetimes( dates => [ $set2 ] ) 
+        unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
 
@@ -558,7 +549,8 @@ sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->empty_set();
-    $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $class->from_datetimes( dates => [ $set2 ] ) 
+        unless $set2->can( 'union' );
 
     if ( $set1->{next} && $set2->{next} )
     {
@@ -595,12 +587,15 @@ sub complement {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->empty_set();
-    if (defined $set2) {
-        $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    if (defined $set2) 
+    {
+        $set2 = $class->from_datetimes( dates => [ $set2 ] ) 
+            unless $set2->can( 'union' );
         # TODO: "compose complement";
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
     }
-    else {
+    else 
+    {
         $tmp->{set} = $set1->{set}->complement;
     }
     bless $tmp, 'DateTime::SpanSet' unless $_[1];
@@ -609,31 +604,30 @@ sub complement {
 
 sub min { 
     my $tmp = $_[0]->{set}->min;
-    # ref($tmp) ? $tmp->clone : $tmp; 
-    if ( ref($tmp) ) {
+    if ( ref($tmp) ) 
+    {
         $tmp = $tmp->clone;
     } 
     else
     {
-        $tmp = new DateTime::Infinite::Past if defined $tmp && $tmp == NEG_INFINITY;
+        $tmp = new DateTime::Infinite::Past 
+            if defined $tmp && $tmp == NEG_INFINITY;
     }
     $tmp;
 }
 
 sub max { 
-    # my $tmp = $_[0]->{set}->max;
-    # ref($tmp) ? $tmp->clone : $tmp; 
-
     my $tmp = $_[0]->{set}->max;
-    if ( ref($tmp) ) {
+    if ( ref($tmp) ) 
+    {
         $tmp = $tmp->clone;
     } 
     else
     {
-        $tmp = new DateTime::Infinite::Future if defined $tmp && $tmp == INFINITY;
+        $tmp = new DateTime::Infinite::Future 
+            if defined $tmp && $tmp == INFINITY;
     }
     $tmp;
-
 }
 
 # returns a DateTime::Span
@@ -644,10 +638,9 @@ sub span {
 }
 
 # unsupported Set::Infinite methods
-
-sub size { die "size() not supported - would be zero!"; }
-sub offset { die "offset() not supported"; }
-sub quantize { die "quantize() not supported"; }
+# sub size { die "size() not supported - would be zero!"; }
+# sub offset { die "offset() not supported"; }
+# sub quantize { die "quantize() not supported"; }
 
 1;
 
