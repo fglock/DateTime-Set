@@ -151,7 +151,7 @@ use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use DateTime 0.12;  # this is for version checking only
 use DateTime::Duration;
 use DateTime::Span;
-use Set::Infinite 0.49;  
+use Set::Infinite 0.50;  
 
 use vars qw( $VERSION $neg_nanosecond );
 
@@ -308,7 +308,7 @@ sub clone {
 }
 
 # default callback that returns the 
-# "current" value in a callback recurrence.
+# "current" value (greater or equal) in a callback recurrence.
 # Does not change $_[0]
 #
 sub _callback_current {
@@ -492,7 +492,7 @@ sub closest {
 
 
 sub as_list {
-    my ($self) = shift;
+    my $self = shift;
     return undef unless ref( $self->{set} );
 
     my %args = @_;
@@ -541,10 +541,9 @@ sub intersection {
         return $class->from_recurrence(
                   next =>  sub {
                                # intersection of parent 'next' callbacks
-                               my $arg = shift;
                                my ($next1, $next2);
                                my $iterate = 0;
-                               $next2 = $set2->{next}->( $arg->clone );
+                               $next2 = $set2->{next}->( $_[0]->clone );
                                while(1) { 
                                    $next1 = $set1->{current}->( $next2 );
                                    return $next1 if $next1 == $next2;
@@ -699,11 +698,6 @@ sub count {
     return undef if $set->{set}->is_too_complex;
     return $set->{set}->count;
 }
-
-# unsupported Set::Infinite methods
-# sub size { die "size() not supported - would be zero!"; }
-# sub offset { die "offset() not supported"; }
-# sub quantize { die "quantize() not supported"; }
 
 1;
 

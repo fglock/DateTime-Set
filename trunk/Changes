@@ -1,5 +1,6 @@
 Changes for DateTime::Set
 
+- faster recurrence intersection
 - count returns 'undef' for infinite sets.
 
 0.09    2003-08-18

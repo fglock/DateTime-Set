@@ -12,7 +12,6 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
 - discuss functions like 
     is_infinite
     is_empty 
-    cardinality ?
 
 - implement faster DT::Set::complement(), 
   using 'function composition'
@@ -24,4 +23,6 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
 
 - tests for DT::Span and DT::SpanSet 'duration()'
 - duration() returns 'Inf' scalar - should be a DT::Duration::Infinite
+
+- rewrite intersection of recurrences 'previous' function
 
