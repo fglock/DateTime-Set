@@ -1,7 +1,7 @@
 use strict;
 
 use Test::More;
-plan tests => 17;
+plan tests => 19;
 
 use DateTime;
 use DateTime::Duration;
@@ -151,6 +151,31 @@ ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
 
     $res = span_str( $iter->next );
     ok( $res eq '1810-09-21T00:00:00..1810-09-22T00:00:00',
+        "start_set == end_set recurrence works properly - got $res" );
+}
+
+# set_and_duration
+{
+    my $start_set = DateTime::Set->from_recurrence(
+       next  => sub { $_[0]->truncate( to => 'day' )
+                           ->add( days => 1 ) },
+       span => new DateTime::Span(
+                   start => new DateTime( year =>  '1810',
+                                          month => '9',
+                                          day =>   '20' )
+               ),
+    );
+    my $span_set = DateTime::SpanSet->from_set_and_duration(
+                       set => $start_set, hours => 1 );
+
+    my $iter = $span_set->iterator;
+
+    $res = span_str( $iter->next );
+    ok( $res eq '1810-09-20T00:00:00..1810-09-20T01:00:00',
+        "start_set == end_set recurrence works properly - got $res" );
+
+    $res = span_str( $iter->next );
+    ok( $res eq '1810-09-21T00:00:00..1810-09-21T01:00:00',
         "start_set == end_set recurrence works properly - got $res" );
 }
 
