@@ -8,6 +8,7 @@ use strict;
 
 use Set::Infinite;
 use DateTime::Duration;
+use Params::Validate qw( validate SCALAR BOOLEAN OBJECT );
 
 use vars qw( @ISA $VERSION );
 @ISA = qw( Set::Infinite );
@@ -71,7 +72,7 @@ sub create_recurrence {
     my $duration = new DateTime::Duration( $parm{time_unit} => 1 );
 
     # round the start time according to the time_unit
-    $this->set( %{ $set{ $parm{time_unit} } )
+    $this->set( %{ $set{ $parm{time_unit} } } );
 
     # $this->set(  ) if $parm{time_unit} eq 'seconds';
     if ($parm{time_unit} eq 'weeks') {
