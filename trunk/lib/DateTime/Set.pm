@@ -85,7 +85,7 @@ sub from_recurrence {
     $param{previous} = $args{previous}  and  delete $args{previous};
     $param{span} = $args{span}  and  delete $args{span};
     # they might be specifying a span using begin / end
-    $param{span} = new DateTime::Span( %args ) if keys %args;
+    $param{span} = DateTime::Span->from_datetimes( %args ) if keys %args;
     # otherwise, it is unbounded
     $param{span}->{set} = Set::Infinite->new( NEG_INFINITY, INFINITY )
         unless exists $param{span}->{set};
@@ -358,7 +358,7 @@ sub next {
             return $self->{next}->( $_[0]->clone );
         }
         else {
-            my $span = new DateTime::Span( after => $_[0] );
+            my $span = DateTime::Span->from_datetimes( after => $_[0] );
             return $self->intersection( $span )->next;
         }
     }
@@ -381,7 +381,7 @@ sub previous {
             return $self->{previous}->( $_[0]->clone );
         }
         else {
-            my $span = new DateTime::Span( before => $_[0] );
+            my $span = DateTime::Span->from_datetimes( before => $_[0] );
             return $self->intersection( $span )->previous;
         }
     }
@@ -416,7 +416,7 @@ sub as_list {
     my %args = @_;
     my $span;
     $span = delete $args{span};
-    $span = DateTime::Span->new( @_ ) if @_;
+    $span = DateTime::Span->from_datetimes( %args ) if %args;
 
     my $set = $self->{set};
     $set = $set->intersection( $span ) if $span;
