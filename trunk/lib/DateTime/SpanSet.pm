@@ -10,6 +10,9 @@ use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use Set::Infinite '0.44';
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
+use constant INFINITY     =>       100 ** 100 ** 100 ;
+use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
+
 sub from_spans {
     my $class = shift;
     my %args = validate( @_,
@@ -34,7 +37,23 @@ sub from_set_and_duration {
 }
 
 sub from_sets {
-    die "from_sets() not implemented yet";
+    my $class = shift;
+    my %args = validate( @_,
+                         { start_set =>
+                           { can => 'union',
+                             optional => 0,
+                           },
+                           end_set =>
+                           { can => 'union',
+                             optional => 0,
+                           },
+                         }
+                       );
+    my $self;
+    $self->{set} = $args{start_set}->{set}->until( 
+                   $args{end_set}->{set} );
+    bless $self, $class;
+    return $self;
 }
 
 sub empty_set {

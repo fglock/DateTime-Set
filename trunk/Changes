@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.00_22
+- implemented DateTime::SpanSet->from_sets
+
 0.00_21
 
 - Many doc tweaks.  Dave Rolsky
