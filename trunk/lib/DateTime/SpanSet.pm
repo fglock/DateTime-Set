@@ -12,7 +12,7 @@ $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( @ISA $VERSION );
 
-sub new {
+sub from_spans {
     my $class = shift;
     my %args = validate( @_,
                          { spans =>
@@ -29,7 +29,7 @@ sub new {
     return $self;
 }
 
-*from_spans = \&new;
+*new = \&from_spans;
 
 sub from_set_and_duration {
     die "from_set_and_duration() not implemented yet";
@@ -178,47 +178,48 @@ DateTime::SpanSet - set of DateTime spans
 
 =head1 DESCRIPTION
 
-DateTime::SpanSet is a module for sets of date/time spans or time-ranges. 
+DateTime::SpanSet is a class that represents sets of datetime spans.
+An example would be a recurring meeting that occurs from 13:00-15:00
+every Friday.
 
 =head1 METHODS
 
 =over 4
 
-=item * new 
-
-Creates a new span set. 
-
-   $dates = DateTime::SpanSet->new( spans => [ $dt_span ] );  
-
-=back
-
 =item * from_spans
 
-Creates a new span set, from C<DateTime::Span> objects.
+Creates a new span set from one or more C<DateTime::Span> objects.
 
-   $dates = DateTime::SpanSet->from_spans( spans => [ $dt_span ] ); 
+   $dates = DateTime::SpanSet->from_spans( spans => [ $dt_span ] );
 
 =item * from_set_and_duration
 
-Creates a new span set, from C<DateTime::Set> objects, with a duration.
+Creates a new span set from one or more C<DateTime::Set> objects and a
+duration.
 
-The duration might be a C<DateTime::Duration> object, or duration scalars such as C<days>.
+The duration can be a C<DateTime::Duration> object, or the parameters
+to create a new C<DateTime::Duration> object, such as "days",
+"months", etc.
 
    $dates = DateTime::SpanSet->from_set_and_duration( set => $dt_set, days => 1 );
 
 =item * from_sets
 
-Creates a new span set, from two C<DateTime::Set> objects. 
+Creates a new span set from two C<DateTime::Set> objects.
 
-One set defines the I<starting dates>, and the other defines the I<end dates>.
+One set defines the I<starting dates>, and the other defines the I<end
+dates>.
 
    $dates = DateTime::SpanSet->from_sets( start_set => $dt_set1, end_set => $dt_set2 );
 
-The spans have the starting date C<closed>, and the end date C<open>, like in C<[$dt1, $dt2)>.
+The spans have the starting date C<closed>, and the end date C<open>,
+like in C<[$dt1, $dt2)>.
 
-If an end date comes without a starting date before it, then it defines a span like C<(-inf, $dt)>.
+If an end date comes without a starting date before it, then it
+defines a span like C<(-inf, $dt)>.
 
-If a starting date comes without an end date after it, then it defines a span like C<[$dt, inf)>.
+If a starting date comes without an end date after it, then it defines
+a span like C<[$dt, inf)>.
 
 =item * min / max
 
@@ -226,13 +227,13 @@ First or last dates in the set.
 
 =item * size
 
-The total size of the set, as a DateTime::Duration.
+The total size of the set, as a C<DateTime::Duration> object.
 
 This is the sum of the durations of all spans.
 
 =item * span
 
-The total span of the set, as a DateTime::Span.
+The total span of the set, as a C<DateTime::Span> object.
 
 =item * union / intersection / complement
 
