@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 23;
+plan tests => 25;
 
 use DateTime;
 use DateTime::Duration;
@@ -66,6 +66,14 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
     $res = span_str( $iter->next );
     is( $res, '1813-12-23T00:00:00..'.INFINITY,
         "got $res" );
+
+    # as_list
+    my @spans = $s1->as_list;
+    isa_ok ( $spans[0], 'DateTime::Span' );
+    $res = span_str( $spans[0] );
+    is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
+        "got $res" );
+
 }
 
 # special case: end == start

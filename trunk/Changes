@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- implemented DateTime::SpanSet::as_list
+
 0.1204  2003-10-10
 - DateTime::SpanSet and DateTime::Span inherit DateTime::Set $VERSION
 - Trying to subtract infinity from a datetime is not fatal in duration()

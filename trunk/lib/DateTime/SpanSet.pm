@@ -149,6 +149,36 @@ sub previous {
     return $return;
 }
 
+sub as_list {
+    my $self = shift;
+    return undef unless ref( $self->{set} );
+
+    my %args = @_;
+    my $span;
+    $span = delete $args{span};
+    $span = DateTime::Span->new( %args ) if %args;
+
+    my $set = $self->clone;
+    $set = $set->intersection( $span ) if $span;
+
+    # Note: removing this line means we may end up in an infinite loop!
+    return undef if $set->{set}->is_too_complex;  # undef = no begin/end
+
+    # return if $set->{set}->is_null;  # nothing = empty
+    my @result;
+    # we should extract _copies_ of the set elements,
+    # such that the user can't modify the set indirectly
+
+    my $iter = $set->iterator;
+    while ( my $dt = $iter->next )
+    {
+        push @result, $dt
+            if ref( $dt );   # we don't want to return INFINITY value
+    };
+
+    return @result;
+}
+
 # Set::Infinite methods
 
 sub intersection {
@@ -341,6 +371,21 @@ Also available as C<size()>.
 =item * span
 
 The total span of the set, as a C<DateTime::Span> object.
+
+=item * as_list
+
+Returns a list of C<DateTime::Span> objects.
+
+  my @dt = $set->as_list( span => $span );
+
+Just as with the C<iterator()> method, the C<as_list()> method can be
+limited by a span.
+
+If a set is specified as a recurrence and has no
+fixed begin and end datetimes, then C<as_list> will return C<undef>
+unless you limit it with a span.  Please note that this is explicitly
+not an empty list, since an empty list is a valid return value for
+empty sets!
 
 =item * union / intersection / complement
 
