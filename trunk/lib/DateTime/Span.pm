@@ -75,24 +75,24 @@ sub from_datetimes {
     return $self;
 }
 
-*new = \&from_datetimes;
-
 sub from_datetime_and_duration {
-    my $self = shift;
+    my $class = shift;
     my %args = @_;
-    my %date;
+
+    my $key;
+    my $dt;
     # extract datetime parameters
     for ( qw( start end before after ) ) {
-        $date{$_} = delete $args{$_} if exists $args{$_};
+        if ( exists $args{$_} ) {
+           $key = $_;
+           $dt = delete $args{$_};
+       }
     }
-    my ($key) = keys %date;
-    my $dt = $date{$key};
+
     # extract duration parameters
-    my ($duration_key) = keys %args;
     my $dt_duration;
-    # warn "args: $key - $duration_key - @{[ %args ]}";
-    if ($duration_key eq 'duration') {
-        $dt_duration = $args{$duration_key};
+    if ( exists $args{duration} ) {
+        $dt_duration = $args{duration};
     }
     else {
         $dt_duration = DateTime::Duration->new( %args );
@@ -113,7 +113,26 @@ sub from_datetime_and_duration {
         $other_key = 'before' if $key eq 'start';
         $key = 'start';
     }
-    return $self->new( $key => $dt, $other_key => $other_date ); 
+    return $class->new( $key => $dt, $other_key => $other_date ); 
+}
+
+# This method is intentionally not documented.  It's really only for
+# use by ::Set and ::SpanSet's as_list() and iterator() methods.
+sub new {
+    my $class = shift;
+    my %args = @_;
+
+    # If we find anything _not_ appropriate for from_datetimes, we
+    # assume it must be for durations, and call this constructor.
+    # This way, we don't need to hardcode the DateTime::Duration
+    # parameters.
+    foreach ( keys %args )
+    {
+        return $class->from_datetime_and_duration(%args)
+            unless /^(?:before|after|start|end)$/;
+    }
+
+    return $class->from_datetimes(%args);
 }
 
 sub clone { 
