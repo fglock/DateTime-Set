@@ -1,7 +1,7 @@
 use strict;
 
 use Test::More;
-plan tests => 4;
+plan tests => 6;
 
 use DateTime;
 use DateTime::Duration;
@@ -71,7 +71,32 @@ my $month_callback = sub {
 # create spanset by adding duration to recurrence
 #======================================================================
 
-# TODO
+{
+    # SPANSET FROM RECURRENCE AND DURATION
+
+    my $months = DateTime::Set->from_recurrence(
+        recurrence => $month_callback,
+    );
+
+    my $spans = DateTime::SpanSet->from_set_and_duration( 
+                 set => $months,
+                 duration => $dur 
+    );
+
+    $res = $spans->intersection(
+               new DateTime::Span( after => $t1 )
+           );
+    # this was written step-by-step to help debugging
+    my $first_span = $res->{set}->first;
+    $res = $first_span->min;
+    $res = $res->datetime if ref($res);
+    ok( $res eq '1810-09-01T00:00:00',
+        "min() - got $res" );
+    $res = $first_span->max;
+    $res = $res->datetime if ref($res);
+    ok( $res eq '1810-09-01T01:00:00',
+        "max() - got $res" );
+}
 
 1;
 
