@@ -1,15 +1,15 @@
+- Add support for first() into new methods.
 
 - Redefine Set::Infinite::Arithmetic hashes, to use DateTime
   functions instead of epoch-related internals.
   Actually, it might be better to redo the implementations
   of offset() and quantize()
 
-- Define the new API. Without offset/quantize it is 
-  almost impossible to do things like 'every wednesday'.
-  It can be done with the iterate() method, but it is
-  too difficult.
+- Define the new API. 
 
 - Make Set::Infinite::intersects() accept objects as
   parameters (it currently only accepts sets or scalars)
   Such that we can directly check a set against some date.
+
+- Move 'round' procedure from create_recurrence to DateTime.pm
 
