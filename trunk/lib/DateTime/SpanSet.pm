@@ -225,9 +225,9 @@ This method can be used to iterate over the date-spans in a set.
         print $dt->max->ymd;   # last date of span
     }
 
-The C<next()> returns C<undef> when there are no more datetimes in the
-iterator.  Obviously, if a set is specified as a recurrence and has no
-fixed end datetime, then it may never stop returning datetimes.  User
+The C<next()> returns C<undef> when there are no more spans in the
+iterator.  Obviously, if a span set is specified as a recurrence and
+has no fixed end, then it may never stop returning spans.  User
 beware!
 
 
