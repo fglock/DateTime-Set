@@ -867,10 +867,13 @@ This method can be used to change the C<locale> of a datetime set.
 
 =item * max
 
-The first and last datetimes in the set.  These methods may return
+The first and last C<DateTime> in the set.  These methods may return
 C<undef> if the set is empty.  It is also possible that these methods
 may return a C<DateTime::Infinite::Past> or C<DateTime::Infinite::Future> 
 object.
+
+These methods return just a I<copy> of the actual boundary value.
+If you modify the result, the set will not be modified.
 
 =item * span
 
