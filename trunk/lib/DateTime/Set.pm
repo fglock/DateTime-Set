@@ -8,17 +8,26 @@ use strict;
 use Carp;
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use DateTime 0.12;  # this is for version checking only
+use DateTime::Duration;
 use DateTime::Span;
 use Set::Infinite 0.49;  
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
-use vars qw( $VERSION );
+use vars qw( $VERSION $neg_nanosecond );
 
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
+
+BEGIN {
+    # This doesn't work - might be a DT::Duration bug
+    # $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
+
+    $neg_nanosecond = DateTime::Duration->new( nanoseconds => 0 );
+    $neg_nanosecond->{nanoseconds} = -1;
+}
 
 # _add_callback( $set_infinite, $datetime_duration )
 # Internal function
@@ -290,9 +299,8 @@ sub _setup_finite_recurrence {
 # Does not change $_[0]
 #
 sub _callback_current {
-    my ($value, $callback_next) = @_;
-    my $tmp = $value->clone->subtract( nanoseconds => 1 );
-    return $callback_next->( $tmp );
+    # ($value, $callback_next)
+    return $_[1]->( $_[0] + $neg_nanosecond );
 }
 
 # default callback that returns the 

@@ -1,3 +1,5 @@
+- remove negative-duration hacks - check if there are bugs in DT::Duration!
+
 - intersection() function composition in DateTime::Set
     - check 'span'
     - add tests

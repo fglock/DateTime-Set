@@ -1,8 +1,7 @@
 Changes for DateTime::Set
 
+0.08     2003-05-30
 - recurrence set intersection uses 'current'
-
-0.08
 - fixed a number of methods in DateTime::Span, including intersection,
 intersects, contains, union, and complement, all of which called the
 non-existent DateTime::Set->new method.  Dave Rolsky.
