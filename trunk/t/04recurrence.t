@@ -41,8 +41,8 @@ $res = $res->ymd if ref($res);
 is( $res, '1810-09-01', 
     "min()" );
 $res = $months->max;
-$res = $res->ymd if ref($res);
-is( $res, INFINITY,
+# $res = $res->ymd if ref($res);
+is( ref($res), 'DateTime::Infinite::Future',
     "max()" );
 
 # "END"
@@ -51,8 +51,8 @@ $months = DateTime::Set->from_recurrence(
     end => $t1,  # 1810-08-22
 );
 $res = $months->min;
-$res = $res->ymd if ref($res);
-is( $res, NEG_INFINITY,
+# $res = $res->ymd if ref($res);
+is( ref($res), 'DateTime::Infinite::Past',
     "min()" );
 
 {

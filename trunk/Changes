@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+- small fix in DT::Set clone()
+- DateTime::Set uses DateTime infinity constants; 
+  max and min now return DateTime::Infinite::Future/Past objects.
+
 - DateTime::Span uses DateTime infinity constants; 
   max and min now return DateTime::Infinite::Future/Past objects.
   Docs update to explain 'max()' value when a span is built using 'before'.

@@ -175,9 +175,9 @@ sub empty_set {
 }
 
 sub clone { 
-    bless { 
-        set => $_[0]->{set}->copy,
-        }, ref $_[0];
+    my $self = bless { %{ $_[0] } }, ref $_[0];
+    $self->{set} = $_[0]->{set}->copy;
+    return $self;
 }
 
 # _recurrence_callback( 
@@ -337,25 +337,6 @@ sub _callback_previous {
         my $previous = $callback_next->( $value->clone );
         my $next =     $callback_next->( $previous->clone );
 
-my $FIXED = <<'___END_REMOVE';
-        $freq = $next - $previous;
-        # my %freq = $freq->deltas;
-        # $freq{$_} = - abs ( int( $freq{$_} * 2 ) ) for keys %freq; 
-
-        # TODO: don't use DT::Duration internals here.
-        # - find out why it doesn't work with normal multiplication.
-        for ( keys %$freq ) {
-            next if $_ eq 'eom_mode';
-            next if $_ eq 'sign';
-            $freq->{$_} = - abs ( int( $freq->{$_} * 2 ) );
-        }
-
-        # my @freq = %freq;
-        # warn "freq 1 is @freq";
-
-        # $freq = new DateTime::Duration( %freq );
-___END_REMOVE
-
         $freq = 2 * ( $previous - $next );
 
         # save it for future use with this same recurrence
@@ -376,11 +357,6 @@ ___END_REMOVE
         my @freq = $freq->deltas;
         print STDERR "_callback_previous: Delta components are: @freq\n";
         warn "_callback_previous: iterator can't find a previous value, got ".$previous->ymd." before ".$value->ymd;
-
-        # retry
-        # $previous->add_duration( 2 * $freq );
-        # $previous = $callback_next->( $previous );
-        # die "Still getting ".$previous->ymd if ($previous >= $value);
     }
     my $previous1;
     while (1) {
@@ -473,9 +449,6 @@ sub closest {
     my $dt1 = $self->current( $_[0] );
     my $dt2 = $self->next( $_[0] );
 
-    # removed - in order to avoid duration comparison
-    # return $dt1 if ( $_[0] - $dt1 ) <= ( $dt2 - $_[0] );
-
     my $delta = $_[0] - $dt1;
     return $dt1 if ( $dt2 - $delta ) >= $_[0];
 
@@ -516,13 +489,6 @@ sub intersection {
     my $class = ref($set1);
     my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
-
-    # It looks like this is not worth optimizing - it never happens in tests
-    # if ( ( $set1->{next} && $set2->{method} eq 'intersection' ) ||
-    #      ( $set2->{next} && $set1->{method} eq 'intersection' ) )
-    # {
-    #     warn "optimize this!";
-    # }
 
     # optimization - use function composition if both sets are recurrences
     if ( $set1->{next} && $set2->{next} ) 
@@ -643,12 +609,31 @@ sub complement {
 
 sub min { 
     my $tmp = $_[0]->{set}->min;
-    ref($tmp) ? $tmp->clone : $tmp; 
+    # ref($tmp) ? $tmp->clone : $tmp; 
+    if ( ref($tmp) ) {
+        $tmp = $tmp->clone;
+    } 
+    else
+    {
+        $tmp = new DateTime::Infinite::Past if defined $tmp && $tmp == NEG_INFINITY;
+    }
+    $tmp;
 }
 
 sub max { 
+    # my $tmp = $_[0]->{set}->max;
+    # ref($tmp) ? $tmp->clone : $tmp; 
+
     my $tmp = $_[0]->{set}->max;
-    ref($tmp) ? $tmp->clone : $tmp; 
+    if ( ref($tmp) ) {
+        $tmp = $tmp->clone;
+    } 
+    else
+    {
+        $tmp = new DateTime::Infinite::Future if defined $tmp && $tmp == INFINITY;
+    }
+    $tmp;
+
 }
 
 # returns a DateTime::Span
@@ -841,7 +826,7 @@ to leave the local time untouched.
 
 The first and last dates in the set.  These methods may return
 C<undef> if the set is empty.  It is also possible that these methods
-may return a scalar containing infinity or negative infinity.
+may return a C<DateTime::Infinite::Past> or C<DateTime::Infinite::Future> object.
 
 =item * span
 
