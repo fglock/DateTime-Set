@@ -8,7 +8,7 @@ use strict;
 use Carp;
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use DateTime::Span;
-use Set::Infinite '0.44_04';
+use Set::Infinite 0.45;   # 0.44_04 would be ok, but it is a devel version
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( $VERSION );
@@ -314,7 +314,9 @@ sub _setup_finite_recurrence {
     my $min = $set->min;
     return unless defined $min;
 
-    $min = $min->clone->subtract( seconds => 1 );
+    # start at 'less-than-min', because next(min) would return 
+    # 'bigger-than-min', and we want 'bigger-or-equal-to-min'
+    $min = $min->clone->subtract( nanoseconds => 1 );
 
     my $max = $set->max;
     # warn "_recurrence_callback called with ".$min->ymd."..".$max->ymd;
