@@ -348,7 +348,7 @@ sub next {
     if ( @_ ) {
         if ( exists $self->{next} )
         {
-            return $self->{next} ( $_[0]->clone );
+            return $self->{next}->( $_[0]->clone );
         }
         else {
             my $span = new DateTime::Span( after => $_[0] );
@@ -371,7 +371,7 @@ sub previous {
     if ( @_ ) {
         if ( exists $self->{previous} ) 
         {
-            return $self->{previous} ( $_[0]->clone );
+            return $self->{previous}->( $_[0]->clone );
         }
         else {
             my $span = new DateTime::Span( before => $_[0] );
