@@ -173,7 +173,7 @@ sub start_is_open {
     return $open;
 }
 
-sub start_is_close { $_[0]->start_is_open ? 0 : 1 }
+sub start_is_closed { $_[0]->start_is_open ? 0 : 1 }
 
 sub end_is_open {
     # max_a returns info about the set boundary 
@@ -181,7 +181,7 @@ sub end_is_open {
     return $open;
 }
 
-sub end_is_close { $_[0]->end_is_open ? 0 : 1 }
+sub end_is_closed { $_[0]->end_is_open ? 0 : 1 }
 
 
 # span == $self
@@ -272,7 +272,7 @@ span.
 
 First or last dates in the span.
 
-=item * start_is_close / end_is_close
+=item * start_is_closed / end_is_closed
 
 Return true if the first or last dates belong to the span ( begin <= x <= end ).
 
