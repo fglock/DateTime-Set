@@ -309,7 +309,7 @@ C<DateTime::Span>, or C<DateTime::SpanSet> object as an argument.
 
 =item * iterator / next
 
-This method can be used to iterate over the date-spans in a set.
+This method can be used to iterate over the spans in a set.
 
     $iter = $spanset->iterator;
     while ( $dt = $iter->next ) {
@@ -318,16 +318,19 @@ This method can be used to iterate over the date-spans in a set.
         print $dt->max->ymd;   # last date of span
     }
 
-The C<iterator()> method can optionally take parameters to control the
-range of the iteration.  These are C<start> or C<after>, and C<end> or
-C<before> (see C<DateTime::Span->from_datetime()> for full details).
-If a parameter is ommitted then there is no restriction on that side.
-So specifying only C<start> may iterate forever.
+The boundaries of the iterator can be limited by passing it a C<span>
+parameter.  This should be a C<DateTime::Span> object which delimits
+the iterator's boundaries.  Optionally, instead of passing an object,
+you can pass any parameters that would work for one of the
+C<DateTime::Span> class's constructors, and an object will be created
+for you.
 
-The C<next()> method returns C<undef> when there are no more spans in
-the iterator.  Obviously, if a span set is specified as a recurrence
-and has no fixed end, then it may never stop returning spans.  User
-beware!
+Obviously, if the span you specify does is not restricted both at the
+start and end, then your iterator may iterate forever, depending on
+the nature of your set.  User beware!
+
+The C<next()> method will return C<undef> when there are no more
+datetimes in the iterator.
 
 =head1 SUPPORT
 
