@@ -276,10 +276,11 @@ sub _setup_finite_recurrence {
 
     # start at 'less-than-min', because next(min) would return 
     # 'bigger-than-min', and we want 'bigger-or-equal-to-min'
-    # $min = $min->clone->subtract( nanoseconds => 1 );
+    $min = $min->clone->subtract( nanoseconds => 1 );
 
     # TODO: this should work !!!
-    $min = $callback_previous->( $min->clone );
+    # This gives an error when the set doesn't have a 'previous' value
+    # $min = $callback_previous->( $min->clone );
 
     my $max = $set->max;
     # warn "_recurrence_callback called with ".$min->ymd."..".$max->ymd;
@@ -289,8 +290,9 @@ sub _setup_finite_recurrence {
         # warn " generate from ".$min->ymd;
         $min = $callback_next->( $min );
         # warn " generate got ".$min->ymd;
-        $result = $result->union( $min->clone );
-    } while ( $min <= $max );
+        $result = $result->union( $min->clone )
+            if defined $min;
+    } while ( defined $min && $min <= $max );
 
     return $result;
 }
@@ -340,7 +342,14 @@ sub _callback_previous {
     if ($previous >= $value) {
         # This error might happen if the event frequency oscilates widely
         # (more than 100% of difference from one interval to next)
-        warn "_callback_previous iterator can't find a previous value, got ".$previous->ymd." before ".$value->ymd;
+        my @freq = $freq->deltas;
+        print STDERR "_callback_previous: Delta components are: @freq\n";
+        warn "_callback_previous: iterator can't find a previous value, got ".$previous->ymd." before ".$value->ymd;
+
+        # retry
+        # $previous->add_duration( 2 * $freq );
+        # $previous = $callback_next->( $previous );
+        # die "Still getting ".$previous->ymd if ($previous >= $value);
     }
     my $previous1;
     while (1) {
