@@ -13,3 +13,5 @@ t/04recurrence.t
 t/05iterator.t
 t/06backtrack.t
 lib/DateTime/Set.pm
+lib/DateTime/Span.pm
+
