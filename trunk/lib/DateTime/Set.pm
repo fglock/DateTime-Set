@@ -800,6 +800,10 @@ and holidays.
 
 Creates a new empty set.
 
+=item * clone
+
+This object method returns a replica of the given object.
+
 =item * add_duration( $duration )
 
     $dtd = new DateTime::Duration( year => 1 );

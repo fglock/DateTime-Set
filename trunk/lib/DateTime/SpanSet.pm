@@ -292,6 +292,10 @@ a span like C<[$dt, inf)>.
 
 Creates a new empty set.
 
+=item * clone
+
+This object method returns a replica of the given object.
+
 =item * set_time_zone( $tz )
 
 This method accepts either a time zone object or a string that can be

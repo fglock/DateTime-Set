@@ -352,6 +352,10 @@ Creates a new span.
 
 The new "end of the set" is I<open> by default.
 
+=item * clone
+
+This object method returns a replica of the given object.
+
 =item * set_time_zone( $tz )
 
 This method accepts either a time zone object or a string that can be

@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+- added method set_time_zone()
+- clone() is documented
+
 0.08     2003-05-30
 - recurrence set intersection uses 'current'
 - fixed a number of methods in DateTime::Span, including intersection,
