@@ -11,7 +11,7 @@ use DateTime::Span;
 use Set::Infinite '0.44_04';
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
-use vars qw( @ISA $VERSION );
+use vars qw( $VERSION );
 
 $VERSION = '0.00_20';
 

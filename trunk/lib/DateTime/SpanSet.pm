@@ -10,8 +10,6 @@ use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use Set::Infinite '0.44';
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
-use vars qw( @ISA $VERSION );
-
 sub from_spans {
     my $class = shift;
     my %args = validate( @_,
