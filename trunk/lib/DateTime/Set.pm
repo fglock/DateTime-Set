@@ -67,12 +67,6 @@ sub add_duration {
 # note: the constructors must clone its DateTime parameters, such that
 # the set elements become immutable
 
-sub new {
-    my $class = shift;
-    carp "new is deprecated" if @_;
-    $class->empty_set;
-}
-
 sub from_recurrence {
     my $class = shift;
     # note: not using validate() because this is too complex...
@@ -438,7 +432,7 @@ sub as_list {
 sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
     return $tmp;
@@ -447,7 +441,7 @@ sub intersection {
 sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
@@ -455,7 +449,7 @@ sub intersects {
 sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
@@ -463,7 +457,7 @@ sub contains {
 sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
     bless $tmp, 'DateTime::SpanSet' 
@@ -474,7 +468,7 @@ sub union {
 sub complement {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     if (defined $set2) {
         $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
