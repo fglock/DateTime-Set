@@ -43,12 +43,8 @@ sub new {
                        );
     my $self = {};
     my $set;
-    if ( ! exists( $args{start} ) && 
-         ! exists( $args{end} ) &&
-         ! exists( $args{after} ) &&
-         ! exists( $args{before} ) ) {
-        # no-args -> empty set
-        $set = Set::Infinite->new();
+    unless ( grep { exists $args{$_} } qw( start end after before ) ) {
+        die "No arguments given to DateTime::Span constructor\n";
     }
     else {
         my ( $start, $open_start, $end, $open_end );
@@ -232,8 +228,6 @@ These spans end, or start, in an imaginary 'forever' date:
    $dates = DateTime::Set->new( end => $dt2 );
    $dates = DateTime::Set->new( after => $dt1 );
    $dates = DateTime::Set->new( before => $dt2 );
-
-C<new()> without arguments creates an empty set.
 
 =back
 
