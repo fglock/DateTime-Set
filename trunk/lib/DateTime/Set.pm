@@ -542,18 +542,13 @@ sub intersection {
                   next =>  sub {
                                # intersection of parent 'next' callbacks
                                my $arg = shift;
-                               my ($tmp1, $next1, $next2);
+                               my ($next1, $next2);
                                my $iterate = 0;
+                               $next2 = $set2->{next}->( $arg->clone );
                                while(1) { 
-                                   $next1 = $set1->{next}->( $arg->clone );
-                                   $next2 = $set2->{current}->( $next1 );
+                                   $next1 = $set1->{current}->( $next2 );
                                    return $next1 if $next1 == $next2;
-                            
-                                   $next2 = $set2->{next}->( $arg );
-                                   $tmp1 = $set1->{current}->( $next2 );  
-                                   return $next2 if $next2 == $tmp1;
-                                  
-                                   $arg = $next1 > $next2 ? $next1 : $next2;
+                                   $next2 = $set2->{current}->( $next1 );
                                    return if $iterate++ == $max_iterate;
                                }
                            },
