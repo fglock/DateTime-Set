@@ -98,13 +98,22 @@ sub from_recurrence {
                     }
         }
 
+        unless ( $param{current} ) {
+            $param{current} =
+                sub {
+                    _callback_current ( $_[0], $param{next} );
+                    }
+        }
+
         $self->{next} = $param{next} if $param{next};
+        $self->{current} = $param{current} if $param{current};
         $self->{previous} = $param{previous} if $param{previous};
         $self->{span} = $param{span} if $param{span};
 
         $self->{set} = _recurrence_callback( 
             Set::Infinite->new( NEG_INFINITY, INFINITY ), 
             $param{next}, 
+            $param{current},
             $param{previous} );
         bless $self, $class;
 
@@ -148,7 +157,9 @@ sub clone {
         }, ref $_[0];
 }
 
-# _recurrence_callback( $set_infinite, \&callback_next, \&callback_previous )
+# _recurrence_callback( 
+#     $set_infinite, \&callback_next, \&callback_current, \&callback_previous )
+#
 # Internal function
 #
 # Generates "recurrences" from a callback.
@@ -162,7 +173,7 @@ sub clone {
 sub _recurrence_callback {
     # warn "_recurrence args: @_";
     # note: $_[0] is a Set::Infinite object
-    my ( $set, $callback_next, $callback_previous ) = @_;    
+    my ( $set, $callback_next, $callback_current, $callback_previous ) = @_;    
 
     # test for the special case when we have an infinite recurrence
 
@@ -170,16 +181,17 @@ sub _recurrence_callback {
         $set->max == INFINITY) {
 
         return _setup_infinite_recurrence( 
-            $set, $callback_next, $callback_previous );
+            $set, $callback_next, $callback_current, $callback_previous );
     }
     else {
 
-        return _setup_finite_recurrence( $set, $callback_next, $callback_previous );
+        return _setup_finite_recurrence( 
+            $set, $callback_next, $callback_current, $callback_previous );
     }
 }
 
 sub _setup_infinite_recurrence {
-    my ( $set, $callback_next, $callback_previous ) = @_;
+    my ( $set, $callback_next, $callback_current, $callback_previous ) = @_;
 
     # warn "_recurrence called with inf argument";
 
@@ -201,7 +213,8 @@ sub _setup_infinite_recurrence {
     $set = $set->copy;
     my $func = $set->_function( 'iterate', 
         sub {
-            _recurrence_callback( $_[0], $callback_next, $callback_previous );
+            _recurrence_callback( 
+               $_[0], $callback_next, $callback_current, $callback_previous );
         }
     );
 
@@ -229,7 +242,8 @@ sub _setup_infinite_recurrence {
             $set->new( $min->clone ), 
             $next_set->_function( 'iterate',
                 sub {
-                    _recurrence_callback( $_[0], $callback_next, $callback_previous );
+                    _recurrence_callback( 
+                        $_[0], $callback_next, $callback_current, $callback_previous );
                 } ) );
         # warn "RECURR: preparing first: $min ; $next; got @first";
         $func->{first} = \@first;
@@ -254,7 +268,8 @@ sub _setup_infinite_recurrence {
             $set->new( $max->clone ),
             $previous_set->_function( 'iterate',
                 sub {
-                    _recurrence_callback( $_[0], $callback_next, $callback_previous );
+                    _recurrence_callback( 
+                        $_[0], $callback_next, $callback_current, $callback_previous );
                 } ) );
         # warn "RECURR: preparing last: $max ; $previous; got @last";
         $func->{last} = \@last;
@@ -267,12 +282,15 @@ sub _setup_infinite_recurrence {
 }
 
 sub _setup_finite_recurrence {
-    my ( $set, $callback_next, $callback_previous ) = @_;
+    my ( $set, $callback_next, $callback_current, $callback_previous ) = @_;
 
     # this is a finite recurrence - generate it.
     # warn "RECURR: FINITE recurrence";
     my $min = $set->min;
     return unless defined $min;
+
+    # This is the same algorithm, but it fails some tests
+    # $min = $callback_current->( $min );
 
     # start at 'less-than-min', because next(min) would return 
     # 'bigger-than-min', and we want 'bigger-or-equal-to-min'
@@ -281,10 +299,22 @@ sub _setup_finite_recurrence {
     # TODO: this should work !!!
     # This gives an error when the set doesn't have a 'previous' value
     # $min = $callback_previous->( $min->clone );
+    # if ( ! defined $min ) {
+    #    $min = $callback_next->( NEG_INFINITY );
+    # }
 
     my $max = $set->max;
     # warn "_recurrence_callback called with ".$min->ymd."..".$max->ymd;
-    my $result = $set->new;
+
+    # $min = $callback_previous->( $callback_next->( $min->clone ) );
+    # my $result = $set->new( $min );
+    # return $result if $min >= $max;
+
+    # my $result = $set->new( $min );
+    # warn "return " if $min > $max;
+    # return $result if $min > $max;
+
+    my $result = $set->new();
 
     do {
         # warn " generate from ".$min->ymd;
@@ -295,6 +325,13 @@ sub _setup_finite_recurrence {
     } while ( defined $min && $min <= $max );
 
     return $result;
+}
+
+# returns the "current" value in a callback recurrence.
+sub _callback_current {
+    my ($value, $callback_next) = @_;
+    my $tmp = $value->clone->subtract( nanoseconds => 1 );
+    return $callback_next->( $tmp );
 }
 
 # returns the "previous" value in a callback recurrence.
