@@ -7,6 +7,7 @@ use DateTime;
 use DateTime::Duration;
 use DateTime::Set;
 use DateTime::SpanSet;
+use warnings;
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -42,7 +43,7 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
     # reverse with start/end dates
     $s1 = DateTime::SpanSet->from_sets( start_set => $end_set, end_set => $start_set );
 
-    my $iter = $s1->iterator;
+    $iter = $s1->iterator;
 
     $res = span_str( $iter->next );
     is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
@@ -142,7 +143,7 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
     my $iter = $s1->iterator;
 
     $res = span_str( $iter->next );
-    is( $res, '-inf..1810-09-20T00:00:00',
+    is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
         "start_set == end_set recurrence works properly - got $res" );
 
     $res = span_str( $iter->next );

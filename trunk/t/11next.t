@@ -5,6 +5,7 @@ plan tests => 4;
 
 use DateTime;
 use DateTime::Set;
+use warnings;
 
 #======================================================================
 # next method

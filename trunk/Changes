@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- added 'use warnings' in some tests, added DateTime 0.12 prereq.
+
 0.04
 - change "closest" code to avoid duration comparison
 

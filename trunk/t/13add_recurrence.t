@@ -8,6 +8,7 @@ use DateTime::Duration;
 use DateTime::SpanSet;
 use DateTime::Span;
 use DateTime::Set;
+use warnings;
 
 #======================================================================
 # add duration to recurrence

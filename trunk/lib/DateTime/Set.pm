@@ -7,13 +7,14 @@ package DateTime::Set;
 use strict;
 use Carp;
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
+use DateTime 0.12;  # this is for version checking only
 use DateTime::Span;
 use Set::Infinite 0.49;  
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( $VERSION );
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
