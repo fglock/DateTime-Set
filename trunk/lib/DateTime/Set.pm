@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1405';
+    $VERSION = '0.1406';
 }
 
 sub iterate {
@@ -27,6 +27,41 @@ sub iterate {
         sub {
             my $min = $_[0]->min;
             $callback->( $min->clone ) if ref($min);
+        }
+    );
+    $return;
+}
+
+sub map {
+    my ( $self, $callback ) = @_;
+    my $class = ref( $self );
+    my $return = $class->empty_set;
+    $return->{set} = $self->{set}->iterate( 
+        sub {
+            local $_ = $_[0]->min;
+            next unless ref( $_ );
+            $_ = $_->clone;
+            my @list = $callback->();
+            my $set = Set::Infinite::_recurrence->new();
+            $set = $set->union( $_ ) for @list;
+            return $set;
+        }
+    );
+    $return;
+}
+
+sub grep {
+    my ( $self, $callback ) = @_;
+    my $class = ref( $self );
+    my $return = $class->empty_set;
+    $return->{set} = $self->{set}->iterate( 
+        sub {
+            local $_ = $_[0]->min;
+            next unless ref( $_ );
+            $_ = $_->clone;
+            my $result = $callback->();
+            return $_ if $result;
+            return;
         }
     );
     $return;
@@ -88,7 +123,17 @@ sub from_recurrence {
             my $data = {};
             $param{previous} =
                 sub {
-                    ref $_[0] ? _callback_previous ( $_[0], $param{next}, $data ) : $_[0];
+                    # "objectify" infinity
+                    if ( ! ref( $_[0] ) )
+                    {
+                        if ( $_[0] == NEG_INFINITY ) {
+                            $_[0] = DateTime::Infinite::Past->new; 
+                        }
+                        elsif ( $_[0] == INFINITY ) {
+                            $_[0] = DateTime::Infinite::Future->new 
+                        }
+                    }
+                    _callback_previous ( $_[0], $param{next}, $data );
                 }
         }
         else
@@ -96,7 +141,17 @@ sub from_recurrence {
             my $previous = $param{previous};
             $param{previous} =
                 sub {
-                    ref $_[0] ? $previous->( $_[0]->clone ) : $_[0];
+                    # "objectify" infinity
+                    if ( ! ref( $_[0] ) )
+                    {
+                        if ( $_[0] == NEG_INFINITY ) {
+                            $_[0] = DateTime::Infinite::Past->new; 
+                        }
+                        elsif ( $_[0] == INFINITY ) {
+                            $_[0] = DateTime::Infinite::Future->new 
+                        }
+                    }
+                    $previous->( $_[0]->clone );
                 }
         }
 
@@ -105,7 +160,17 @@ sub from_recurrence {
             my $data = {};
             $param{next} =
                 sub {
-                    ref $_[0] ? _callback_next ( $_[0], $param{previous}, $data ) : $_[0];
+                    # "objectify" infinity
+                    if ( ! ref( $_[0] ) )
+                    {
+                        if ( $_[0] == NEG_INFINITY ) {
+                            $_[0] = DateTime::Infinite::Past->new; 
+                        }
+                        elsif ( $_[0] == INFINITY ) {
+                            $_[0] = DateTime::Infinite::Future->new 
+                        }
+                    }
+                    _callback_next ( $_[0], $param{previous}, $data );
                 }
         }
         else
@@ -113,7 +178,17 @@ sub from_recurrence {
             my $next = $param{next};
             $param{next} =
                 sub {
-                    ref $_[0] ? $next->( $_[0]->clone ) : $_[0];
+                    # "objectify" infinity
+                    if ( ! ref( $_[0] ) )
+                    {
+                        if ( $_[0] == NEG_INFINITY ) {
+                            $_[0] = DateTime::Infinite::Past->new; 
+                        }
+                        elsif ( $_[0] == INFINITY ) {
+                            $_[0] = DateTime::Infinite::Future->new 
+                        }
+                    }
+                    $next->( $_[0]->clone );
                 }
         }
 
@@ -121,7 +196,17 @@ sub from_recurrence {
         {
             $param{current} =
                 sub {
-                    ref $_[0] ? _callback_current ( $_[0], $param{next}, $param{previous} ) : $_[0];
+                    # "objectify" infinity
+                    if ( ! ref( $_[0] ) )
+                    {
+                        if ( $_[0] == NEG_INFINITY ) {
+                            $_[0] = DateTime::Infinite::Past->new; 
+                        }
+                        elsif ( $_[0] == INFINITY ) {
+                            $_[0] = DateTime::Infinite::Future->new 
+                        }
+                    }
+                    _callback_current ( $_[0], $param{next}, $param{previous} );
                 }
         }
         else
@@ -129,7 +214,17 @@ sub from_recurrence {
             my $current = $param{current};
             $param{current} =
                 sub {
-                    ref $_[0] ? $current->( $_[0]->clone ) : $_[0];
+                    # "objectify" infinity
+                    if ( ! ref( $_[0] ) )
+                    {
+                        if ( $_[0] == NEG_INFINITY ) {
+                            $_[0] = DateTime::Infinite::Past->new; 
+                        }
+                        elsif ( $_[0] == INFINITY ) {
+                            $_[0] = DateTime::Infinite::Future->new 
+                        }
+                    }
+                    $current->( $_[0]->clone );
                 }
         }
 
@@ -911,9 +1006,49 @@ it returns the closest event (previous or next).
 All of these methods may return C<undef> if there is no matching
 datetime in the set.
 
-=item * iterate
+=item * map ( sub { ... } )
 
-I<Experimental method - subject to change.>
+This method is the "set" version of Perl "map".
+
+It evaluates a subroutine for each element of
+the set (locally setting "$_" to each datetime)
+and returns the set composed of the results of
+each such evaluation.
+
+Like Perl "map", each element of the set
+may produce zero, one, or more elements in the 
+returned value.
+
+Unlike Perl "map", changing "$_" does not change
+the original set. This means that calling map
+in void context has no effect.
+
+The callback subroutine may not be called immediately.
+Don't count on subroutine side-effects. For example,
+a C<print> inside the subroutine may happen later than you expect.
+
+=item * grep ( sub { ... } )
+
+This method is the "set" version of Perl "grep".
+
+It evaluates a subroutine for each element of
+the set (locally setting "$_" to each datetime)
+and returns the set consisting of those elements 
+for which the expression evaluated to true.
+
+Unlike Perl "grep", changing "$_" does not change
+the original set. This means that calling grep
+in void context has no effect.
+
+Changing "$_" does change the resulting set.
+
+The callback subroutine may not be called immediately.
+Don't count on subroutine side-effects. For example,
+a C<print> inside the subroutine may happen later than you expect.
+
+=item * iterate ( sub { ... } )
+
+I<Internal method - use "map" or "grep" instead.>
 
 This function apply a callback subroutine to all elements of a set
 and returns the resulting set.

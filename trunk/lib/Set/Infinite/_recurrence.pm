@@ -27,17 +27,6 @@ BEGIN {
             my ($callback_next, $callback_current, $callback_previous) = @{ $self->{param} };
             my ($min, $min_open) = $self->{parent}->min_a;
 
-            # "objectify" infinity
-            if ( ! ref($min) )
-            {
-                if ( $min == NEG_INFINITY ) {
-                    $min = DateTime::Infinite::Past->new; 
-                }
-                elsif ( $min == INFINITY ) {
-                    $min = DateTime::Infinite::Future->new 
-                }
-            }
-
             if ( $min_open )
             {
                 $min = $callback_next->( $min );
@@ -57,17 +46,6 @@ BEGIN {
             my $self = $_[0];
             my (undef, $callback_current, $callback_previous) = @{ $self->{param} };
             my ($max, $max_open) = $self->{parent}->max_a;
-
-            # "objectify" infinity
-            if ( ! ref($max) )
-            {
-                if ( $max == NEG_INFINITY ) {
-                    $max = DateTime::Infinite::Past->new 
-                }
-                elsif ( $max == INFINITY ) {
-                    $max = DateTime::Infinite::Future->new;
-                }
-            }
 
             if ( $max_open )
             {

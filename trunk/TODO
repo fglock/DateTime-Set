@@ -10,13 +10,12 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
   Or, try to detect the error and automatically
   "downgrade" DateTime::Set.
 
-- New methods: map / grep
-  From a discussion with Andrew Pimlott and Dave Rolsky
-
-- test DT::SpanSet->iterate; fix examples.
+- DT::SpanSet->iterate - fix examples.
 
 - implement set( locale => .. ) in Span and SpanSet
   implement iterator( \&sub )
+
+- Add tests for new methods: DateTime::SpanSet::map / grep
 
 - specify what these DT::SpanSet methods should return -
   a datetime, a span, or what - under discussion in datetime@perl.org 

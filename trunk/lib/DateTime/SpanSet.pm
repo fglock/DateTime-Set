@@ -33,6 +33,37 @@ sub iterate {
     $return;
 }
 
+sub map {
+    my ( $self, $callback ) = @_;
+    my $class = ref( $self );
+    my $return = $class->empty_set;
+    $return->{set} = $self->{set}->iterate( 
+        sub {
+            local $_ = bless { set => $_[0]->clone }, 'DateTime::Span';
+            my @list = $callback->();
+            my $set = $class->empty_set;
+            $set = $set->union( $_ ) for @list;
+            return $set->{set};
+        }
+    );
+    $return;
+}
+
+sub grep {
+    my ( $self, $callback ) = @_;
+    my $class = ref( $self );
+    my $return = $class->empty_set;
+    $return->{set} = $self->{set}->iterate( 
+        sub {
+            local $_ = bless { set => $_[0]->clone }, 'DateTime::Span';
+            my $result = $callback->();
+            return $_ if $result;
+            return;
+        }
+    );
+    $return;
+}
+
 sub set_time_zone {
     my ( $self, $tz ) = @_;
 
@@ -545,9 +576,49 @@ C<start_set> retrieves a DateTime::Set with the start datetime of each span.
 
 C<end_set> retrieves a DateTime::Set with the end datetime of each span.
 
+=item * map ( sub { ... } )
+
+This method is the "set" version of Perl "map".
+
+It evaluates a subroutine for each element of
+the set (locally setting "$_" to each DateTime::Span)
+and returns the set composed of the results of
+each such evaluation.
+
+Like Perl "map", each element of the set
+may produce zero, one, or more elements in the 
+returned value.
+
+Unlike Perl "map", changing "$_" does not change
+the original set. This means that calling map
+in void context has no effect.
+
+The callback subroutine may not be called immediately.
+Don't count on subroutine side-effects. For example,
+a C<print> inside the subroutine may happen later than you expect.
+
+=item * grep ( sub { ... } )
+
+This method is the "set" version of Perl "grep".
+
+It evaluates a subroutine for each element of
+the set (locally setting "$_" to each DateTime::Span)
+and returns the set consisting of those elements 
+for which the expression evaluated to true.
+
+Unlike Perl "grep", changing "$_" does not change
+the original set. This means that calling grep
+in void context has no effect.
+
+Changing "$_" does change the resulting set.
+
+The callback subroutine may not be called immediately.
+Don't count on subroutine side-effects. For example,
+a C<print> inside the subroutine may happen later than you expect.
+
 =item * iterate
 
-I<Experimental method - subject to change.>
+I<Internal method - use "map" or "grep" instead.>
 
 This function apply a callback subroutine to all elements of a set
 and returns the resulting set.

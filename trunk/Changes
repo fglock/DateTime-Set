@@ -1,5 +1,13 @@
 Changes for DateTime::Set
 
+0.1406  2004-03-15
+- New methods: 
+  DateTime::Set::map / grep
+  DateTime::SpanSet::map / grep
+  From a discussion with Andrew Pimlott and Dave Rolsky
+- Cleanup "datetime" code from _recurrence.pm 
+- iterate() marked as "internal"
+
 0.1405  2004-03-15
 - New method: DateTime::SpanSet::intersected_spans
   Suggested by Reinhold May
