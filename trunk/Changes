@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.1205  2003-10-16
+- requires Set::Infinite 0.54 (it is the "published" version of 0.5307)
+- DateTime::Set add_duration mutates the set. This is more compatible
+  with the way the DateTime.pm API works.
 - new DateTime::SpanSet methods:
   as_list( $span_spec ), next( $dt|$span ), previous( $dt|$span )
 

@@ -43,7 +43,7 @@ my $month_callback = sub {
     ok( $res eq '1810-09-01', 
         "min() - got $res" );
 
-    $res = $months->add_duration( $dur )->min;
+    $res = $months->clone->add_duration( $dur )->min;
     $res = $res->datetime if ref($res);
     ok( $res eq '1810-09-01T01:00:00',
         "min() - got $res" );
@@ -58,7 +58,7 @@ my $month_callback = sub {
         end => new DateTime(
             year => 1810, month => 9, day => 1, hour => 1, minute => 30 ),
     );
-    my $set = $months->add_duration( $dur )->intersection( $span );
+    my $set = $months->clone->add_duration( $dur )->intersection( $span );
     my $res = $set->min;
     $res = $res->datetime if ref($res);
     $res = 'undef' unless $res;
@@ -98,7 +98,7 @@ my $month_callback = sub {
     ok( $res eq '1810-09-01',
         "min() - got $res" );
 
-    $res = $months->add_duration( $dur )
+    $res = $months->clone->add_duration( $dur )
            ->intersection(
                DateTime::Span->from_datetimes( after => $t1 )
            )->min;

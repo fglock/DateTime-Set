@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1203';
+    $VERSION = '0.1205';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
 
@@ -42,7 +42,7 @@ sub subtract_duration { return $_[0]->add_duration( $_[1]->inverse ) }
 sub add_duration {
     my ( $self, $dur ) = @_;
     $dur = $dur->clone;  # $dur must be "immutable"
-    $self->clone->iterate(
+    $self->iterate(
         sub { $_[0]->add_duration( $dur ) }
     );
 }
@@ -668,7 +668,7 @@ This object method returns a replica of the given object.
 This method returns a new set which is the same as the existing set
 with the specified duration added to every element of the set.
 
-The original set is not modified. The method returns the set object.
+The original set is modified. The method returns the set object.
 
 The result for a given set element 
 is expected to be within the span of the
@@ -677,6 +677,10 @@ C<previous> and the C<next> element in the original set.
 For example: given the set C<[ 2001, 2010, 2015 ]>,
 the add_duration result for the value C<2010> is expected to be
 within the span C<[ 2001 .. 2015 ]>.
+
+Note: API change - before version 0.1205, the object was not mutated.
+If you need to keep the original object, do a C<clone> operation 
+before calling C<add_duration>.
 
 =item * add
 

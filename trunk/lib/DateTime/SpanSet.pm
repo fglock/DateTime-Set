@@ -64,7 +64,7 @@ sub from_set_and_duration {
     my $set = delete $args{set} || carp "from_set_and_duration needs a set parameter";
     my $duration = delete $args{duration} ||
                    new DateTime::Duration( %args );
-    my $end_set = $set->add_duration( $duration );
+    my $end_set = $set->clone->add_duration( $duration );
     return $class->from_sets( start_set => $set, 
                               end_set =>   $end_set );
 }

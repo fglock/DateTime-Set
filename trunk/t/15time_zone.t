@@ -61,12 +61,12 @@ is( $str, '2001-12-01T00:00:00 Asia/Taipei', 'recurrence with time zone' );
 is( $original, '2001-11-22T00:00:00 floating', 'does not mutate arg' );
 
 # set locale, add duration
-is ( $months->add( days => 1 )->
+is ( $months->clone->add( days => 1 )->
               next( $t1 )->
               strftime( "%a" ), 'Sun', 
      'default locale' );
 
-is ( $months->add( days => 1 )->
+is ( $months->clone->add( days => 1 )->
               set( locale => 'pt_BR' )->
               next( $t1 )->
               strftime( "%a" ), 

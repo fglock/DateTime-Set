@@ -67,7 +67,7 @@ is( test($recurr_day_1_15), '1810-09-01 1810-09-15 1810-10-01',
 
 # ---------- test add() to a recurrence
 
-my $days_15 = $recurr_months->add( days => 14 );
+my $days_15 = $recurr_months->clone->add( days => 14 );
 is( test($days_15), '1810-09-15 1810-10-15 1810-11-15',
     "days_15" );
 
@@ -75,7 +75,7 @@ is( test($days_15), '1810-09-15 1810-10-15 1810-11-15',
 is( test($recurr_months), '1810-09-01 1810-10-01 1810-11-01',
     "months is still there" );
 
-my $days_20 = $recurr_months->add( days => 19 );
+my $days_20 = $recurr_months->clone->add( days => 19 );
 is( test($days_20), '1810-09-20 1810-10-20 1810-11-20',
     "days_20" );
 

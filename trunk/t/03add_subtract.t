@@ -25,15 +25,15 @@ is( $s2->count, 2, "count" );
 is( $s2->min->ymd, '1811-11-22', 
     'got 1811-11-22 - min' );
 
-$s2 = $s2->add( months => 1 );
+$s2 = $s2->clone->add( months => 1 );
 is( $s2->min->ymd, '1811-12-22',
     'got 1811-12-22 - min' );
 
-my $s3 = $s2->subtract_duration( DateTime::Duration->new( months => 1 ) );
+my $s3 = $s2->clone->subtract_duration( DateTime::Duration->new( months => 1 ) );
 is( $s3->min->ymd, '1811-11-22',
     'got 1811-11-22 - min' );
 
-my $s4 = $s3->subtract( years => 1 );
+my $s4 = $s3->clone->subtract( years => 1 );
 is( $s4->min->ymd, '1810-11-22',
     'got 1810-11-22 - min' );
 
