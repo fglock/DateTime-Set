@@ -11,15 +11,42 @@ use Set::Infinite;
 use vars qw( @ISA $VERSION );
 @ISA = qw( Set::Infinite );
 
-$VERSION = '0.00_05';
+$VERSION = '0.00_06';
 
 # declare our default 'leaf object' class
 __PACKAGE__->type('DateTime');
 
 # warn about Set::Infinite methods that don't work here
 # because they use 'epoch' values internally
-sub quantize { die "quantize() method is not implemented." }
-sub offset   { die "offset() method is not implemented." }
+#
+sub quantize { die "quantize() method is not supported." }
+sub offset   { die "offset() method is not supported. Please use add_duration() instead." }
+
+# add_duration provides more-or-less the same functionality 
+# as Set::Infinite::offset()
+#
+sub add_duration { 
+    my ($self, %parm) = @_;
+    my $result = $self->iterate( 
+        sub {
+            my $set = shift;
+            my ($min, $open_start) = $set->min;
+            my ($max, $open_end)   = $set->max;
+            $min->add_duration( $parm{at_start} ) if exists $parm{at_start};
+            $max->add_duration( $parm{at_end} )   if exists $parm{at_end};
+            return if $min > $max;
+            my $res = $set->new( $min, $max );
+            if ( $open_start ) {
+                $res = $res->complement( $min );  # open_start
+            }
+            if ( $open_end ) {
+                $res = $res->complement( $max );  # open_end
+            }
+            return $res;
+        }
+    );
+    return $result;
+}
 
 # the constructor must clone its DateTime parameters, so that
 # the set elements become (more-or-less) immutable
@@ -94,6 +121,34 @@ All methods are inherited from Set::Infinite.
 Set::Infinite methods C<offset()> and C<quantize()> are disabled.
 The module will die with an error string if one of these methods are 
 called.
+
+=over 4
+
+=item * add_duration
+
+NOTE: this is an experimental feature.
+
+    add_duration( at_start => $datetime_duration, 
+                  at_end =>   $datetime_duration );
+
+This method returns a new set, which is created by adding a 
+C<DateTime::Duration> to the current datetime set.
+
+It moves the whole set values ahead or back in time.
+It will affect the start, end, or both ends of the set intervals.
+
+    $mondays = $sundays->add_duration( 
+         at_start => $one_day,
+         at_end   => $one_day );
+
+    $mondays_and_tuesdays = $sundays->add_duration(
+         at_start => $one_day,
+         at_end   => $two_days );
+
+This method provides more-or-less the same functionality as
+C<Set::Infinite::offset()>.
+
+=back
 
 =head1 SUPPORT
 

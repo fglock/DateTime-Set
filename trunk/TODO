@@ -9,3 +9,7 @@
   It can be done with the iterate() method, but it is
   too difficult.
 
+- Make Set::Infinite::intersects() accept objects as
+  parameters (it currently only accepts sets or scalars)
+  Such that we can directly check a set against some date.
+
