@@ -275,7 +275,9 @@ sub span {
 sub duration { 
     my $dur; 
     eval { $dur = $_[0]->{set}->size };
-    defined $dur ? $dur : INFINITY 
+    return $dur if defined $dur;
+    $@ = undef;  # clear the eval() error message
+    return INFINITY;
 }
 *size = \&duration;
 

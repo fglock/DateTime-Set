@@ -285,7 +285,9 @@ sub span { @_ }
 sub duration { 
     my $dur;
     eval { $dur = $_[0]->end->subtract_datetime_absolute( $_[0]->start ) };
-    defined $dur ? $dur : INFINITY 
+    return $dur if defined $dur;
+    $@ = undef;  # clear the eval() error message
+    return INFINITY;
 }
 *size = \&duration;
 
