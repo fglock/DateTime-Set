@@ -48,8 +48,9 @@ my $month_callback = sub {
     ok( $res eq '1810-09-01T01:00:00',
         "min() - got $res" );
 
-  TODO: {
-    local $TODO = "backtracking add()";
+  # TODO: 
+  {
+  #   local $TODO = "backtracking add()";
     # BACKTRACKING
     my $span = new DateTime::Span( 
         start => new DateTime( 
@@ -65,20 +66,21 @@ my $month_callback = sub {
         "span intersection, add - got ".$res );
   }
 
-  TODO: {
-    local $TODO = "backtracking subtract()";
+  # TODO: 
+  {
+  #  local $TODO = "backtracking subtract()";
     # BACKTRACKING
     my $span = new DateTime::Span(
         start => new DateTime(
-            year => 1810, month => 9, day => 1, hour => 10, minute => 30 ),
+            year => 1810, month => 9, day => 30, hour => 22, minute => 30 ),
         end => new DateTime(
-            year => 1810, month => 9, day => 1, hour => 11, minute => 30 ),
+            year => 1810, month => 9, day => 30, hour => 23, minute => 30 ),
     );
     my $set = $months->subtract_duration( $dur )->intersection( $span );
     my $res = $set->min;
     $res = $res->datetime if ref($res);
     $res = 'undef' unless $res;
-    ok( $res eq '1810-09-01T11:00:00',
+    ok( $res eq '1810-09-30T23:00:00',
         "span intersection, subtract - got ".$res );
   }
 

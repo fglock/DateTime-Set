@@ -7,7 +7,7 @@ use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use DateTime 0.12;  # this is for version checking only
 use DateTime::Duration;
 use DateTime::Span;
-use Set::Infinite 0.50;  
+use Set::Infinite 0.5307;
 use Set::Infinite::_recurrence;
 
 use vars qw( $VERSION $neg_nanosecond $forever );
