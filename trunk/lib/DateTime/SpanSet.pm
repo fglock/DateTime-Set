@@ -337,7 +337,7 @@ C<DateTime::SpanSet> object.
     $set = $spanset->intersection( $set2 );  # like "AND", "while"
     $set = $spanset->complement;             # like "NOT", "negate", "invert"
 
-=item intersects / contains
+=item * intersects / contains
 
 These set functions return a boolean value.
 
@@ -371,6 +371,8 @@ the nature of your set.  User beware!
 
 The C<next()> method will return C<undef> when there are no more
 datetimes in the iterator.
+
+=back
 
 =head1 SUPPORT
 
