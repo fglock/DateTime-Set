@@ -48,7 +48,11 @@ sub subtract_duration { return $_[0]->add_duration( $_[1]->inverse ) }
 sub add_duration {
     my ( $self, $dur ) = @_;
 
-    my $result = $self->{set}->iterate( \&_add_callback, $dur );
+    # $dur should be cloned because if the set is a
+    # recurrence then the callback will not be used
+    # immediately - then $dur must be "immutable".
+
+    my $result = $self->{set}->iterate( \&_add_callback, $dur->clone );
 
     ### this code would enable 'subroutine method' behaviour
     # $self->{set} = $result;
