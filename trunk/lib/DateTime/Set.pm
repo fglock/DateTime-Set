@@ -16,18 +16,20 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1402';
+    $VERSION = '0.1403';
 }
 
 sub iterate {
     my ( $self, $callback ) = @_;
-    $self->{set} = $self->{set}->iterate( 
+    my $class = ref( $self );
+    my $return = $class->empty_set;
+    $return->{set} = $self->{set}->iterate( 
         sub {
             my $min = $_[0]->min;
             $callback->( $min->clone ) if ref($min);
         }
     );
-    $self;
+    $return;
 }
 
 sub add { return shift->add_duration( DateTime::Duration->new(@_) ) }
@@ -737,7 +739,7 @@ This method adds the specified duration added to every element of the set.
     $dtd = new DateTime::Duration( year => 1 );
     $set->add_duration( $dtd );
 
-The original set is modified. The method returns the set object.
+The original set is not modified. The method returns a new set object.
 
 Note: The result of adding a duration to a given set element 
 is expected to be within the span of the
@@ -746,10 +748,6 @@ C<previous> and the C<next> element in the original set.
 For example: given the set C<[ 2001, 2010, 2015 ]>,
 the add_duration result for the value C<2010> is expected to be
 within the span C<[ 2001 .. 2015 ]>.
-
-Note: API change - before version 0.1205, the object was not mutated.
-If you need to keep the original object, do a C<clone> operation 
-before calling C<add_duration>.
 
 =item * add
 
@@ -763,7 +761,7 @@ When given a C<DateTime::Duration> object, this method simply calls
 C<invert()> on that object and passes that new duration to the
 C<add_duration> method.
 
-The original set is modified. The method returns the set object.
+The original set is not modified. The method returns a new set object.
 
 =item * subtract( DateTime::Duration->new parameters )
 
@@ -782,13 +780,15 @@ the local time are made, except to account for leap seconds.  If the
 new time zone is floating, then the I<UTC> time is adjusted in order
 to leave the local time untouched.
 
-The original set C<time zone> is modified. The method returns the set object.
+The original set C<time zone> is not modified. 
+The method returns a new set object.
 
 =item * set( locale => .. )
 
 This method can be used to change the C<locale> of a date time set.
 
-The original set C<locale> is modified. The method returns the set object.
+The original set C<locale> is not modified. 
+The method returns a new set object.
 
 =item * min / max
 
@@ -915,18 +915,16 @@ datetime in the set.
 
 I<Experimental method - subject to change.>
 
-This method apply a callback subroutine to all elements of a set.
+This function apply a callback subroutine to all elements of a set
+and returns the resulting set.
 
     sub callback {
         $_[0]->add( hours => 1 );
     }
 
-    # offset $set elements by one hour
-    $set->iterate( \&callback );  
-
     # $set2 elements are one hour after $set elements, and
     # $set is unchanged
-    $set2 = $set->clone->iterate( \&callback );  
+    $set2 = $set->iterate( \&callback );  
 
 If the callback returns C<undef>, the datetime is removed from the set:
 
@@ -947,6 +945,10 @@ C<previous> and the C<next> element in the original set.
 For example: given the set C<[ 2001, 2010, 2015 ]>, 
 the callback result for the value C<2010> is expected to be 
 within the span C<[ 2001 .. 2015 ]>.
+
+The callback subroutine may not be called immediately.
+Don't count on subroutine side-effects. For example,
+a C<print> inside the subroutine may happen later than you expect.
 
 =back
 

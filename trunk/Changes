@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.1403  2004-03-10
+- new method DateTime::SpanSet::iterate
+- DateTime::Set and DateTime::SpanSet methods do not mutate the set.
+  This is the behaviour we had before version 0.13
+
 0.1402  2004-03-08
 - Recurrence functions can be used to generate bounded sets.
   See: t/16bounded_recurrence.t

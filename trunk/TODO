@@ -1,5 +1,7 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
+- test DT::SpanSet->iterate; fix examples.
+
 - implement set( locale => .. ) in Span and SpanSet
   implement iterator( \&sub )
 
