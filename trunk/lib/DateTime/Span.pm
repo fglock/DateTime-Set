@@ -44,9 +44,16 @@ sub new {
     my $self = {};
     my $set;
     unless ( grep { exists $args{$_} } qw( start end after before ) ) {
-        die "No arguments given to DateTime::Span constructor\n";
+        die "No arguments given to DateTime::Span->new\n";
     }
     else {
+        if ( exists $args{start} && exists $args{after} ) {
+            die "Cannot give both start and after arguments to DateTime::Span->new\n";
+        }
+        if ( exists $args{end} && exists $args{before} ) {
+            die "Cannot give both end and before arguments to DateTime::Span->new\n";
+        }
+
         my ( $start, $open_start, $end, $open_end );
         ( $start, $open_start ) = ( NEG_INFINITY,  0 );
         ( $start, $open_start ) = ( $args{start},  0 ) if exists $args{start};
@@ -228,6 +235,10 @@ These spans end, or start, in an imaginary 'forever' date:
    $dates = DateTime::Set->new( end => $dt2 );
    $dates = DateTime::Set->new( after => $dt1 );
    $dates = DateTime::Set->new( before => $dt2 );
+
+You cannot give both a "start" and "after" argument, nor can you give
+both an "end" and "before" argument.  Either of these conditions cause
+will cause the C<new()> method to die.
 
 =back
 
