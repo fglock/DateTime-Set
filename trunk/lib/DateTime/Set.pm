@@ -670,6 +670,14 @@ with the specified duration added to every element of the set.
 
 The original set is not modified. The method returns the set object.
 
+The result for a given set element 
+is expected to be within the span of the
+C<previous> and the C<next> element in the original set.
+
+For example: given the set C<[ 2001, 2010, 2015 ]>,
+the add_duration result for the value C<2010> is expected to be
+within the span C<[ 2001 .. 2015 ]>.
+
 =item * add
 
     $meetings_2004 = $meetings_2003->add( years => 1 );
@@ -852,6 +860,13 @@ events which collide with datetimes in another set:
     sub after_holiday {
         $_[0]->add( days => 1 ) while $holidays->contains( $_[0] );
     }
+
+The callback return value is expected to be within the span of the 
+C<previous> and the C<next> element in the original set. 
+
+For example: given the set C<[ 2001, 2010, 2015 ]>, 
+the callback result for the value C<2010> is expected to be 
+within the span C<[ 2001 .. 2015 ]>.
 
 =back
 
