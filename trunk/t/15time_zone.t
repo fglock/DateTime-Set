@@ -122,10 +122,10 @@ is ( $months->clone->add( days => 1 )->
      'default locale' );
 
 is ( $months->clone->add( days => 1 )->
-              set( locale => 'pt_BR' )->
+              set( locale => 'en_US' )->
               next( $t1 )->
               strftime( "%a" ), 
-     'Dom', 
+     'Sun', 
      'new locale' );
 }
 
