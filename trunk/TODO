@@ -4,6 +4,18 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
 
 - implement as_list() in DT::SpanSet.pm
 
+- specify what these DT::SpanSet methods should return -
+  a datetime, a span, or what - under discussion in datetime@perl.org 
+    next( $dt )
+    previous( $dt )
+    current( $dt )
+    closest( $dt )
+- these functions should probably accept both a dt or a span as a parameter, 
+  such that they can be used as a kind of iterator - give previous result,
+  ask for next.
+
+- "iterator" method - under discussion in datetime@perl.org
+
 - discuss functions like 
     is_infinite
     is_empty 
