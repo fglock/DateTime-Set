@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 6;
+plan tests => 8;
 
 use DateTime;
 use DateTime::Set;
@@ -41,6 +41,26 @@ is( $span2->start->datetime, '2001-11-22T00:00:00',
     'got 2001-11-22T00:00:00 - min' );
 is( $span2->end->datetime, '2002-11-22T00:00:00',
     'got 2002-11-22T00:00:00 - max' );
+
+# recurrence
+{
+my $months = DateTime::Set->from_recurrence(
+                 recurrence => sub {
+                     $_[0]->truncate( to => 'month' )->add( months => 1 );
+                 }
+             )
+             ->set_time_zone( 'Asia/Taipei' );
+
+my $str = $months->next( $t1 )->datetime . ' ' .
+          $months->next( $t1 )->time_zone_long_name;
+
+my $original = $t1->datetime . ' ' .
+               $t1->time_zone_long_name;
+
+is( $str, '2001-12-01T00:00:00 Asia/Taipei', 'recurrence with time zone' );
+is( $original, '2001-11-22T00:00:00 floating', 'does not mutate arg' );
+
+}
 
 1;
 
