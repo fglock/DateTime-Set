@@ -26,7 +26,7 @@ sub test {
 
 my $t1 = new DateTime( year => '1810', month => '08', day => '22' );
 my $t2 = new DateTime( year => '1810', month => '11', day => '24' );
-my $s1 = new DateTime::Set( dates => [ $t1, $t2 ] );
+my $s1 = DateTime::Set->from_datetimes( dates => [ $t1, $t2 ] );
 
 # ------------- test a simple recurrence
 
@@ -35,7 +35,7 @@ my $month_callback = sub {
             $_[0]->add( months => 1 );
             return $_[0];
         };
-my $recurr_months = new DateTime::Set(
+my $recurr_months = DateTime::Set->from_recurrence(
     recurrence => $month_callback,
     end => $t1,
 );
@@ -51,7 +51,7 @@ ok( test($recurr_months) eq '1810-09-01 1810-08-01 1810-07-01',
             $_[0]->add( months => 1 ) if $after;
             return $_[0];
         };
-    my $recurr_day_15 = new DateTime::Set( 
+    my $recurr_day_15 = DateTime::Set->from_recurrence( 
         recurrence => $day_15_callback, 
         end => $t1,
     );

@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.18
+- changes docs, changed API
+  from_recurrence, from_datetimes, new()
+- as_list
+
 0.17
 - previous() method (quite untested)
 

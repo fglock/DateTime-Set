@@ -7,12 +7,13 @@ package DateTime::Set;
 use strict;
 use Carp;
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
+use DateTime::Span;
 use Set::Infinite '0.44_04';
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.00_19';
+$VERSION = '0.00_20';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -126,41 +127,31 @@ sub new {
 
 sub from_recurrence {
     my $class = shift;
-    my %args = validate( @_,
-                         { recurrence =>      # "next" alias
-                           { type => CODEREF,
-                             optional => 1,
-                           },
-                           next =>
-                           { type => CODEREF,
-                             optional => 1,
-                           },
-                           previous =>       
-                           { type => CODEREF,
-                             optional => 1,
-                           },
-                           span => 
-                           { type => OBJECT,
-                             optional => 1,
-                           },
-                         }
-                       );
+    # note: not using validate() because this is too complex...
+    my %args = @_;
+    my %param;
+    # Parameter renaming, such that we can use either
+    #   recurrence => xxx   or   next => xxx, previous => xxx
+    $param{next} = delete $args{recurrence}  or
+    $param{next} = delete $args{next};
+    $param{previous} = $args{previous}  and  delete $args{previous};
+    $param{span} = $args{span}  and  delete $args{span};
+    # they might be specifying a span using begin / end
+    $param{span} = new DateTime::Span( %args ) if keys %args;
+    # otherwise, it is unbounded
+    $param{span}->{set} = Set::Infinite->new( NEG_INFINITY, INFINITY )
+        unless exists $param{span};
     my $self = {};
-    $args{next} = $args{recurrence} if exists $args{recurrence};
-    if (exists $args{next}) {
-        my $tmp_set = Set::Infinite->new( NEG_INFINITY, INFINITY );
-        $self->{set} = _recurrence_callback( $tmp_set, $args{next} );  
-        $self->{set} = $self->{set}->intersection( $args{span}->{set} ) 
-            if exists $args{span};
+    if (exists $param{next}) {
+        $self->{set} = _recurrence_callback( $param{span}->{set}, $param{next} );  
+        bless $self, $class;
     }
-    elsif (exists $args{previous}) {
-        die '"previous =>" argument not implemented';
+    elsif (exists $param{previous}) {
+        die '"previous =>" argument not implemented in from_recurrence()';
     }
     else {
-        # no arguments => return an empty set (or should die?)
-        $self->{set} = Set::Infinite->new;
+        die "Not enough arguments in from_recurrence()";
     }
-    bless $self, $class;
     return $self;
 }
 
@@ -176,6 +167,7 @@ sub from_datetimes {
     my $self = {};
     if (exists $args{dates}) {
         $self->{set} = Set::Infinite->new;
+        # possible optimization: sort dates and use "push"
         for( @{ $args{dates} } ) {
             $self->{set} = $self->{set}->union( $_->clone );
         }
@@ -408,13 +400,28 @@ sub previous {
     return $head;
 }
 
+sub as_list {
+    my ($self) = shift;
+    return undef unless ref( $self->{set} );
+    return undef if $self->{set}->is_too_complex;  # undef = no begin/end
+    return if $self->{set}->is_null;  # nothing = empty
+    my @result;
+    # we should extract _copies_ of the set elements,
+    # such that the user can't modify the set indirectly
+    for ( @{ $self->{set}->{list}  } ) {
+        push @result, $_->{a}->clone
+            if ref( $_->{a} );   # we don't want to return INFINITY value
+    }
+    return @result;
+}
+
 # Set::Infinite methods
 
 sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
     return $tmp;
 }
@@ -423,7 +430,7 @@ sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
 
@@ -431,7 +438,7 @@ sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
 
@@ -439,8 +446,10 @@ sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
+    bless $tmp, 'DateTime::SpanSet' 
+        if $set2->isa('DateTime::Span') or $set2->isa('DateTime::SpanSet');
     return $tmp;
 }
 
@@ -449,7 +458,7 @@ sub complement {
     my $class = ref($set1);
     my $tmp = $class->new();
     if (defined $set2) {
-        $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+        $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
     }
     else {
@@ -563,13 +572,25 @@ Creates a new set from a list of dates.
 Creates a new set specified via a "recurrence" callback.
 
     $months = DateTime::Set->from_recurrence( 
-        span => $this_year,    # optional span
+        span => $dt_span_this_year,    # optional span
         recurrence => sub { 
             $_[0]->truncate( to => 'month' )->add( months => 1 ) 
         }, 
     );
 
-The "span" parameter is optional.  
+The C<span> parameter is optional. It must be a C<DateTime::Span> object.
+
+The span can also be specified using 
+C<begin> / C<after> and C<end> / C<before> DateTime objects, 
+as in the C<DateTime::Span> constructor. 
+In this case, if there is a C<span> parameter it will be ignored.
+
+    $months = DateTime::Set->from_recurrence(
+        after => $dt_now,
+        recurrence => sub {
+            $_[0]->truncate( to => 'month' )->add( months => 1 )
+        },
+    );
 
 =item * add
 
@@ -594,7 +615,7 @@ First or last dates in the set.
 
 =item * span
 
-The total span of the set, as a DateTime::Span.
+Returns the total span of the set, as a C<DateTime::Span> object.
 
 =item * iterator / next
 
@@ -611,16 +632,31 @@ datetimes in the iterator.
 Obviously, if a set is specified as a recurrence and has no fixed end
 datetime, then it may never stop returning datetimes.  User beware!
 
-=item union / intersection / complement
+=item * as_list
 
-These set operations result in a DateTime::Set.
+Returns a list of C<DateTime> objects.
+
+If a set is specified as a recurrence and has no fixed begin or end
+datetimes, then C<as_list> will return C<undef>.
+
+If the set is empty, then C<as_list> will return nothing.
+
+=item * union / intersection / complement
+
+Set operations.
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
     $set = $set1->intersection( $set2 );  # like "AND", "while"
     $set = $set1->complement;             # like "NOT", "negate", "invert"
 
-=item intersects / contains
+The C<union> 
+with a C<DateTime::Span> or a C<DateTime::SpanSet> object
+returns a C<DateTime::SpanSet> object.
+
+All other operations always return a C<DateTime::Set>.
+
+=item * intersects / contains
 
 These set operations result in a boolean value.
 

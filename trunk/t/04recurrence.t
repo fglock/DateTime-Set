@@ -18,7 +18,7 @@ my $res;
 
 my $t1 = new DateTime( year => '1810', month => '08', day => '22' );
 my $t2 = new DateTime( year => '1810', month => '11', day => '24' );
-my $s1 = new DateTime::Set( dates => [ $t1, $t2 ] );
+my $s1 = DateTime::Set->from_datetimes( dates => [ $t1, $t2 ] );
 
 my $month_callback = sub {
             $_[0]->truncate( to => 'month' );
@@ -29,7 +29,7 @@ my $month_callback = sub {
         };
 
 # "START"
-my $months = new DateTime::Set( 
+my $months = DateTime::Set->from_recurrence( 
     recurrence => $month_callback, 
     start => $t1,
 );
@@ -43,7 +43,7 @@ ok( $res eq INFINITY,
     "max() - got $res" );
 
 # "END"
-my $months = new DateTime::Set(
+my $months = DateTime::Set->from_recurrence(
     recurrence => $month_callback,
     end => $t1,
 );
@@ -57,7 +57,7 @@ ok( $res eq '1810-09-01',
     "max() - got $res" );
 
 # "START+END"
-my $months = new DateTime::Set(
+my $months = DateTime::Set->from_recurrence(
     recurrence => $month_callback,
     start => $t1,
     end => $t2,
@@ -75,7 +75,7 @@ ok( $res eq '1810-12-01',
 # "START+END" at recurrence 
 $t1->set( day => 1 );  # month=8
 $t2->set( day => 1 );  # month=11
-my $months = new DateTime::Set(
+my $months = DateTime::Set->from_recurrence(
     recurrence => $month_callback,
     start => $t1,
     end => $t2,
