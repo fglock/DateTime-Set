@@ -22,6 +22,17 @@ BEGIN {
 
 $forever = Set::Infinite::_recurrence->new( NEG_INFINITY, INFINITY );
 
+sub iterate {
+    my ( $self, $callback ) = @_;
+    $self->{set} = $self->{set}->iterate( 
+        sub {
+            my $min = $_[0]->min;
+            $callback->( $min->clone ) if ref($min);
+        }
+    );
+    $self;
+}
+
 sub add { shift->add_duration( DateTime::Duration->new(@_) ) }
 
 sub subtract { return shift->subtract_duration( DateTime::Duration->new(@_) ) }
@@ -30,36 +41,17 @@ sub subtract_duration { return $_[0]->add_duration( $_[1]->inverse ) }
 
 sub add_duration {
     my ( $self, $dur ) = @_;
-
     $dur = $dur->clone;  # $dur must be "immutable"
-    my $result = $self->{set}->iterate( 
-        sub {
-            my $min = $_[0]->min;
-            return $min->clone->add_duration( $dur ) if ref($min);
-            $min;
-        }
+    $self->clone->iterate(
+        sub { $_[0]->add_duration( $dur ) }
     );
-
-    ### this code enables 'function method' behaviour
-    my $set = $self->clone;
-    $set->{set} = $result;
-    return $set;
 }
 
 sub set_time_zone {
     my ( $self, $tz ) = @_;
-
-    my $result = $self->{set}->iterate( 
-        sub {
-            my $min = $_[0]->min;
-            return $min->clone->set_time_zone( $tz ) if ref $min;
-            $min;
-        }
+    $self->iterate( 
+        sub { $_[0]->set_time_zone( $tz ) }
     );
-
-    ### this code enables 'subroutine method' behaviour
-    $self->{set} = $result;
-    return $self;
 }
 
 sub set {
@@ -69,17 +61,9 @@ sub set {
                                        default => undef },
                          }
                        );
-
-    my $result = $self->{set}->iterate(
-        sub {
-            my $min = $_[0]->min;
-            return $min->clone->set( %args ) if ref $min;
-            $min;
-        }
+    $self->iterate( 
+        sub { $_[0]->set( %args ) }
     );
-
-    $self->{set} = $result;
-    return $self;
 }
 
 sub from_recurrence {
@@ -838,6 +822,36 @@ it returns the closest event (previous or next).
 
 All of these methods may return C<undef> if there is no matching
 datetime in the set.
+
+=item * iterate
+
+Experimental method - subject to change.
+
+This method apply a callback subroutine to all elements of a set.
+
+    sub callback {
+        $_[0]->add( hours => 1 );
+    }
+
+    # offset $set elements by one hour
+    $set->iterate( \&callback );  
+
+    # $set2 elements are one hour after $set elements, and
+    # $set is unchanged
+    $set2 = $set->clone->iterate( \&callback );  
+
+If the callback returns C<undef>, the datetime is removed from the set:
+
+    sub remove_sundays {
+        $_[0] unless $_[0]->day_of_week == 7;
+    }
+
+The callback can be used to postpone or anticipate
+events which collide with datetimes in another set:
+
+    sub after_holiday {
+        $_[0]->add( days => 1 ) while $holidays->contains( $_[0] );
+    }
 
 =back
 

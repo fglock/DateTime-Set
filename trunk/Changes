@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- new method 'iterate'
+- requires Set::Infinite 0.5307 (pass new backtracking tests)
 - added more tests for add_duration, subtract_duration
 - added set( locale => .. ) to DateTime::Set
 

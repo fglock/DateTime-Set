@@ -14,8 +14,6 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
   such that they can be used as a kind of iterator - give previous result,
   ask for next.
 
-- "iterator" method - under discussion in datetime@perl.org
-
 - discuss functions like 
     is_infinite
     is_empty 
