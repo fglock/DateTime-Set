@@ -21,7 +21,7 @@ my $t2 = new DateTime( year => '1810', month => '11', day => '24' );
 my $s1 = new DateTime::Set( dates => [ $t1, $t2 ] );
 
 my $month_callback = sub {
-            $_[0]->truncate( to => 'day' );
+            $_[0]->truncate( to => 'month' );
             # warn " truncate = ".$_[0]->ymd;
             $_[0]->add( months => 1 );
             # warn " add = ".$_[0]->ymd;
