@@ -120,7 +120,7 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
     my $start_set = DateTime::Set->from_recurrence(
        next  => sub { $_[0]->truncate( to => 'day' )
                            ->add( days => 1 ) },
-       span => new DateTime::Span(
+       span => DateTime::Span->from_datetimes(
                    start => new DateTime( year =>  '1810', 
                                           month => '9',  
                                           day =>   '20' )
@@ -159,7 +159,7 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
     my $start_set = DateTime::Set->from_recurrence(
        next  => sub { $_[0]->truncate( to => 'day' )
                            ->add( days => 1 ) },
-       span => new DateTime::Span(
+       span => DateTime::Span->from_datetimes(
                    start => new DateTime( year =>  '1810',
                                           month => '9',
                                           day =>   '20' )
