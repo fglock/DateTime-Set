@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 22;
+plan tests => 23;
 
 use DateTime;
 use DateTime::Duration;
@@ -161,7 +161,7 @@ my $months = DateTime::Set->from_recurrence(
 );
 my $bounded = $months->intersection( $set );
 
-  # TODO: write the tests :)
+ok( ! defined $bounded->count, "will not count: there are too many elements" );
 
 }
 

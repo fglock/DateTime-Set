@@ -1,8 +1,5 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
-- finish writing the tests at t/04recurrence.t
-  (tests for lazy evaluation when "bounding" the recurrences)
-
 - Test for errors, in case the "next/previous" 
   recurrence spec is not followed (detect infinite loop).
 

@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1408';
+    $VERSION = '0.1409';
 }
 
 sub iterate {
@@ -205,7 +205,7 @@ sub from_recurrence {
              if $param{span};
         # warn "base set is $base_set\n";
 
-        my $data;
+        my $data = {};
         $self->{set} = 
             $base_set->_recurrence(
                 $param{next}, 
@@ -897,7 +897,7 @@ limited by a span.
 
 If a set is specified as a recurrence and has no
 fixed begin and end datetimes, then C<as_list> will return C<undef>
-unless you limit it with a span.  Please note that this is explicitly
+unless you limit it with a span. Please note that this is explicitly
 not an empty list, since an empty list is a valid return value for
 empty sets!
 

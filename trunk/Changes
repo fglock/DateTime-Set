@@ -1,6 +1,8 @@
 Changes for DateTime::Set
 
-- evaluation of bounded recurrences is "lazier"
+0.1409  2004-03-23
+- evaluation of bounded recurrences is "lazier".
+  (DateTime::Incomplete tests are twice as fast)
 
 0.1408  2004-03-22
 - refactored S::I::_recurrence class:

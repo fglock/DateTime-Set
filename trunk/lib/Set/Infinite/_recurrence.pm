@@ -82,11 +82,18 @@ BEGIN {
 #
 # The recurrence generation is based on an idea from Dave Rolsky.
 #
+
+# use Data::Dumper;
+# use Carp qw(cluck);
+
 sub _recurrence { 
     my $set = shift;
     my ( $callback_next, $callback_previous, $delta ) = @_;
 
-    # warn "reusing delta" if defined $delta ;
+    $delta->{count} = 0 unless defined $delta->{delta};
+
+    # warn "reusing delta: ". $delta->{count} if defined $delta->{delta};
+    # warn Dumper( $delta );
 
     if ( $#{ $set->{list} } != 0 || $set->is_too_complex )
     {
@@ -114,12 +121,11 @@ sub _recurrence {
         
         $result = $set->new();
 
-        # get "delta" - if this will take too much time, then abort earlier
+        # get "delta" - abort if this will take too much time.
 
-        unless ( $delta ) 
+        unless ( defined $delta->{max_delta} )
         {
-
-          for ( 1 .. 50 ) 
+          for ( $delta->{count} .. 10 ) 
           {
             if ( $max_open )
             {
@@ -133,7 +139,7 @@ sub _recurrence {
                  { a => $min1, b => $min1, open_begin => 0, open_end => 0 };
             $min2 = $callback_next->( $min1 );
             
-            if ( $delta ) 
+            if ( $delta->{delta} ) 
             {
                 $delta->{delta} += $min2 - $min1;
             }
@@ -141,18 +147,15 @@ sub _recurrence {
             {
                 $delta->{delta} = $min2 - $min1;
             }
+            $delta->{count}++;
             $min1 = $min2;
           }
-          $delta->{delta} *= 4;
-        }
-        else
-        {
-            # warn "had delta";
+
+          $delta->{max_delta} = $delta->{delta} * 40;
         }
 
-        if ( $max < $min + $delta->{delta} ) 
+        if ( $max < $min + $delta->{max_delta} ) 
         {
-
           for ( 1 .. 200 ) 
           {
             if ( $max_open )
@@ -167,13 +170,9 @@ sub _recurrence {
                  { a => $min1, b => $min1, open_begin => 0, open_end => 0 };
             $min1 = $callback_next->( $min1 );
           } 
-          # warn "BIG set";
+        }
 
-        }
-        else 
-        { 
-            # warn "give up";
-        }
+        # cluck "give up";
     }
 
     # return a "_function", such that we can backtrack later.
