@@ -959,7 +959,8 @@ C<DateTime::SpanSet> object returns a C<DateTime::SpanSet> object.
 If C<complement> is called without any arguments, then the result is a
 C<DateTime::SpanSet> object representing the spans between each of the
 set's elements.  If complement is given an argument, then the return
-value is a C<DateTime::Set> object.
+value is a C<DateTime::Set> object representing the
+I<set difference> between the sets.
 
 All other operations will always return a C<DateTime::Set>.
 
