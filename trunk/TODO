@@ -1,13 +1,6 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
-- DT::Set needs a fix to avoid generating _huge_ in-memory sets,
-  when the result of an operation is a finite set.
-  For example: "every minute in year 2003"
-  (see SKIP in DateTime::Incomplete t/02incomplete.t)
-
 - implement as_list() in DT::SpanSet.pm
-
-- implement previous() in DT::SpanSet.pm
 
 - discuss functions like 
     is_infinite

@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+- implement previous() in DT::SpanSet.pm
+- Fixed: set_time_zone would mutate a clone.
+
 0.11   2003-09-19
 - Fixed callback return value on set_time_zone. 
   This caused the start date to be equal to the end date.

@@ -3,15 +3,12 @@
 use strict;
 
 use Test::More;
-plan tests => 6;
+plan tests => 8;
 
 use DateTime;
 use DateTime::Duration;
 use DateTime::Set;
-
-#======================================================================
-# recurrence
-#====================================================================== 
+use DateTime::SpanSet;
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -107,8 +104,9 @@ is( $res, '1810-09-01 1810-10-01 1810-11-01',
     is( $res, '1810-09-01 1810-10-01 1810-11-01',
         "limited iterator give $res" );
 
+  {
     # Make another iterator over a short time range
-    $iter = $all_months->iterator( start => $t1, end => $t2 );
+    my $iter = $all_months->iterator( start => $t1, end => $t2 );
     
     # And make sure that we run on the correct months only
     $limit = 4; # Make sure we don't hit an infinite iterator
@@ -119,6 +117,7 @@ is( $res, '1810-09-01 1810-10-01 1810-11-01',
     $res = join( ' ', @res);
     is( $res, '1810-09-01 1810-10-01 1810-11-01',
         "limited iterator give $res" );
+  }
 
     # And try looping just using a start date and get 4 items
     # to make sure that we didn't damage the original set
@@ -131,6 +130,51 @@ is( $res, '1810-09-01 1810-10-01 1810-11-01',
     $res = join( ' ', @res);
     is( $res, '1810-09-01 1810-10-01 1810-11-01 1810-12-01',
         "limited iterator give $res" );
+}
+ 
+
+# test SpanSet iterator
+{
+    # Make a recurrence that returns all months
+    my $all_months = DateTime::Set->from_recurrence( recurrence => $month_callback );
+    $all_months = DateTime::SpanSet->from_sets(
+        start_set => $all_months, end_set => $all_months ); 
+
+    my $t1 = new DateTime( year => '1810', month => '08', day => '22' );
+    my $t2 = new DateTime( year => '1810', month => '11', day => '24' );
+    my $span = DateTime::Span->from_datetimes( start => $t1, end => $t2 );
+
+  {
+    # make an iterator with an explicit span argument
+    my $iter = $all_months->iterator( span => $span );
+    
+    # And make sure that we run on the correct months only
+    my $limit = 4; # Make sure we don't hit an infinite iterator
+    my @res = ();
+    while ( my $span = $iter->next() and $limit--) {
+        push @res, $span->min->ymd() . "," . $span->max->ymd();
+    }
+    my $res = join( ' ', @res);
+    is( $res, '1810-08-22,1810-09-01 1810-09-01,1810-10-01 '.
+              '1810-10-01,1810-11-01 1810-11-01,1810-11-24',
+        "limited iterator give $res" );
+  }
+
+  {
+    # make an iterator, again.
+    my $iter = $all_months->iterator( span => $span );
+
+    # And make sure that we run on the correct months only
+    my $limit = 4; # Make sure we don't hit an infinite iterator
+    my @res = ();
+    while ( my $span = $iter->previous() and $limit--) {
+        push @res, $span->min->ymd() . "," . $span->max->ymd();
+    }
+    my $res = join( ' ', @res);
+    is( $res, '1810-11-01,1810-11-24 1810-10-01,1810-11-01 '.
+              '1810-09-01,1810-10-01 1810-08-22,1810-09-01',
+        "limited iterator give $res" );
+  }
 }
  
 
