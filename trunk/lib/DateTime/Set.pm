@@ -678,30 +678,32 @@ These methods can be used to iterate over the dates in a set.
         print $dt->ymd;
     }
 
-The C<iterator()> method can optionally take parameters to control the
-range of the iteration.  These are C<start> or C<after>, and C<end> or
-C<before> (see C<DateTime::Span->from_datetime()> for full details).
-If a parameter is ommitted then there is no restriction on that side.
-So specifying only C<start> may iterate forever.
+The boundaries of the iterator can be limited by passing it a C<span>
+parameter.  This should be a C<DateTime::Span> object which delimits
+the iterator's boundaries.  Optionally, instead of passing an object,
+you can pass any parameters that would work for one of the
+C<DateTime::Span> class's constructors, and an object will be created
+for you.
+
+Obviously, if the span you specify does is not restricted both at the
+start and end, then your iterator may iterate forever, depending on
+the nature of your set.  User beware!
 
 The C<next()> or C<previous()> method will return C<undef> when there
 are no more datetimes in the iterator.
-
-Obviously, if a set is specified as a recurrence and has no fixed end
-datetime, then it may never stop returning datetimes.  User beware!
 
 =item * as_list
 
 Returns a list of C<DateTime> objects.
 
-If a set is specified as a recurrence and has no fixed begin or end
-datetimes, then C<as_list> will return C<undef>.  Please note that
-this is explicitly not an empty list, since an empty list is a valid
-return value for empty sets!
-
   my @dt = $set->as_list( span => $span );
 
-This builds a DateTime array of events that happen inside the span.
+Just as with the C<iterator()> method, the C<as_list()> method can be
+limited by a span.  If a set is specified as a recurrence and has no
+fixed begin and end datetimes, then C<as_list> will return C<undef>
+unless you limit it with a span.  Please note that this is explicitly
+not an empty list, since an empty list is a valid return value for
+empty sets!
 
 =item * union / intersection / complement
 
