@@ -480,7 +480,7 @@ sub as_list {
 
 # Set::Infinite methods
 
-my $max_iterate = 10;
+my $max_iterate = 20;
 
 sub intersection {
     my ($set1, $set2) = @_;
