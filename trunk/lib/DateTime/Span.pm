@@ -62,10 +62,15 @@ sub new {
         ( $end,   $open_end   ) = ( $args{end},    0 ) if exists $args{end};
         ( $end,   $open_end   ) = ( $args{before}, 1 ) if exists $args{before};
 
+        if ( $start > $end ) {
+            die "Span cannot start after the end in DateTime::Span->new\n";
+        }
         my $set = Set::Infinite->new( $start, $end );
         if ( $start != $end ) {
-            $set = $set->complement( $start );
-            $set = $set->complement( $end );
+            # remove start, such that we have ">" instead of ">="
+            $set = $set->complement( $start ) if $open_start;  
+            # remove end, such that we have "<" instead of "<="
+            $set = $set->complement( $end )   if $open_end;    
         }
     }
 
@@ -250,9 +255,17 @@ span.
 
 These set operations result in a DateTime::SpanSet.
 
+    $set = $set1->union( $set2 );         # like "OR", "insert", "both"
+    $set = $set1->complement( $set2 );    # like "delete", "remove"
+    $set = $set1->intersection( $set2 );  # like "AND", "while"
+    $set = $set1->complement;             # like "NOT", "negate", "invert"
+
 =item intersects / contains
 
-...
+These set functions result in a boolean value.
+
+    if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
+    if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
 
 =head1 SUPPORT
 

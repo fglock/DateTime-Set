@@ -194,21 +194,44 @@ First or last dates in the set.
 
 The total size of the set, as a DateTime::Duration.
 
+This is the sum of the durations of all spans.
+
 =item * span
 
-The span of the set, as a DateTime::Span.
+The total span of the set, as a DateTime::Span.
 
 =item * union / intersection / complement
 
-...
+These set operations return the resulting SpanSet.
+
+    $set = $set1->union( $set2 );         # like "OR", "insert", "both"
+    $set = $set1->complement( $set2 );    # like "delete", "remove"
+    $set = $set1->intersection( $set2 );  # like "AND", "while"
+    $set = $set1->complement;             # like "NOT", "negate", "invert"
 
 =item intersects / contains
 
-...
+These set functions return a boolean value.
+
+    if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
+    if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
 
 =item * iterator / next
 
-...
+This method can be used to iterate over the date-spans in a set.
+
+    $iter = $set1->iterator;
+    while ( $dt = $iter->next ) {
+        # $dt is a DateTime::Span
+        print $dt->min->ymd;   # first date of span
+        print $dt->max->ymd;   # last date of span
+    }
+
+The C<next()> returns C<undef> when there are no more datetimes in the
+iterator.  Obviously, if a set is specified as a recurrence and has no
+fixed end datetime, then it may never stop returning datetimes.  User
+beware!
+
 
 =head1 SUPPORT
 

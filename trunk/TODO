@@ -1,9 +1,29 @@
-- discuss DateTime::SpanSet begin_set/end_set constructor
-  or: implement until() into DateTime::Set
-
-- Document the part of the API that was inherited from Set::Infinite. 
+- discuss functions like 
+    is_infinite_set
+    is_empty_set 
+    is_closed_start 
+    is_closed_end
 
 - Tests for DateTime::Span
 
 - Tests for DateTime::SpanSet
+
+- New constructors-from-duration API:
+
+    $set2 = DateTime::Span->new( 
+        start => $date1, 
+        end => $date2 );                 # OK
+    $set2 = DateTime::Span->new( 
+        start => $date1, 
+        duration => $dt_duration );      # TODO
+
+    $set1 = DateTime::SpanSet->new( 
+        sets => [ $dt_set, $dt_set ] );  # OK
+    $set1 = DateTime::SpanSet->new( 
+        spans => [ $dt_span, $dt_span ], 
+        duration => $dt_duration );      # TODO
+    $set1 = DateTime::SpanSet->new(
+        dates => [ $dt_span, $dt_span ],
+        duration => $dt_duration );      # TODO
+
 

@@ -159,8 +159,10 @@ sub _setup_recurrence_with_infinity {
 
     # -- begin hack
 
-    # This code will be removed, as soon as Set::Infinite can deal directly with this type of set generation.
-    # Since this is a Set::Infinite custom function, the iterator will need some help.
+    # This code will be removed, as soon as Set::Infinite can deal 
+    # directly with this type of set generation.
+    # Since this is a Set::Infinite "custom" function, the iterator 
+    # will need some help.
     # We are setting up the first() cache directly,
     # because Set::Infinite has no hint of how to do it.
 
@@ -304,9 +306,6 @@ DateTime::Set - Date/time sets math
 
 =head1 SYNOPSIS
 
-NOTE: this is just an example of how the API will look like when
-this module is finished.
-
     use DateTime;
     use DateTime::Set;
 
@@ -420,11 +419,19 @@ beware!
 
 =item union / intersection / complement
 
-...
+These set operations result in a DateTime::Set.
+
+    $set = $set1->union( $set2 );         # like "OR", "insert", "both"
+    $set = $set1->complement( $set2 );    # like "delete", "remove"
+    $set = $set1->intersection( $set2 );  # like "AND", "while"
+    $set = $set1->complement;             # like "NOT", "negate", "invert"
 
 =item intersects / contains
 
-...
+These set operations result in a boolean value.
+
+    if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
+    if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
 
 =back
 

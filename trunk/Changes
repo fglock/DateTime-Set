@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.15
+- revised docs, from Dave Rolsky
+- small bugfix in creating open spans
+
 0.14
 - added DateTime::Span and DateTime::SpanSet
 - put "..." to mark where we need more docs
