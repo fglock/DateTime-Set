@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.03     2003-04-26
+- requires Set::Infinite 0.49
+
 0.02     2003-04-20
 - removed some calls to 'new'
 - added many methods from DT::Event::Recurrence
