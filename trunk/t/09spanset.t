@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 33;
+plan tests => 39;
 
 use DateTime;
 use DateTime::Duration;
@@ -74,7 +74,7 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
     is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
         "got $res" );
 
-    {
+  {
     # next( $dt )
     my $dt = new DateTime( year => '1809', month => '8',  day => '19' );
     my $next = $s1->next( $dt );
@@ -90,21 +90,35 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
         "next span got $res" );
     is( $next->end_is_open, 1, 'end is open' );
     isnt( $next->start_is_open, 1, 'start is closed' );
-    }
+  }
 
-    {
+  {
     # previous( $dt )
     my $dt = new DateTime( year => '1812', month => '8',  day => '19' );
     my $previous = $s1->previous( $dt );
     $res = span_str( $previous );
     is( $res, '1811-10-21T00:00:00..1812-08-19T00:00:00',
         "previous dt got $res" );
+    is( $previous->end_is_open, 1, 'end is open' );
+    isnt( $previous->start_is_open, 1, 'start is closed' );
     # previous( $span )
     $previous = $s1->previous( $previous );
     $res = span_str( $previous );
     is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
         "previous span got $res" );
-    }
+    is( $previous->end_is_open, 1, 'end is open' );
+    is( $previous->start_is_open, 1, 'start is open' );
+    is( $previous->duration->delta_seconds, INFINITY, 'span size is infinite' );
+  }
+
+  TODO: {
+    local $TODO = 'spanset duration should be an object';
+    eval { 
+      is ( $s1->duration->delta_seconds, INFINITY, 
+        'spanset size is infinite' );
+    } or
+        ok( 0, 'not a duration object' );
+  }
 
 }
 

@@ -1,6 +1,7 @@
 Changes for DateTime::Set
 
-- implemented DateTime::SpanSet::as_list
+- new DateTime::SpanSet methods:
+  as_list( $span_spec ), next( $dt|$span ), previous( $dt|$span )
 
 0.1204  2003-10-10
 - DateTime::SpanSet and DateTime::Span inherit DateTime::Set $VERSION

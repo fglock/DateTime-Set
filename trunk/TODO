@@ -1,14 +1,12 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
 - implement set( locale => .. ) in Span and SpanSet
+  implement iterator( \&sub )
 
 - specify what these DT::SpanSet methods should return -
   a datetime, a span, or what - under discussion in datetime@perl.org 
-    current( $dt )
-    closest( $dt )
-- these functions should probably accept both a dt or a span as a parameter, 
-  such that they can be used as a kind of iterator - give previous result,
-  ask for next.
+    current( $dt|$span )
+    closest( $dt|$span )
 
 - discuss functions like 
     is_infinite
@@ -18,13 +16,19 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
   using 'function composition'
 
 - move all 'set-specific' code to Set::Infinite::_recurrence 
+  use accessors instead of structure references
 
 - functions like before(), after(), during() might be useful
   in DT::Span
   or maybe these should be called next(), previous(), current(), closest()
 
-- tests for DT::Span and DT::SpanSet 'duration()'
-- duration() returns 'Inf' scalar - should be a DT::Duration::Infinite
+- document better:
+  how to transform a Span into an iterator - for example,
+  get the list of days in a span
 
-- rewrite intersection of recurrences 'previous' function
+- DateTime::SpanSet duration() returns 'Inf' scalar - 
+  should be a DT::Duration::Infinite
+  (DT::Span is correct)
+
+- optimization: rewrite intersection of recurrences 'previous' function
 
