@@ -2,7 +2,7 @@
 # This program is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
 
-package DateTime::Span;
+package DateTime::SpanSet;
 
 use strict;
 
@@ -17,44 +17,24 @@ use vars qw( @ISA $VERSION );
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
-
-# note: the constructor must clone its DateTime parameters, such that
-# the set elements become immutable
 sub new {
     my $class = shift;
     my %args = validate( @_,
-                         { start =>
+                         { span =>
                            { type => OBJECT,
                              optional => 1,
                            },
-                           end =>
-                           { type => OBJECT,
-                             optional => 1,
-                           },
-                           after =>
-                           { type => OBJECT,
-                             optional => 1,
-                           },
-                           before => 
+                           set =>
                            { type => OBJECT,
                              optional => 1,
                            },
                          }
                        );
     my $self = {};
-    my ( $start, $open_start, $end, $open_end );
-    ( $start, $open_start ) = ( NEG_INFINITY,  0 );
-    ( $start, $open_start ) = ( $args{start},  0 ) if exists $args{start};
-    ( $start, $open_start ) = ( $args{after},  1 ) if exists $args{after};
-    ( $end,   $open_end   ) = ( INFINITY,      0 );
-    ( $end,   $open_end   ) = ( $args{end},    0 ) if exists $args{end};
-    ( $end,   $open_end   ) = ( $args{before}, 1 ) if exists $args{before};
-
-    my $set = Set::Infinite->new( $start, $end );
-    if ( $start != $end ) {
-      $set = $set->complement( $start );
-      $set = $set->complement( $end );
-    }
+    my $set;
+    $set = $args{span}->{set} if exists $args{span};
+    $set = $args{set}->{set}  if exists $args{set};
+    $set = Set::Infinite->new() unless defined $set;
     $self->{set} = $set;
     bless $self, $class;
     return $self;
@@ -66,6 +46,21 @@ sub clone {
         }, ref $_[0];
 }
 
+# iterator() doesn't do much yet.
+# This might change as the API gets more complex.
+sub iterator {
+    return $_[0]->clone;
+}
+
+# next() gets the next element from an iterator()
+sub next {
+    my ($self) = shift;
+    my ($head, $tail) = $self->{set}->first;
+    $self->{set} = $tail;
+    bless $head, 'DateTime::Span' if ref $head;
+    return $head;
+}
+
 # Set::Infinite methods
 
 sub intersection {
@@ -74,10 +69,6 @@ sub intersection {
     my $tmp = $class->new();
     $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
-
-    # intersection() can generate something more complex than a span.
-    bless $tmp, 'Date::SpanSet';
-
     return $tmp;
 }
 
@@ -103,15 +94,6 @@ sub union {
     my $tmp = $class->new();
     $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
- 
-    # union() can generate something more complex than a span.
-    bless $tmp, 'Date::SpanSet';
-
-    # # We have to check it's internal structure to find out.
-    # if ( $#{ $tmp->{set}->{list} } != 0 ) {
-    #    bless $tmp, 'Date::SpanSet';
-    # }
-
     return $tmp;
 }
 
@@ -126,15 +108,6 @@ sub complement {
     else {
         $tmp->{set} = $set1->{set}->complement;
     }
-
-    # complement() can generate something more complex than a span.
-    bless $tmp, 'Date::SpanSet';
-
-    # # We have to check it's internal structure to find out.
-    # if ( $#{ $tmp->{set}->{list} } != 0 ) {
-    #    bless $tmp, 'Date::SpanSet';
-    # }
-
     return $tmp;
 }
 
@@ -148,11 +121,9 @@ sub max {
     ref($tmp) ? $tmp->clone : $tmp; 
 }
 
-# span == $self
-sub span { @_ }
+sub span { return $_[0]->{set}->span }
 
-# size is a DateTime::Duration
-sub size { return $_[0]->max - $_[0]->min; }
+sub size { return $_[0]->{set}->size }
 
 # unsupported Set::Infinite methods
 
@@ -165,17 +136,13 @@ __END__
 
 =head1 NAME
 
-DateTime::Span - Date/time spans
+DateTime::SpanSet - Date/time set of spans
 
 =head1 SYNOPSIS
 
-    use DateTime;
-    use DateTime::Span;
+    $set1 = DateTime::SpanSet->new( set => $dt_set );
 
-    $date1 = DateTime->new( year => 2002, month => 3, day => 11 );
-    $date2 = DateTime->new( year => 2003, month => 4, day => 12 );
-    $set2 = DateTime::Span->new( start => $date1, end => $date2 );
-    #  set2 = 2002-03-11 until 2003-04-12
+    $set1 = DateTime::SpanSet->new( span => $dt_span );
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
@@ -186,12 +153,19 @@ DateTime::Span - Date/time spans
     if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
 
     # data extraction 
-    $date = $set1->min;           # first date of the span
-    $date = $set1->max;           # last date of the span
+    $date = $set1->min;           # first date of the set
+    $date = $set1->max;           # last date of the set
+
+    $iter = $set1->iterator;
+    while ( $dt = $iter->next ) {
+        # $dt is a DateTime::Span
+        print $dt->min->ymd;   # first date of span
+        print $dt->max->ymd;   # last date of span
+    };
 
 =head1 DESCRIPTION
 
-DateTime::Span is a module for date/time spans or time-ranges. 
+DateTime::SpanSet is a module for sets of date/time spans or time-ranges. 
 
 =head1 METHODS
 
@@ -199,26 +173,10 @@ DateTime::Span is a module for date/time spans or time-ranges.
 
 =item * new 
 
-Generates a new span. 
+Creates a new span set. 
 
-A 'closed' span includes its end-dates:
-
-   $dates = DateTime::Set->new( start => $dt1, end => $dt2 );
-
-An 'open' span does not include its end-dates:
-
-   $dates = DateTime::Set->new( after => $dt1, before => $dt2 );
-
-A 'semi-open' span includes one of its end-dates:
-
-   $dates = DateTime::Set->new( start => $dt1, before => $dt2 );
-   $dates = DateTime::Set->new( after => $dt1, end => $dt2 );
-
-A span might have just a begin date, or just an end date. 
-These spans end, or start, in an imaginary 'forever' date:
-
-   $dates = DateTime::Set->new( start => $dt1 );
-   $dates = DateTime::Set->new( end => $dt2 );
+   $dates = DateTime::Set->new( span => $dt_span );  # from a DateTime::Span
+   $dates = DateTime::Set->new( set => $dt_set );    # from a DateTime::Set
 
 =back
 
@@ -227,8 +185,6 @@ These spans end, or start, in an imaginary 'forever' date:
 The size of the span, as a DateTime::Duration.
 
 =item * union / intersection / complement
-
-These set operations result in a DateTime::SpanSet.
 
 =head1 SUPPORT
 

@@ -216,7 +216,7 @@ sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
     return $tmp;
 }
@@ -225,7 +225,7 @@ sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
 
@@ -233,7 +233,7 @@ sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
 
@@ -241,7 +241,7 @@ sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
     return $tmp;
 }
@@ -251,7 +251,7 @@ sub complement {
     my $class = ref($set1);
     my $tmp = $class->new();
     if (defined $set2) {
-        $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+        $set2 = $class->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
     }
     else {
@@ -329,22 +329,9 @@ this module is finished.
 
 =head1 DESCRIPTION
 
-DateTime::Set is a module for date/time sets. It allows you to generate
-groups of dates, like "every wednesday", and then find all the dates
-matching that pattern, within a time range.
+DateTime::Set is a module for date/time sets. 
 
-=head1 ERROR HANDLING
-
-A method will return C<undef> if it can't find a suitable 
-representation for its result, such as when trying to 
-C<list()> a too complex set.
-
-Programs that expect to generate empty sets or complex sets
-should check for the C<undef> return value when extracting data.
-
-Set elements must be either a C<DateTime> or a C<+/- Infinity> value.
-Scalar values, including date strings, are not expected and
-might cause strange results.
+It allows you to generate list of dates, and recurrences like "every wednesday".
 
 =head1 METHODS
 
@@ -352,7 +339,7 @@ might cause strange results.
 
 =item * new 
 
-Generates a new set. The set can be generated from a list of dates, or from a "recurrence" subroutine.
+Creates a new set. The set can be generated from a list of dates, or from a "recurrence" subroutine.
 
 From a list of dates:
 
@@ -366,7 +353,7 @@ From a recurrence:
         recurrence => sub { $_[0]->truncate( to => 'month' )->add( months => 1 ) }, 
     );
 
-The start and end parameters are optional.
+The start and end bounding parameters are optional.
 
 =item * add
 
