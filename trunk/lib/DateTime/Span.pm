@@ -34,7 +34,7 @@ sub from_datetimes {
                            { type => OBJECT,
                              optional => 1,
                            },
-                           before => 
+                           before =>
                            { type => OBJECT,
                              optional => 1,
                            },
@@ -42,35 +42,34 @@ sub from_datetimes {
                        );
     my $self = {};
     my $set;
-    unless ( grep { exists $args{$_} } qw( start end after before ) ) {
-        die "No arguments given to DateTime::Span->new\n";
+
+    die "No arguments given to DateTime::Span->from_datetimes\n"
+        unless keys %args;
+
+    if ( exists $args{start} && exists $args{after} ) {
+        die "Cannot give both start and after arguments to DateTime::Span->from_datetimes\n";
     }
-    else {
-        if ( exists $args{start} && exists $args{after} ) {
-            die "Cannot give both start and after arguments to DateTime::Span->new\n";
-        }
-        if ( exists $args{end} && exists $args{before} ) {
-            die "Cannot give both end and before arguments to DateTime::Span->new\n";
-        }
+    if ( exists $args{end} && exists $args{before} ) {
+        die "Cannot give both end and before arguments to DateTime::Span->from_datetimes\n";
+    }
 
-        my ( $start, $open_start, $end, $open_end );
-        ( $start, $open_start ) = ( NEG_INFINITY,  0 );
-        ( $start, $open_start ) = ( $args{start},  0 ) if exists $args{start};
-        ( $start, $open_start ) = ( $args{after},  1 ) if exists $args{after};
-        ( $end,   $open_end   ) = ( INFINITY,      0 );
-        ( $end,   $open_end   ) = ( $args{end},    0 ) if exists $args{end};
-        ( $end,   $open_end   ) = ( $args{before}, 1 ) if exists $args{before};
+    my ( $start, $open_start, $end, $open_end );
+    ( $start, $open_start ) = ( NEG_INFINITY,  0 );
+    ( $start, $open_start ) = ( $args{start},  0 ) if exists $args{start};
+    ( $start, $open_start ) = ( $args{after},  1 ) if exists $args{after};
+    ( $end,   $open_end   ) = ( INFINITY,      0 );
+    ( $end,   $open_end   ) = ( $args{end},    0 ) if exists $args{end};
+    ( $end,   $open_end   ) = ( $args{before}, 1 ) if exists $args{before};
 
-        if ( $start > $end ) {
-            die "Span cannot start after the end in DateTime::Span->new\n";
-        }
-        $set = Set::Infinite->new( $start, $end );
-        if ( $start != $end ) {
-            # remove start, such that we have ">" instead of ">="
-            $set = $set->complement( $start ) if $open_start;  
-            # remove end, such that we have "<" instead of "<="
-            $set = $set->complement( $end )   if $open_end;    
-        }
+    if ( $start > $end ) {
+        die "Span cannot start after the end in DateTime::Span->from_datetimes\n";
+    }
+    $set = Set::Infinite->new( $start, $end );
+    if ( $start != $end ) {
+        # remove start, such that we have ">" instead of ">="
+        $set = $set->complement( $start ) if $open_start;  
+        # remove end, such that we have "<" instead of "<="
+        $set = $set->complement( $end )   if $open_end;    
     }
 
     $self->{set} = $set;
@@ -150,7 +149,7 @@ sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = {};  # $class->new();
-    $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
 
     # intersection() can generate something more complex than a span.
@@ -162,16 +161,14 @@ sub intersection {
 sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
-    $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
 
 sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
-    $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
 
@@ -179,7 +176,7 @@ sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = {};   # $class->new();
-    $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
  
     # union() can generate something more complex than a span.
@@ -198,7 +195,7 @@ sub complement {
     my $class = ref($set1);
     my $tmp = {};   # $class->new;
     if (defined $set2) {
-        $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+        $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
     }
     else {
