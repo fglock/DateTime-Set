@@ -1,19 +1,31 @@
-- remove negative-duration hacks - check if there are bugs in DT::Duration!
+TODO list for DT::Set, DT::Span, and DT::SpanSet
 
-- intersection() function composition in DateTime::Set
-    - check 'span'
-    - add tests
-    - 'union' too ?
+- modify intersection() and other methods that accept a DT object,
+  to accept a list of DT objects.  
+  Suggested by Ben Bennet, I think.
 
-- check 'span' in next/previous methods
-    - add tests
+- all methods should accept/return DT::Infinity objects
+  instead of infinity-scalars.
+  Modify docs and tests accordingly.
+  Note: this should be further discussed in datetime@perl.org before 
+        implementing, because it might break other modules tests!
 
-- as_list in SpanSet.pm
-- previous in SpanSet for iterators
+- implement 'previous-only recurrences' in DT::Set.pm
+
+- implement as_list() in DT::SpanSet.pm
+
+- implement previous() in DT::SpanSet.pm
 
 - discuss functions like 
     is_infinite
     is_empty 
-
     cardinality ?
+
+- implement faster DT::Set::complement(), 
+  using 'function composition'
+
+- move all 'set-specific' code to Set::Infinite::Callback ?
+
+- functions like before(), after(), during() might be useful
+  in DT::Span
 

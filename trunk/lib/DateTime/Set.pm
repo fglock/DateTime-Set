@@ -22,11 +22,7 @@ use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 
 BEGIN {
-    # [FIXED] This doesn't work - might be a DT::Duration bug
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
-
-    # $neg_nanosecond = DateTime::Duration->new( nanoseconds => 0 );
-    # $neg_nanosecond->{nanoseconds} = -1;
 }
 
 # _add_callback( $set_infinite, $datetime_duration )
