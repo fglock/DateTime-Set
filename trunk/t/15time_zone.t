@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 10;
+plan tests => 11;
 
 use DateTime;
 use DateTime::Set;
@@ -59,6 +59,16 @@ my $original = $t1->datetime . ' ' .
 
 is( $str, '2001-12-01T00:00:00 Asia/Taipei', 'recurrence with time zone' );
 is( $original, '2001-11-22T00:00:00 floating', 'does not mutate arg' );
+
+TODO: {
+  local $TODO = "Time zone settings do not backtrack";
+  # bug reported by Tim Mueller-Seydlitz
+
+  my $t3 = $t1->clone->set_time_zone( 'America/Sao_Paulo' );
+  my $str = $months->next( $t3 )->datetime . ' ' .
+            $months->next( $t3 )->time_zone_long_name;
+  is( $str, '2001-12-01Txx:00:00 America/Sao_Paulo', 'recurrence with time zone, arg has time zone' );
+}
 
 # set locale, add duration
 is ( $months->clone->add( days => 1 )->
