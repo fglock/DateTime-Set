@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.13
+- added tests for set operations with recurrences/add
+
 0.12
 - iterator passes all tests
 - the API is complete, as described in SYNOPSIS

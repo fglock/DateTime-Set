@@ -7,17 +7,38 @@ package DateTime::Set;
 use strict;
 
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
-use Set::Infinite 0.43;
+use Set::Infinite '0.44';
+$Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.00_12';
+$VERSION = '0.00_13';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
-# TODO: do we really need this method?
-sub add { 
+
+# _add_callback( $set_infinite, $datetime_duration )
+# Internal function
+#
+# Adds a value to a DateTime in a set.
+#
+# this is an internal callback - it is not an object method!
+# Used by: add()
+#
+sub _add_callback {
+    my $set = shift;   # $set is a Set::Infinite object
+    my $dt = shift;    # $dt is a DateTime::Duration
+    my $min = $set->min;
+    if ( ref($min) ) {
+        $min = $min->clone;
+        $min->add_duration( $dt ) if ref($min);
+    }
+    my $result = $set->new( $min );
+    return $result;
+}; 
+
+sub add {
     my ($self, %parm) = @_;
     my $dt;
     if (exists $parm{duration}) {
@@ -26,16 +47,16 @@ sub add {
     else {
         $dt = new DateTime::Duration( %parm );
     }
-    my $result = $self->{set}->iterate( 
-        sub {
-            my $set = shift;
-            my $min = $set->min;
-            $min->add_duration( $dt );
-            return $set->new( $min->clone );
-        }
-    );
-    $self->{set} = $result;
-    return $self;
+    my $result = $self->{set}->iterate( \&_add_callback, $dt );
+
+    ### this code would enable 'subroutine method' behaviour
+    # $self->{set} = $result;
+    # return $self;
+
+    ### this code enables 'function method' behaviour
+    my $set = $self->clone;
+    $set->{set} = $result;
+    return $set;
 }
 
 # note: the constructor must clone its DateTime parameters, such that
@@ -74,14 +95,10 @@ sub new {
         # Set::Infinity->iterate() builds a "set-function" with a callback:
         my $start = ( exists $args{start} ) ? $args{start} : NEG_INFINITY;
         my $end =   ( exists $args{end} )   ? $args{end}   : INFINITY;
-        $self->{set} = Set::Infinite->new( $start, $end );
-        # this "sub" is a closure - $args{recurrence} won't change anymore.
-        $self->{set} = $self->{set}->iterate( 
-            sub { 
-                _recurrence( $_[0], $args{recurrence} );
-            } 
-        );
-        # new( $parm{start}->clone, INFINITY )-> .....
+        $start = $start->clone if ref($start);
+        $end =   $end->clone   if ref($end);
+        my $tmp_set = Set::Infinite->new( $start, $end );
+        $self->{set} = _recurrence_callback( $tmp_set, $args{recurrence} );  
     }
     else {
         $self->{set} = Set::Infinite->new;
@@ -96,18 +113,20 @@ sub clone {
         }, ref $_[0];
 }
 
-# _recurrence( &callback )
+# _recurrence_callback( $set_infinite, \&callback )
 # Internal function
 #
 # Generates "recurrences" from a callback.
 # These recurrences are simple lists of dates.
 #
 # this is an internal callback - it is not an object method!
+# Used by: new( recurrence => )
 #
 # The recurrence generation is based on an idea from Dave Rolsky.
 #
-sub _recurrence {
+sub _recurrence_callback {
     # warn "_recurrence args: @_";
+    # note: $self is a Set::Infinite object
     my ( $self, $callback ) = @_;    
 
     # test for the special case when we have an infinite recurrence
@@ -118,45 +137,53 @@ sub _recurrence {
         return NEG_INFINITY if $self->min == NEG_INFINITY && $self->max == NEG_INFINITY;
         return INFINITY if $self->min == INFINITY && $self->max == INFINITY;
         # return an internal "_function", such that we can 
-        # backtrack and solve the problem later.
+        # backtrack and solve the equation later.
+        $self = $self->copy;
         my $func = $self->_function( 'iterate', 
             sub {
-                _recurrence( $_[0], $callback );
+                _recurrence_callback( $_[0], $callback );
             }
         );
 
         # -- begin hack
 
-        # Since this is a custom function, the iterator will need some help.
+        # This code will be removed, as soon as Set::Infinite can deal directly with this type of set generation.
+        # Since this is a Set::Infinite custom function, the iterator will need some help.
         # We are setting up the first() cache directly,
         # because Set::Infinite has no hint of how to do it.
 
         if ($self->min == INFINITY || $self->min == NEG_INFINITY) {
+            # warn "RECURR: start in ".$self->min;
             $func->{first} = [ $self->new( $self->min ), $self ];
         }
         else {
             my $this = $func->min;
             my $next = &$callback($this->clone);
-            # warn "preparing first: $this ; $next";
-            $func->{first} = [ 
-                $self->new( $func->min ), 
-                $self->_function( 'iterate',
+            # warn "RECURR: preparing first: ".$this->ymd." ; ".$next->ymd;
+            my $next_set = $self->intersection( $next->clone, INFINITY );
+            # warn "next_set min is ".$next_set->min->ymd;
+            my @first = ( 
+                $self->new( $this->clone ), 
+                $next_set->_function( 'iterate',
                     sub {
-                        _recurrence( $self->intersection( $next, INFINITY ), $callback );
-                    } ) ];
+                        _recurrence_callback( $_[0], $callback );
+                    } ) );
+            # warn "RECURR: preparing first: $this ; $next; got @first";
+            $func->{first} = \@first;
         }
         # -- end hack
 
+        # warn "func parent is ". $func->{first}[1]{parent}{list}[0]{a}->ymd;
         return $func;
     }
 
     # this is a finite recurrence - generate it.
-
+    # warn "RECURR: FINITE recurrence";
     my $min = $self->min;
     return unless defined $min;
     $min = $min->clone->subtract( seconds => 1 );
     my $max = $self->max;
-    # warn "_recurrence called with ".$min->ymd."..".$max->ymd;
+    # warn "_recurrence_callback called with ".$min->ymd."..".$max->ymd;
     my $result = $self->new;
     my $subset;
     do {
@@ -343,12 +370,13 @@ The start and end parameters are optional.
 
 =item * add
 
-    $set->add( year => 1 );
+    $new_set = $set->add( year => 1 );
 
     $dtd = new DateTime::Duration( year => 1 );
-    $set->add( duration => $dtd );
+    $new_set = $set->add( duration => $dtd );
 
-This method adds a value to the current datetime set.
+This function method adds a value to a DateTime set, generating a new set.
+
 It moves the whole set values ahead or back in time.
 
 Example:

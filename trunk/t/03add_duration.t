@@ -21,7 +21,7 @@ my $s2 = $s1->add( duration => $dur1 );
 ok( $s2->min->ymd eq '1811-11-22', 
     'got 1811-11-22 - min' );
 
-$s2->add( months => 1 );
+$s2 = $s2->add( months => 1 );
 ok( $s2->min->ymd eq '1811-12-22',
     'got 1811-12-22 - min' );
 
