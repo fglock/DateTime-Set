@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 43;
+plan tests => 44;
 
 use DateTime;
 use DateTime::Duration;
@@ -73,6 +73,14 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
     $res = span_str( $spans[0] );
     is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
         "got $res" );
+
+    # intersected_spans
+    my $intersected = $s1->intersected_spans( $end1 );
+    $res = span_str( $intersected );
+    # diag "intersected with ". span_str( $s1 );
+    is( $res, $end1->datetime .'..'.$start2->datetime,
+        "got $res" );
+    
 
   {
     # next( $dt )

@@ -239,8 +239,18 @@ sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->empty_set();
-    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2, @_ ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
+    return $tmp;
+}
+
+sub intersected_spans {
+    my ($set1, $set2) = ( shift, shift );
+    my $class = ref($set1);
+    my $tmp = $class->empty_set();
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2, @_ ] )
+        unless $set2->can( 'union' );
+    $tmp->{set} = $set1->{set}->intersected_spans( $set2->{set} );
     return $tmp;
 }
 
@@ -248,7 +258,7 @@ sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->empty_set();
-    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2, @_ ] ) unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
 
@@ -256,7 +266,7 @@ sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->empty_set();
-    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2, @_ ] ) unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
 
@@ -264,7 +274,7 @@ sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->empty_set();
-    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2, @_ ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
     return $tmp;
 }
@@ -274,7 +284,7 @@ sub complement {
     my $class = ref($set1);
     my $tmp = $class->empty_set();
     if (defined $set2) {
-        $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+        $set2 = DateTime::Set->from_datetimes( dates => [ $set2, @_ ] ) unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
     }
     else {
@@ -468,6 +478,27 @@ C<DateTime::SpanSet> object.
     $set = $spanset->complement( $set2 );    # like "delete", "remove"
     $set = $spanset->intersection( $set2 );  # like "AND", "while"
     $set = $spanset->complement;             # like "NOT", "negate", "invert"
+
+=item * intersected_spans
+
+This method can accept a C<DateTime> list,
+a C<DateTime::Set>, a C<DateTime::Span>, or a C<DateTime::SpanSet>
+object as an argument.
+
+    $set = $set1->intersected_spans( $set2 );
+
+The method always returns a C<DateTime::SpanSet> object,
+containing all spans that are intersected by the given set.
+
+Unlike the C<intersection> method, the spans are not modified.
+See diagram below:
+
+               set1   [....]   [....]   [....]   [....]
+               set2      [................]
+
+       intersection      [.]   [....]   [.]
+
+  intersected_spans   [....]   [....]   [....]
 
 =item * intersects / contains
 

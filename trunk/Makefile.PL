@@ -8,7 +8,7 @@ WriteMakefile( NAME         => 'DateTime::Set',
                ABSTRACT     => 'DateTime set objects',
 
                PREREQ_PM    => { 'DateTime' => 0.12,
-                                 'Set::Infinite' => 0.5502,
+                                 'Set::Infinite' => 0.5503,
                                  'Test::More'  => 0,
                                },
              );

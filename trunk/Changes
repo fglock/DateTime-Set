@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.1405  2004-03-15
+- New method: intersected_spans
+  Suggested by Reinhold May
+  Name suggested by Dave Rolsky
+
 0.1404  2004-03-14
 - New methods: DateTime::SpanSet::start_set / end_set 
   These are the inverse of the "from_sets" method.
