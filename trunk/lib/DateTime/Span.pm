@@ -65,7 +65,7 @@ sub new {
         if ( $start > $end ) {
             die "Span cannot start after the end in DateTime::Span->new\n";
         }
-        my $set = Set::Infinite->new( $start, $end );
+        $set = Set::Infinite->new( $start, $end );
         if ( $start != $end ) {
             # remove start, such that we have ">" instead of ">="
             $set = $set->complement( $start ) if $open_start;  
