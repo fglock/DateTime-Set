@@ -64,19 +64,20 @@ sub _recurrence {
     }
     return $set->new( $min ) if $min == $max;
 
+    my $result;
     if ($min != NEG_INFINITY && $max != INFINITY) 
     {
         # print STDERR " finite \n";
 
-        my $result = $set->new();
-        my $next = $min;
-        while(1) 
+        $result = $set->new();
+        for ( 1 .. 200 ) 
         {
-            last if $next > $max;
-            push @{ $result->{list} }, { a => $next, b => $next };
-            $next = $callback_next->( $next->clone );
+            return $result if $min > $max;
+            push @{ $result->{list} }, { a => $min, b => $min };
+            $min = $callback_next->( $min->clone );
         } 
-        return $result;
+        return $result if $min > $max;
+        # warn "BIG set";
     }
 
     # return a "_function", such that we can backtrack later.
@@ -120,6 +121,7 @@ sub _recurrence {
                   _function( '_recurrence', @_ )
         ];
     }
+    return $func->_function2( 'union', $result ) if $result;
     return $func;
 }
 
@@ -159,7 +161,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.09';
+    $VERSION = '0.0901';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
 

@@ -1,5 +1,11 @@
 Changes for DateTime::Set
 
+0.0901
+- supports _huge_ recurrence sets (not infinite) with "virtual" elements.
+  these sets have 'undef' count.
+  Experimental - mostly untested !
+  this adds support for sets like 'all seconds in 2003'
+
 - faster recurrence intersection
 - count returns 'undef' for infinite sets.
 
