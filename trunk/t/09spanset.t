@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 39;
+plan tests => 43;
 
 use DateTime;
 use DateTime::Duration;
@@ -277,6 +277,12 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
         "limited iterator works properly" );
     is( $res_a, '1812-11-22T00:00:00..1813-12-23T00:00:00',
         "limited iterator doesn't break regular iterator" );
+
+    isa_ok( $s1->start_set , "DateTime::Set" , "start_set" );
+    isa_ok( $s1->end_set , "DateTime::Set" , "end_set" );
+
+    is( "".$s1->start_set->{set}, "".$start_set->{set} , "start_set" );
+    is( "".$s1->end_set->{set}, "".$end_set->{set} , "end_set" );
 }
 
 1;

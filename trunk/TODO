@@ -1,5 +1,12 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
+- New method: intersected_spans
+  Suggested by Reinhold May
+  Name suggested by Dave Rolsky
+
+- New methods: map / grep
+  From a discussion with Andrew Pimlott and Dave Rolsky
+
 - test DT::SpanSet->iterate; fix examples.
 
 - implement set( locale => .. ) in Span and SpanSet

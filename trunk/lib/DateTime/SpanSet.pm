@@ -107,6 +107,18 @@ sub from_sets {
     return $self;
 }
 
+sub start_set {
+    my $return = DateTime::Set->empty_set;
+    $return->{set} = $_[0]->{set}->start_set;
+    $return;
+}
+
+sub end_set {
+    my $return = DateTime::Set->empty_set;
+    $return->{set} = $_[0]->{set}->end_set;
+    $return;
+}
+
 sub empty_set {
     my $class = shift;
 
@@ -491,6 +503,16 @@ the nature of your set.  User beware!
 
 The C<next()> or C<previous()> methods will return C<undef> 
 when there are no more spans in the iterator.
+
+=item * start_set
+
+=item * end_set
+
+These methods do the inverse of the C<from_sets> method:
+
+C<start_set> retrieves a DateTime::Set with the start datetime of each span.
+
+C<end_set> retrieves a DateTime::Set with the end datetime of each span.
 
 =item * iterate
 

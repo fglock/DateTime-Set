@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.1404  2004-03-14
+- New methods: start_set / end_set 
+  These are the inverse of the "from_sets" method.
+  Suggested by Reinhold May
+
 0.1403  2004-03-10
 - new method DateTime::SpanSet::iterate
 - DateTime::Set and DateTime::SpanSet methods do not mutate the set.
@@ -8,7 +13,13 @@ Changes for DateTime::Set
 0.1402  2004-03-08
 - Recurrence functions can be used to generate bounded sets.
   See: t/16bounded_recurrence.t
-  Note: all modules that create their own recurrences
+
+- There is no limit on how small a recurrence can be.
+  Recurrences as small as 1 nanosecond are possible.
+
+[ *** BACKWARDS INCOMPATIBILITIES *** ]
+
+  All modules that create their own recurrences
   must now be able to respond to DateTime::Infinite::Future
   and DateTime::Infinite::Past parameters. The easiest way
   to do this is to add this to the first line of the recurrence
@@ -22,9 +33,6 @@ Changes for DateTime::Set
      return $_[0] if $_[0]->is_infinite;
      ...
   }
-
-- There is no limit on how small a recurrence can be.
-  Recurrences as small as 1 nanosecond are possible.
 
 0.1401  2003-11-06
 - span() was returning the set, instead of the result.

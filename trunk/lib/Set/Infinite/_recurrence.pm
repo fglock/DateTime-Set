@@ -12,7 +12,7 @@ use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 use vars qw( @ISA $PRETTY_PRINT $max_iterate );
 
 @ISA = qw( Set::Infinite );
-use Set::Infinite 0.5305;
+use Set::Infinite 0.5502;
 
 BEGIN {
     $PRETTY_PRINT = 1;   # enable Set::Infinite debug
