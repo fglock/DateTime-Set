@@ -398,7 +398,13 @@ sub closest {
     # return $_[0] if $self->contains( $_[0] );
     my $dt1 = $self->current( $_[0] );
     my $dt2 = $self->next( $_[0] );
-    return $dt1 if ( $_[0] - $dt1 ) <= ( $dt2 - $_[0] );
+
+    # removed - in order to avoid duration comparison
+    # return $dt1 if ( $_[0] - $dt1 ) <= ( $dt2 - $_[0] );
+
+    my $delta = $_[0] - $dt1;
+    return $dt1 if ( $dt2 - $delta ) >= $_[0];
+
     return $dt2;
 }
 

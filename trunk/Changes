@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- change "closest" code to avoid duration comparison
+
 0.03     2003-04-27
 - fixes in Set.pm as_list, span.
 - iterator accepts 'span' parameters.  Ben Bennett
