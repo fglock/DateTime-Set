@@ -79,6 +79,47 @@ sub new {
     return $self;
 }
 
+*from_datetimes = \&new;
+
+sub from_datetime_and_duration {
+    my $self = shift;
+    my %args = @_;
+    my %date;
+    # extract datetime parameters
+    for ( qw( start end before after ) ) {
+        $date{$_} = delete $args{$_} if exists $args{$_};
+    }
+    my ($key) = keys %date;
+    my $dt = $date{$key};
+    # extract duration parameters
+    my ($duration_key) = keys %args;
+    my $dt_duration;
+    # warn "args: $key - $duration_key - @{[ %args ]}";
+    if ($duration_key eq 'duration') {
+        $dt_duration = $args{$duration_key};
+    }
+    else {
+        $dt_duration = DateTime::Duration->new( %args );
+    }
+    # warn "Creating span from $key => ".$dt->datetime." and $dt_duration";
+    my $other_date = $dt->clone->add_duration( $dt_duration );
+    # warn "Creating span from $key => ".$dt->datetime." and ".$other_date->datetime;
+    my $other_key;
+    if ( $dt_duration->is_positive ) {
+        # check if have to invert keys
+        $key = 'after' if $key eq 'end';
+        $key = 'start' if $key eq 'before';
+        $other_key = 'before';
+    }
+    else {
+        # check if have to invert keys
+        $other_key = 'end' if $key eq 'after';
+        $other_key = 'before' if $key eq 'start';
+        $key = 'start';
+    }
+    return $self->new( $key => $dt, $other_key => $other_date ); 
+}
+
 sub clone { 
     bless { 
         set => $_[0]->{set}->copy,
@@ -162,10 +203,14 @@ sub start {
     ref($tmp) ? $tmp->clone : $tmp; 
 }
 
+*min = \&start;
+
 sub end { 
     my $tmp = $_[0]->{set}->max;
     ref($tmp) ? $tmp->clone : $tmp; 
 }
+
+*max = \&end;
 
 sub start_is_open {
     # min_a returns info about the set boundary 
@@ -234,7 +279,7 @@ DateTime::Span is a module for date/time spans or time-ranges.
 
 =item * new 
 
-Generates a new span. 
+Creates a new span. 
 
 A 'closed' span includes its end-dates:
 
@@ -262,6 +307,30 @@ both an "end" and "before" argument.  Either of these conditions cause
 will cause the C<new()> method to die.
 
 =back
+
+=item * from_datetimes
+
+Creates a new span. Same as C<new>.
+
+   $dates = DateTime::Set->from_datetimes( start => $dt1, end => $dt2 );
+   $dates = DateTime::Set->from_datetimes( after => $dt1, before => $dt2 );
+   $dates = DateTime::Set->from_datetimes( start => $dt1, before => $dt2 );
+   $dates = DateTime::Set->from_datetimes( after => $dt1, end => $dt2 );
+   $dates = DateTime::Set->from_datetimes( start => $dt1 );
+   $dates = DateTime::Set->from_datetimes( end => $dt2 );
+   $dates = DateTime::Set->from_datetimes( after => $dt1 );
+   $dates = DateTime::Set->from_datetimes( before => $dt2 );
+
+=item * from_datetime_and_duration
+
+Creates a new span.
+
+   $dates = DateTime::Set->from_datetime_and_duration( 
+       start => $dt1, duration => $dt_dur1 );
+   $dates = DateTime::Set->from_datetime_and_duration( 
+       after => $dt1, hours => 12 );
+
+The new "end of the set" is I<open> by default.
 
 =item * duration
 
