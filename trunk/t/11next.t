@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 use strict;
 
 use Test::More;
@@ -5,7 +7,7 @@ plan tests => 4;
 
 use DateTime;
 use DateTime::Set;
-use warnings;
+# use warnings;
 
 #======================================================================
 # next method

@@ -320,7 +320,13 @@ sub _callback_previous {
         # my %freq = $freq->deltas;
         # $freq{$_} = - abs ( int( $freq{$_} * 2 ) ) for keys %freq; 
 
-        $freq->{$_} = - abs ( int( $freq->{$_} * 2 ) ) for keys %$freq;
+        # TODO: don't use DT::Duration internals here.
+        # - find out why it doesn't work with normal multiplication.
+        for ( keys %$freq ) {
+            next if $_ eq 'eom_mode';
+            next if $_ eq 'sign';
+            $freq->{$_} = - abs ( int( $freq->{$_} * 2 ) );
+        }
 
         # my @freq = %freq;
         # warn "freq 1 is @freq";

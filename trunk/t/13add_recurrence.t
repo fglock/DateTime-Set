@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 use strict;
 
 use Test::More;
@@ -8,7 +10,7 @@ use DateTime::Duration;
 use DateTime::SpanSet;
 use DateTime::Span;
 use DateTime::Set;
-use warnings;
+# use warnings;
 
 #======================================================================
 # add duration to recurrence

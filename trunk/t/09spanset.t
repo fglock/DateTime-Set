@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 use strict;
 
 use Test::More;
@@ -7,7 +9,7 @@ use DateTime;
 use DateTime::Duration;
 use DateTime::Set;
 use DateTime::SpanSet;
-use warnings;
+# use warnings;
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);

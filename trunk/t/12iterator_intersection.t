@@ -1,3 +1,5 @@
+#!/usr/bin/perl -w
+
 use strict;
 
 use Test::More;
@@ -6,7 +8,7 @@ plan tests => 4;
 use DateTime;
 use DateTime::Duration;
 use DateTime::Set;
-use warnings;
+# use warnings;
 
 #======================================================================
 # recurrence intersection
