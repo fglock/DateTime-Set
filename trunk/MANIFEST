@@ -18,6 +18,8 @@ t/09spanset.t
 t/10previous-2.t
 t/11next.t
 t/12iterator_intersection.t
+t/13add_recurrence.t
+t/14complement.t
 lib/DateTime/Set.pm
 lib/DateTime/Span.pm
 lib/DateTime/SpanSet.pm
