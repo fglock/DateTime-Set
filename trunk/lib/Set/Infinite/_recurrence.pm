@@ -24,49 +24,58 @@ BEGIN {
     $Set::Infinite::_first{_recurrence} = 
         sub {
             my $self = $_[0];
-            my ($callback_next, $callback_current, $callback_previous) = @{ $self->{param} };
+            my ($callback_next, $callback_previous) = @{ $self->{param} };
             my ($min, $min_open) = $self->{parent}->min_a;
 
-            if ( $min_open )
+            my ( $min1, $min2 );
+            $min1 = $callback_next->( $min );
+            if ( ! $min_open )
             {
-                $min = $callback_next->( $min );
-            }
-            else
-            {
-                $min = $callback_current->( $min );
+                $min2 = $callback_previous->( $min1 );
+                $min1 = $min2 if $min == $min2;
             }
 
-            return ( $self->new( $min ),
-                     $self->new( $callback_next->( $min ), 
-                                 $self->{parent}->max )->
+            my $start = $callback_next->( $min1 );
+            my $end   = $self->{parent}->max;
+            
+            #print STDERR "set ";
+            #print STDERR $start->datetime
+            #   unless $start == INFINITY;
+            #print STDERR " - " ;
+            #print STDERR $end->datetime 
+            #    unless $end == INFINITY;
+            #print STDERR "\n";
+            
+            return ( $self->new( $min1 ), undef )
+                if $start > $end;
+
+            return ( $self->new( $min1 ),
+                     $self->new( $start, $end )->
                           _function( '_recurrence', @{ $self->{param} } ) );
         };
     $Set::Infinite::_last{_recurrence} =
         sub {
             my $self = $_[0];
-            my (undef, $callback_current, $callback_previous) = @{ $self->{param} };
+            my ($callback_next, $callback_previous) = @{ $self->{param} };
             my ($max, $max_open) = $self->{parent}->max_a;
 
-            if ( $max_open )
+            my ( $max1, $max2 );
+            $max1 = $callback_previous->( $max );
+            if ( ! $max_open )
             {
-                $max = $callback_previous->( $max );
-            }
-            else
-            {
-                $max = $callback_current->( $max );
-                $max = $callback_previous->( $max ) 
-                    if $max > $self->{parent}->max;
+                $max2 = $callback_next->( $max1 );
+                $max1 = $max2 if $max == $max2;
             }
 
-            return ( $self->new( $max ),
+            return ( $self->new( $max1 ),
                      $self->new( $self->{parent}->min, 
-                                 $callback_previous->( $max ) )->
+                                 $callback_previous->( $max1 ) )->
                           _function( '_recurrence', @{ $self->{param} } ) );
         };
 }
 
 # $si->_recurrence(
-#     \&callback_next, \&callback_current, \&callback_previous )
+#     \&callback_next, \&callback_previous )
 #
 # Generates "recurrences" from a callback.
 # These recurrences are simple lists of dates.
@@ -75,13 +84,13 @@ BEGIN {
 #
 sub _recurrence { 
     my $set = shift;
-    my ( $callback_next, $callback_current, $callback_previous ) = @_;
+    my ( $callback_next, $callback_previous, $delta ) = @_;
     if ( $#{ $set->{list} } != 0 || $set->is_too_complex )
     {
         return $set->iterate( 
             sub { 
                 $_[0]->_recurrence( 
-                    $callback_next, $callback_current, $callback_previous ) 
+                    $callback_next, $callback_previous, $delta ) 
             } );
     }
     # $set is a span
@@ -91,38 +100,85 @@ sub _recurrence {
         # print STDERR " finite set\n";
         my ($min, $min_open) = $set->min_a;
         my ($max, $max_open) = $set->max_a;
-        if ( $min_open )
+
+        my ( $min1, $min2 );
+        $min1 = $callback_next->( $min );
+        if ( ! $min_open )
         {
-            $min = $callback_next->( $min );
+                $min2 = $callback_previous->( $min1 );
+                $min1 = $min2 if $min == $min2;
         }
-        else
-        {
-            $min = $callback_current->( $min );
-        }
-        if ( $max_open )
-        {
-            $max = $callback_previous->( $max );
-        }
-        else
-        {
-            $max = $callback_current->( $max );
-            $max = $callback_previous->( $max ) if $max > $set->max;
-        }
-        return $set->new( $min ) if $min == $max;
+        
         $result = $set->new();
-        for ( 1 .. 200 ) 
+
+        # get "delta" - if this will take too much time, then abort earlier
+
+        unless ( $delta ) 
         {
-            return $result if $min > $max;
-            push @{ $result->{list} }, { a => $min, b => $min };
-            $min = $callback_next->( $min );
-        } 
-        return $result if $min > $max;
-        # warn "BIG set";
+
+          for ( 1 .. 50 ) 
+          {
+            if ( $max_open )
+            {
+                return $result if $min1 >= $max;
+            }
+            else
+            {
+                return $result if $min1 > $max;
+            }
+            push @{ $result->{list} }, 
+                 { a => $min1, b => $min1, open_begin => 0, open_end => 0 };
+            $min2 = $callback_next->( $min1 );
+            
+            if ( $delta ) 
+            {
+                $$delta += $min2 - $min1;
+            }
+            else
+            {
+                $delta = \( $min2 - $min1 );
+            }
+            $min1 = $min2;
+          }
+          $$delta *= 4;
+        }
+        else
+        {
+            # warn "had delta";
+        }
+
+        if ( $max < $min + $$delta ) 
+        {
+
+          for ( 1 .. 200 ) 
+          {
+            if ( $max_open )
+            {
+                return $result if $min1 >= $max;
+            }
+            else
+            {
+                return $result if $min1 > $max;
+            }
+            push @{ $result->{list} }, 
+                 { a => $min1, b => $min1, open_begin => 0, open_end => 0 };
+            $min1 = $callback_next->( $min1 );
+          } 
+          # warn "BIG set";
+
+        }
+        else 
+        { 
+            # warn "give up";
+        }
     }
 
     # return a "_function", such that we can backtrack later.
-    my $func = $set->_function( '_recurrence', @_ );
-    return $func->_function2( 'union', $result ) if $result;
+    my $func = $set->_function( '_recurrence', $callback_next, $callback_previous, $delta );
+    
+    # removed - returning $result doesn't help on speed
+    ## return $func->_function2( 'union', $result ) if $result;
+
     return $func;
 }
 
@@ -156,8 +212,8 @@ sub intersection
         if ( $s1->{parent}->is_forever && 
             ref($s2) && _is_recurrence( $s2 ) )
         {
-            my ( $next1, $current1, $previous1 ) = @{ $s1->{param} };
-            my ( $next2, $current2, $previous2 ) = @{ $s2->{param} };
+            my ( $next1, $previous1 ) = @{ $s1->{param} };
+            my ( $next2, $previous2 ) = @{ $s2->{param} };
             return $s1->{parent}->_function( '_recurrence', 
                   sub {
                                # intersection of parent 'next' callbacks
@@ -165,39 +221,21 @@ sub intersection
                                my $iterate = 0;
                                $n2 = $next2->( $_[0] );
                                while(1) { 
-                                   $n1 = $current1->( $n2 );
+                                   $n1 = $next1->( $previous1->( $n2 ) );
                                    return $n1 if $n1 == $n2;
-                                   $n2 = $current2->( $n1 );
-                                   return if $iterate++ == $max_iterate;
-                               }
-                  },
-                  sub {
-                               # intersection of parent 'current' callbacks
-                               my ($n1, $n2);
-                               my $iterate = 0;
-                               $n2 = $current2->( $_[0] );
-                               while(1) {
-                                   $n1 = $current1->( $n2 );
-                                   return $n1 if $n1 == $n2;
-                                   $n2 = $current2->( $n1 );
+                                   $n2 = $next2->( $previous2->( $n1 ) );
                                    return if $iterate++ == $max_iterate;
                                }
                   },
                   sub {
                                # intersection of parent 'previous' callbacks
-                               my $arg = $_[0];
-                               my ($tmp1, $p1, $p2);
+                               my ($p1, $p2);
                                my $iterate = 0;
+                               $p2 = $previous2->( $_[0] );
                                while(1) { 
-                                   $p1 = $previous1->( $arg );
-                                   $p2 = $current2->( $p1 ); 
+                                   $p1 = $previous1->( $next1->( $p2 ) );
                                    return $p1 if $p1 == $p2;
-
-                                   $p2 = $previous2->( $arg ); 
-                                   $tmp1 = $current1->( $p2 ); 
-                                   return $p2 if $p2 == $tmp1;
-
-                                   $arg = $p1 < $p2 ? $p1 : $p2;
+                                   $p2 = $previous2->( $next2->( $p1 ) ); 
                                    return if $iterate++ == $max_iterate;
                                }
                   },
@@ -214,17 +252,12 @@ sub union
          ref($s2) && _is_recurrence( $s2 ) )
     {
         # optimize: recurrence || recurrence
-        my ( $next1, $current1, $previous1 ) = @{ $s1->{param} };
-        my ( $next2, $current2, $previous2 ) = @{ $s2->{param} };
+        my ( $next1, $previous1 ) = @{ $s1->{param} };
+        my ( $next2, $previous2 ) = @{ $s2->{param} };
         return $s1->{parent}->_function( '_recurrence',
                   sub {  # next
                                my $n1 = $next1->( $_[0] );
                                my $n2 = $next2->( $_[0] );
-                               return $n1 < $n2 ? $n1 : $n2;
-                  },
-                  sub {  # current
-                               my $n1 = $current1->( $_[0] );
-                               my $n2 = $current2->( $_[0] );
                                return $n1 < $n2 ? $n1 : $n2;
                   },
                   sub {  # previous
@@ -243,7 +276,7 @@ Set::Infinite::_recurrence - Extends Set::Infinite with recurrence functions
 
 =head1 SYNOPSIS
 
-    $recurrence = $base_set->_recurrence ( \&next, \&current, \&previous );
+    $recurrence = $base_set->_recurrence ( \&next, \&previous );
 
 =head1 DESCRIPTION
 
@@ -257,15 +290,14 @@ to define recurrences with arbitrary objects, such as dates.
 
 =over 4
 
-=item * _recurrence ( \&next, \&current, \&previous )
+=item * _recurrence ( \&next, \&previous )
 
 Creates a recurrence set. The set is defined inside a 'base set'.
 
-   $recurrence = $base_set->_recurrence ( \&next, \&current, \&previous );
+   $recurrence = $base_set->_recurrence ( \&next, \&previous );
 
 The recurrence functions take one argument, and return the 'next' or 
 the 'previous' occurence. 
-The C<current> function returns the 'next or equal' occurence.
 
 Example: defines the set of all 'integer numbers':
 
@@ -284,9 +316,6 @@ Example: defines the set of all 'integer numbers':
         sub {   # next
                 floor( $_[0] + 1 ) 
             },   
-        sub {   # current
-                floor( $_[0] ) 
-            },       
         sub {   # previous
                 my $tmp = floor( $_[0] ); 
                 $tmp < $_[0] ? $tmp : $_[0] - 1
@@ -301,8 +330,6 @@ Example: defines the set of all 'integer numbers':
         my $x = 234.567;
         print "next occurence after $x = ", 
               $recurrence->{param}[0]->( $x ), "\n";  # 235
-        print "current occurence on $x = ",
-              $recurrence->{param}[1]->( $x ), "\n";  # 234
         print "previous occurence before $x = ",
               $recurrence->{param}[2]->( $x ), "\n";  # 234
     }
@@ -311,8 +338,6 @@ Example: defines the set of all 'integer numbers':
         my $x = 234;
         print "next occurence after $x = ",
               $recurrence->{param}[0]->( $x ), "\n";  # 235
-        print "current occurence on $x = ",
-              $recurrence->{param}[1]->( $x ), "\n";  # 234
         print "previous occurence before $x = ",
               $recurrence->{param}[2]->( $x ), "\n";  # 233
     }

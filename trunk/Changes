@@ -1,5 +1,12 @@
 Changes for DateTime::Set
 
+- evaluation of bounded recurrences is "lazier"
+
+0.1408  2004-03-22
+- refactored S::I::_recurrence class:
+  it doesn't use "current" anymore; 
+  small bugfixes & optimizations. 
+  ("current" was not documented in DT::Set)
 - new test: t/17quantize.t
   Tests a method to make "quantization" (or "discretization")
   of spansets.
@@ -40,6 +47,9 @@ Changes for DateTime::Set
 
 0.1403  2004-03-10
 - new method DateTime::SpanSet::iterate
+
+[ *** BACKWARDS INCOMPATIBILITIES *** ]
+
 - DateTime::Set and DateTime::SpanSet methods do not mutate the set.
   This is the behaviour we had before version 0.13
 

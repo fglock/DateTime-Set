@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1407';
+    $VERSION = '0.1408';
 }
 
 sub iterate {
@@ -196,59 +196,23 @@ sub from_recurrence {
                 }
         }
 
-        if ( ! $param{current} ) 
-        {
-            $param{current} =
-                sub {
-                    # "objectify" infinity
-                    if ( ! ref( $_[0] ) )
-                    {
-                        if ( $_[0] == NEG_INFINITY ) {
-                            $_[0] = DateTime::Infinite::Past->new; 
-                        }
-                        elsif ( $_[0] == INFINITY ) {
-                            $_[0] = DateTime::Infinite::Future->new 
-                        }
-                    }
-                    _callback_current ( $_[0], $param{next}, $param{previous} );
-                }
-        }
-        else
-        {
-            my $current = $param{current};
-            $param{current} =
-                sub {
-                    # "objectify" infinity
-                    if ( ! ref( $_[0] ) )
-                    {
-                        if ( $_[0] == NEG_INFINITY ) {
-                            $_[0] = DateTime::Infinite::Past->new; 
-                        }
-                        elsif ( $_[0] == INFINITY ) {
-                            $_[0] = DateTime::Infinite::Future->new 
-                        }
-                    }
-                    $current->( $_[0]->clone );
-                }
-        }
-
         my $max = $param{previous}->( DateTime::Infinite::Future->new );
         my $min = $param{next}->( DateTime::Infinite::Past->new );
         $max = INFINITY if $max->is_infinite;
         $min = NEG_INFINITY if $min->is_infinite;
         my $base_set = Set::Infinite::_recurrence->new( $min, $max );
+        $base_set = $base_set->intersection( $param{span}->{set} )
+             if $param{span};
         # warn "base set is $base_set\n";
 
+        my $data;
         $self->{set} = 
             $base_set->_recurrence(
                 $param{next}, 
-                $param{current},
-                $param{previous} 
+                $param{previous},
+                $data,
             );
         bless $self, $class;
-
-        return $self->intersection( $param{span} )
-             if $param{span};
     }
     else {
         die "Not enough arguments in from_recurrence()";
@@ -286,14 +250,6 @@ sub clone {
     my $self = bless { %{ $_[0] } }, ref $_[0];
     $self->{set} = $_[0]->{set}->copy;
     return $self;
-}
-
-# default callback that returns the 
-# "current" value (greater or equal) in a callback recurrence.
-#
-sub _callback_current {
-    my ($value, $callback_next, $callback_previous ) = @_;
-    return $callback_next->( $callback_previous->( $value ) );
 }
 
 # default callback that returns the 
@@ -432,7 +388,7 @@ sub previous {
     {
         if ( $self->{set}->_is_recurrence ) 
         {
-            return $self->{set}->{param}[2]->( $_[0] );
+            return $self->{set}->{param}[1]->( $_[0] );
         }
         else 
         {
@@ -455,9 +411,8 @@ sub current {
 
     if ( $self->{set}->_is_recurrence )
     {
-        my $tmp = $self->{set}->{param}[1]->( $_[0] );
-        return $tmp if $tmp == $_[0];
-        return $self->previous( $_[0] );
+        my $tmp = $self->next( $_[0] );
+        return $self->previous( $tmp );
     }
 
     return $_[0] if $self->contains( $_[0] );
@@ -529,7 +484,7 @@ sub intersects {
         {
             for ( $set2, @_ )
             {
-                return 1 if $set1->{set}->{param}[1]->( $_ ) == $_;
+                return 1 if $set1->current( $_ ) == $_;
             }
             return 0;
         }
@@ -547,7 +502,7 @@ sub contains {
         {
             for ( $set2, @_ ) 
             {
-                return 0 unless $set1->{set}->{param}[1]->( $_ ) == $_;
+                return 0 unless $set1->current( $_ ) == $_;
             }
             return 1;
         }
@@ -787,10 +742,10 @@ In this case, both 'next' and 'previous' callbacks must be defined:
 
     my $months = DateTime::Set->from_recurrence(
         next => sub {
+            return $dt if $_[0] < $dt;
             $_[0]->truncate( to => 'month' );
             $_[0]->add( months => 1 );
-            return $_[0] if $_[0] >= $dt;
-            return $dt->clone;
+            return $_[0];
         },
         previous => sub {
             my $param = $_[0]->clone;
