@@ -1,6 +1,6 @@
 Changes for DateTime::Set
 
-0.01  2003-04-19
+0.01     2003-04-19
 
 - first "official" release.
 - implemented DateTime::SpanSet->from_sets and
@@ -10,14 +10,15 @@ Changes for DateTime::Set
 infinity instead of undef for infinite spans.  Dave Rolsky
 - Added DateTime::SpanSet->empty_set.  Dave Rolsky
 
-0.00_20
+0.00_20  2003-04-10
 
 - Docs for DateTime::SpanSet API 
   (not implemented)
 - DateTime::Span API: 
   from_datetime_and_duration, from_datetimes
 
-0.00_18
+
+0.00_18  2003-03-25
 
 - changes docs, changed API
   from_recurrence, from_datetimes, new()
@@ -30,7 +31,8 @@ infinity instead of undef for infinite spans.  Dave Rolsky
 - put "..." to mark where we need more docs
 - DateTime::Set and DateTime::Span API look ok.
 
-0.00_13
+
+0.00_13  2003-03-19
 
 - added tests for set operations with recurrences/add
 - iterator passes all tests
@@ -38,12 +40,15 @@ infinity instead of undef for infinite spans.  Dave Rolsky
 - small fix in add() syntax; accepts a duration=> parameter
 - iterator, next
 
-0.00_10
+
+0.00_10  2003-03-14
 
 - union, intersection
 - experimental code to generate recurrence from a simple callback
 
-0.00_07
+
+0.00_07  2003-02-28
+
 - added experimental method create_recurrence()
 - added experimental method add_duration()
 - improved SYNOPSIS
