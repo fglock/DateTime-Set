@@ -267,7 +267,6 @@ sub _setup_infinite_recurrence {
 
     # -- end hack
 
-    # warn "func parent is ". $func->{first}[1]{parent}{list}[0]{a}->ymd;
     return $func;
 }
 
@@ -288,6 +287,7 @@ sub _setup_finite_recurrence {
 
 # default callback that returns the 
 # "current" value in a callback recurrence.
+# Does not change $_[0]
 #
 sub _callback_current {
     my ($value, $callback_next) = @_;
@@ -429,7 +429,7 @@ sub current {
 
     if ( $self->{current} )
     {
-        my $tmp = $self->{current}->( $_[0]->clone );
+        my $tmp = $self->{current}->( $_[0] );
         return $tmp if $tmp == $_[0];
         return $self->previous( $_[0] );
     }
@@ -496,8 +496,7 @@ sub intersection {
     # }
 
     # optimization - use function composition if both sets are recurrences
-    if ( $set1->{next} && $set2->{next} &&
-         $set1->{previous} && $set2->{previous} )
+    if ( $set1->{next} && $set2->{next} ) 
     {
         # TODO: add tests
 
@@ -506,16 +505,15 @@ sub intersection {
                   next =>  sub {
                                # intersection of parent 'next' callbacks
                                my $arg = shift;
-                               my ($tmp1, $tmp2);
-                               my ($next1, $next2);
+                               my ($tmp1, $next1, $next2);
                                my $iterate = 0;
                                while(1) { 
                                    $next1 = $set1->{next}->( $arg->clone );
-                                   $tmp2 = $set2->{previous}->( $set2->{next}->( $next1->clone ) );
-                                   return $next1 if $next1 == $tmp2;
+                                   $next2 = $set2->{current}->( $next1 );
+                                   return $next1 if $next1 == $next2;
                             
-                                   $next2 = $set2->{next}->( $arg->clone );
-                                   $tmp1 = $set1->{previous}->( $set1->{next}->( $next2->clone ) );
+                                   $next2 = $set2->{next}->( $arg );
+                                   $tmp1 = $set1->{current}->( $next2 );  
                                    return $next2 if $next2 == $tmp1;
                                   
                                    $arg = $next1 > $next2 ? $next1 : $next2;
@@ -525,16 +523,15 @@ sub intersection {
                   previous => sub {
                                # intersection of parent 'previous' callbacks
                                my $arg = shift;
-                               my ($tmp1, $tmp2, $cmp);
-                               my ($previous1, $previous2);
+                               my ($tmp1, $previous1, $previous2);
                                my $iterate = 0;
                                while(1) { 
                                    $previous1 = $set1->{previous}->( $arg->clone );
-                                   $tmp2 = $set2->{previous}->( $set2->{next}->( $previous1->clone ) );
-                                   return $previous1 if $previous1 == $tmp2;
+                                   $previous2 = $set2->{current}->( $previous1 ); 
+                                   return $previous1 if $previous1 == $previous2;
 
-                                   $previous2 = $set2->{previous}->( $arg->clone );
-                                   $tmp1 = $set1->{previous}->( $set1->{next}->( $previous2->clone ) );
+                                   $previous2 = $set2->{previous}->( $arg ); 
+                                   $tmp1 = $set1->{current}->( $previous2 ); 
                                    return $previous2 if $previous2 == $tmp1;
 
                                    $arg = $previous1 < $previous2 ? $previous1 : $previous2;
@@ -570,8 +567,7 @@ sub union {
     my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
 
-    if ( $set1->{next} && $set2->{next} &&
-         $set1->{previous} && $set2->{previous} )
+    if ( $set1->{next} && $set2->{next} )
     {
         # TODO: add tests
 
@@ -582,7 +578,7 @@ sub union {
                                my $arg = shift;
                                my ($next1, $next2);
                                $next1 = $set1->{next}->( $arg->clone );
-                               $next2 = $set2->{next}->( $arg->clone );
+                               $next2 = $set2->{next}->( $arg );
                                return $next1 < $next2 ? $next1 : $next2;
                            },
                   previous => sub {
@@ -590,7 +586,7 @@ sub union {
                                my $arg = shift;
                                my ($previous1, $previous2);
                                $previous1 = $set1->{previous}->( $arg->clone );
-                               $previous2 = $set2->{previous}->( $arg->clone );
+                               $previous2 = $set2->{previous}->( $arg ); 
                                return $previous1 > $previous2 ? $previous1 : $previous2;;
                            },
                );
@@ -608,6 +604,7 @@ sub complement {
     my $tmp = $class->empty_set();
     if (defined $set2) {
         $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+        # TODO: "compose complement";
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
     }
     else {
