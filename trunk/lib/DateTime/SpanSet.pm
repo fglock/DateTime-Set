@@ -23,9 +23,10 @@ sub set_time_zone {
 
     my $result = $self->{set}->iterate( 
         sub {
-            $_[0]{list}[0]{a}->set_time_zone( $tz ) if ref $_[0]{list}[0]{a};
-            $_[0]{list}[0]{b}->set_time_zone( $tz ) if ref $_[0]{list}[0]{b};
-            $_[0];
+            my %tmp = %{ $_[0]->{list}[0] };
+            $tmp{a} = $tmp{a}->clone->set_time_zone( $tz ) if ref $tmp{a};
+            $tmp{b} = $tmp{b}->clone->set_time_zone( $tz ) if ref $tmp{b};
+            \%tmp;
         }
     );
 

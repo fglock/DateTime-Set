@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 4;
+plan tests => 6;
 
 use DateTime;
 use DateTime::Set;
@@ -27,12 +27,20 @@ is( $s2->min->time_zone->name, 'Asia/Taipei',
 
 my $span1 = DateTime::Span->from_datetimes( start => $t1, end => $t2 );
 $span1->set_time_zone( 'America/Sao_Paulo' );
+my $span2 = $span1->clone;
+
 $span1->set_time_zone( 'Asia/Taipei' );
 
 is( $span1->start->datetime, '2001-11-22T10:00:00',
     'got 2001-11-22T10:00:00 - min' );
 is( $span1->end->datetime, '2002-11-22T10:00:00',
     'got 2002-11-22T10:00:00 - max' );
+
+# check for immutability
+is( $span2->start->datetime, '2001-11-22T00:00:00',
+    'got 2001-11-22T00:00:00 - min' );
+is( $span2->end->datetime, '2002-11-22T00:00:00',
+    'got 2002-11-22T00:00:00 - max' );
 
 1;
 
