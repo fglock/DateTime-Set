@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.16  2004-03-29
+- Makefile.PL skips processing of "Build.PL"
+  Reported by Reinhold May
+
 0.15  2004-03-28
   
   [ ENHANCEMENTS from version 0.14 ]

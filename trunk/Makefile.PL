@@ -46,4 +46,5 @@ WriteMakefile( NAME         => 'DateTime::Set',
                                  'Set::Infinite' => 0.5503,
                                  'Test::More'  => 0,
                                },
+               PL_FILES     => { },  # ignore Build.PL
 );
