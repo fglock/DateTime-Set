@@ -1,9 +1,7 @@
 Changes for DateTime::Set
 
-0.02_01  3003-04-21
-- removed some calls to 'new'
-
 0.02     2003-04-20
+- removed some calls to 'new'
 - added many methods from DT::Event::Recurrence
 - add 'span' parameter to as_list
 - from_recurrence now accepts next + previous
