@@ -607,6 +607,8 @@ increments of 30 seconds would look like this:
   sub every_30_seconds {
       my $dt = shift;
 
+      $dt->truncate( to => 'seconds' );
+
       if ( $dt->second < 30 ) {
           $dt->add( seconds => 30 - $dt->second );
       } else {
@@ -683,7 +685,7 @@ datetimes, then C<as_list> will return C<undef>.  Please note that
 this is explicitly not an empty list, since an empty list is a valid
 return value for empty sets!
 
-  my @dt = $r_daily->as_list( $span );
+  my @dt = $set->as_list( $span );
 
 This builds a DateTime array of events that happen inside the span.
 
@@ -708,21 +710,28 @@ All other operations will always return a C<DateTime::Set>.
 These set operations result in a boolean value.
 
     if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
-    if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
+    if ( $set1->contains( $dt ) ) { ...    # like "is-fully-inside"
 
-=item * previous current next closest
+These methods can accept a C<DateTime>, C<DateTime::Set>,
+C<DateTime::Span>, or C<DateTime::SpanSet> object as an argument.
 
-  my $dt = $r_daily->next( $dt );
+=item * previous / next / current / closest
 
-  my $dt = $r_daily->previous( $dt );
+  my $dt = $set->next( $dt );
 
-Returns a set event related to a datetime.
+  my $dt = $set->previous( $dt );
 
-C<current> returns $dt if $dt is an event. 
-It returns previous event otherwise.
+These methods are used to find a set member relative to a given
+datetime.
 
-C<closest> returns $dt if $dt is an event. 
-Otherwise it returns the closest event (previous or next).
+The C<current()> method returns C<$dt> if $dt is an event, otherwise
+it returns the previous event.
+
+The C<closest()> method returns C<$dt> if $dt is an event, otherwise
+it returns the closest event (previous or next).
+
+All of these methods may return C<undef> if there is no matching
+datetime in the set.
 
 =back
 

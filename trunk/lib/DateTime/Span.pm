@@ -280,36 +280,36 @@ Creates a new span based on a starting and ending datetime.
 
 A 'closed' span includes its end-dates:
 
-   $dates = DateTime::Set->new( start => $dt1, end => $dt2 );
+   $span = DateTime::Span->from_datetimes( start => $dt1, end => $dt2 );
 
 An 'open' span does not include its end-dates:
 
-   $dates = DateTime::Set->new( after => $dt1, before => $dt2 );
+   $span = DateTime::Span->from_datetimes( after => $dt1, before => $dt2 );
 
 A 'semi-open' span includes one of its end-dates:
 
-   $dates = DateTime::Set->new( start => $dt1, before => $dt2 );
-   $dates = DateTime::Set->new( after => $dt1, end => $dt2 );
+   $span = DateTime::Span->from_datetimes( start => $dt1, before => $dt2 );
+   $span = DateTime::Span->from_datetimes( after => $dt1, end => $dt2 );
 
 A span might have just a beginning date, or just an ending date.
 These spans end, or start, in an imaginary 'forever' date:
 
-   $dates = DateTime::Set->new( start => $dt1 );
-   $dates = DateTime::Set->new( end => $dt2 );
-   $dates = DateTime::Set->new( after => $dt1 );
-   $dates = DateTime::Set->new( before => $dt2 );
+   $span = DateTime::Span->from_datetimes( start => $dt1 );
+   $span = DateTime::Span->from_datetimes( end => $dt2 );
+   $span = DateTime::Span->from_datetimes( after => $dt1 );
+   $span = DateTime::Span->from_datetimes( before => $dt2 );
 
 You cannot give both a "start" and "after" argument, nor can you give
 both an "end" and "before" argument.  Either of these conditions cause
-will cause the C<new()> method to die.
+will cause the C<from_datetimes()> method to die.
 
 =item * from_datetime_and_duration
 
 Creates a new span.
 
-   $dates = DateTime::Set->from_datetime_and_duration( 
+   $span = DateTime::Span->from_datetime_and_duration( 
        start => $dt1, duration => $dt_dur1 );
-   $dates = DateTime::Set->from_datetime_and_duration( 
+   $span = DateTime::Span->from_datetime_and_duration( 
        after => $dt1, hours => 12 );
 
 The new "end of the set" is I<open> by default.
@@ -342,17 +342,20 @@ objects, but also with C<DateTime::Set> and C<DateTime::SpanSet>
 objects.  These set operations always return a C<DateTime::SpanSet>
 object.
 
-    $set = $set1->union( $set2 );         # like "OR", "insert", "both"
-    $set = $set1->complement( $set2 );    # like "delete", "remove"
-    $set = $set1->intersection( $set2 );  # like "AND", "while"
-    $set = $set1->complement;             # like "NOT", "negate", "invert"
+    $set = $span->union( $set2 );         # like "OR", "insert", "both"
+    $set = $span->complement( $set2 );    # like "delete", "remove"
+    $set = $span->intersection( $set2 );  # like "AND", "while"
+    $set = $span->complement;             # like "NOT", "negate", "invert"
 
 =item intersects / contains
 
 These set functions return a boolean value.
 
-    if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
-    if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
+    if ( $span->intersects( $set2 ) ) { ...  # like "touches", "interferes"
+    if ( $span->contains( $dt ) ) { ...    # like "is-fully-inside"
+
+These methods can accept a C<DateTime>, C<DateTime::Set>,
+C<DateTime::Span>, or C<DateTime::SpanSet> object as an argument.
 
 =back
 
