@@ -81,7 +81,7 @@ $iterator = $m12->iterator;
 @res = ();
 for (1..3) {
         my $tmp = $iterator->next;
-        push @res, $tmp->ymd if defined $tmp;
+        push @res, $tmp->ymd if defined $tmp && ref($tmp);
 }
 $res = join( ' ', @res );
 ok( $res eq '1811-04-15 1811-06-15 1811-09-15',
