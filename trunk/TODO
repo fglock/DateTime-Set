@@ -1,6 +1,6 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
-- fix set_time_zone backtracking
+- add set_time_zone tests to Span & SpanSet 
 
 - add "mutability" tests for DT::Span, DT::SpanSet
   see 02immutable.t
@@ -13,11 +13,6 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
             return $_[0] if $_[0]->is_infinite;
   and explain when and why to use this.
 - add tests for all examples given.
-
-- add tests for using datetimes with UTC/floating (local, etc.) time zones:
-    -> as parameters for next()
-    -> as set elements.
-- these tests should be reusable by the DateTime::Event packages.
 
 -----------------
 

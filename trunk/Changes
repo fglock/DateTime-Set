@@ -1,5 +1,16 @@
 Changes for DateTime::Set
 
+- fixed time zone handling in the methods:
+  set_time_zone
+  next/previous/closest/current
+
+- removed limitation of duration size in methods:
+  add/add_duration
+  subtract/subtract_duration
+
+- requires Set::Infinite 0.59 - uses iterate() experimental 
+  argument "backtrack_callback"
+
 - the following methods are now mutators:
   set_time_zone( $tz )
   set( locale => $locale )

@@ -19,7 +19,7 @@ $VERSION = $DateTime::Set::VERSION;
 sub set_time_zone {
     my ( $self, $tz ) = @_;
 
-    my $result = $self->{set}->iterate( 
+    $self->{set} = $self->{set}->iterate( 
         sub {
             my %tmp = %{ $_[0]->{list}[0] };
             $tmp{a} = $tmp{a}->clone->set_time_zone( $tz ) if ref $tmp{a};
@@ -27,15 +27,7 @@ sub set_time_zone {
             \%tmp;
         }
     );
-
-    ### this code enables 'subroutine method' behaviour
-    $self->{set} = $result;
     return $self;
-
-    ### this code enables 'function method' behaviour
-    # my $set = $self->clone;
-    # $set->{set} = $result;
-    # return $set;
 }
 
 # note: the constructor must clone its DateTime parameters, such that

@@ -7,7 +7,7 @@ use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use DateTime 0.12;  # this is for version checking only
 use DateTime::Duration;
 use DateTime::Span;
-use Set::Infinite 0.5503;
+use Set::Infinite 0.59;
 use Set::Infinite::_recurrence;
 
 use vars qw( $VERSION );
@@ -38,6 +38,24 @@ sub _fix_datetime {
     return $_[0];                  # error
 }
 
+sub _fix_return_datetime {
+    my ( $dt, $dt_arg ) = @_;
+
+    # internal function -
+    # (not a class method)
+    #
+    # checks that the returned datetime has the same
+    # time zone as the parameter
+
+    # TODO: set locale
+
+    if ( $dt_arg->can('time_zone_long_name') &&
+         !( $dt_arg->time_zone_long_name eq 'floating' ) )
+    {
+        $dt->set_time_zone( $dt_arg->time_zone );
+    }
+    return $dt;
+}
 
 sub iterate {
     my ( $self, $callback ) = @_;
@@ -50,12 +68,6 @@ sub iterate {
         }
     );
     $return;
-}
-
-sub _iterate_inplace {
-    my $self = shift;
-    $self->{set} = $self->iterate( @_ )->{set};
-    return $self;
 }
 
 sub map {
@@ -106,16 +118,54 @@ sub subtract_duration { return $_[0]->add_duration( $_[1]->inverse ) }
 sub add_duration {
     my ( $self, $dur ) = @_;
     $dur = $dur->clone;  # $dur must be "immutable"
-    return $self->_iterate_inplace(
-        sub { $_[0]->add_duration( $dur ) }
+
+    $self->{set} = $self->{set}->iterate(
+        sub {
+            my $min = $_[0]->min;
+            $min->clone->add_duration( $dur ) if ref($min);
+        },
+        backtrack_callback => sub { 
+            my ( $min, $max ) = ( $_[0]->min, $_[0]->max );
+            if ( ref($min) )
+            {
+                $min = $min->clone;
+                $min->subtract_duration( $dur );
+            }
+            if ( ref($max) )
+            {
+                $max = $max->clone;
+                $max->subtract_duration( $dur );
+            }
+            return Set::Infinite::_recurrence->new( $min, $max );
+        },
     );
+    $self;
 }
 
 sub set_time_zone {
     my ( $self, $tz ) = @_;
-    return $self->_iterate_inplace( 
-        sub { $_[0]->set_time_zone( $tz ) }
+
+    $self->{set} = $self->{set}->iterate(
+        sub {
+            my $min = $_[0]->min;
+            $min->clone->set_time_zone( $tz ) if ref($min);
+        },
+        backtrack_callback => sub {
+            my ( $min, $max ) = ( $_[0]->min, $_[0]->max );
+            if ( ref($min) )
+            {
+                $min = $min->clone;
+                $min->set_time_zone( $tz );
+            }
+            if ( ref($max) )
+            {
+                $max = $max->clone;
+                $max->set_time_zone( $tz );
+            }
+            return Set::Infinite::_recurrence->new( $min, $max );
+        },
     );
+    $self;
 }
 
 sub set {
@@ -125,9 +175,13 @@ sub set {
                                        default => undef },
                          }
                        );
-    return $self->_iterate_inplace( 
-        sub { $_[0]->set( %args ) }
+    $self->{set} = $self->{set}->iterate( 
+        sub {
+            my $min = $_[0]->min;
+            $min->clone->set( %args ) if ref($min);
+        },
     );
+    $self;
 }
 
 sub from_recurrence {
@@ -364,12 +418,14 @@ sub next {
     {
         if ( $self->{set}->_is_recurrence )
         {
-            return $self->{set}->{param}[0]->( $_[0] );
+            return _fix_return_datetime(
+                       $self->{set}->{param}[0]->( $_[0] ), $_[0] );
         }
         else 
         {
             my $span = DateTime::Span->from_datetimes( after => $_[0] );
-            return $self->intersection( $span )->next;
+            return _fix_return_datetime(
+                        $self->intersection( $span )->next, $_[0] );
         }
     }
 
@@ -389,12 +445,14 @@ sub previous {
     {
         if ( $self->{set}->_is_recurrence ) 
         {
-            return $self->{set}->{param}[1]->( $_[0] );
+            return _fix_return_datetime(
+                      $self->{set}->{param}[1]->( $_[0] ), $_[0] );
         }
         else 
         {
             my $span = DateTime::Span->from_datetimes( before => $_[0] );
-            return $self->intersection( $span )->previous;
+            return _fix_return_datetime(
+                      $self->intersection( $span )->previous, $_[0] );
         }
     }
 
@@ -670,7 +728,6 @@ Creates a new set specified via a "recurrence" callback.
     $months = DateTime::Set->from_recurrence( 
         span => $dt_span_this_year,    # optional span
         recurrence => sub { 
-            return $_[0] if $_[0]->is_infinite;
             return $_[0]->truncate( to => 'month' )->add( months => 1 ) 
         }, 
     );
@@ -684,7 +741,6 @@ case, if there is a C<span> parameter it will be ignored.
     $months = DateTime::Set->from_recurrence(
         after => $dt_now,
         recurrence => sub {
-            return $_[0] if $_[0]->is_infinite;
             return $_[0]->truncate( to => 'month' )->add( months => 1 );
         },
     );
@@ -754,7 +810,6 @@ Bounded recurrences are is easier to write using span parameters:
     $months = DateTime::Set->from_recurrence(
         start => $dt,
         recurrence => sub {
-            return $_[0] if $_[0]->is_infinite;
             return $_[0]->truncate( to => 'month' )->add( months => 1 );
         },
     );
@@ -790,14 +845,6 @@ This method adds the specified duration added to every element of the set.
 The original set is modified. If you want to keep the old values use:
 
     $new_set = $set->clone->add_duration( $dt_dur );
-
-Note: The result of adding a duration to a given set element 
-is expected to be within the span of the
-C<previous> and the C<next> element in the original set.
-
-For example: given the set C<[ 2001, 2010, 2015 ]>,
-the add_duration result for the value C<2010> is expected to be
-within the span C<[ 2001 .. 2015 ]>.
 
 =item * add
 

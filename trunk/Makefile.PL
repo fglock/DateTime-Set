@@ -43,7 +43,7 @@ WriteMakefile( NAME         => 'DateTime::Set',
                ABSTRACT     => 'DateTime set objects',
 
                PREREQ_PM    => { 'DateTime' => 0.12,
-                                 'Set::Infinite' => 0.5503,
+                                 'Set::Infinite' => 0.59,
                                  'Test::More'  => 0,
                                },
                PL_FILES     => { },  # ignore Build.PL

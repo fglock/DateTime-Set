@@ -79,17 +79,26 @@ sub set_time_zone {
             $tmp{a} = $tmp{a}->clone->set_time_zone( $tz ) if ref $tmp{a};
             $tmp{b} = $tmp{b}->clone->set_time_zone( $tz ) if ref $tmp{b};
             \%tmp;
-        }
+        },
+        backtrack_callback => sub {
+            my ( $min, $max ) = ( $_[0]->min, $_[0]->max );
+            if ( ref($min) )
+            {
+                $min = $min->clone;
+                $min->set_time_zone( $tz );
+            }
+            if ( ref($max) )
+            {
+                $max = $max->clone;
+                $max->set_time_zone( $tz );
+            }
+            return Set::Infinite::_recurrence->new( $min, $max );
+        },
     );
 
     ### this code enables 'subroutine method' behaviour
     $self->{set} = $result;
     return $self;
-
-    ### this code enables 'function method' behaviour
-    # my $set = $self->clone;
-    # $set->{set} = $result;
-    # return $set;
 }
 
 sub from_spans {

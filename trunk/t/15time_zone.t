@@ -94,20 +94,22 @@ is( $original, '2001-11-22T00:00:00 floating', 'does not mutate arg' );
           '2001-12-01T00:00:00 America/Sao_Paulo',
           'recurrence with time zone, arg without time zone' );
 
-TODO: {
-  local $TODO = "Time zone settings do not backtrack";
+  # TODO: {
+  #  local $TODO = "Time zone settings do not backtrack";
   # bug reported by Tim Mueller-Seydlitz
 
   # tz set => tz dt
       is( $set_with_tz->next( $dt_with_tz )->
           strftime( "%FT%H:%M:%S %{time_zone_long_name}"),
-          '2001-12-01T10:00:00 America/Sao_Paulo',
+          # = '2001-12-01T00:00:00 Asia/Taipei',
+          '2001-11-30T14:00:00 America/Sao_Paulo',
           'recurrence with time zone, arg with time zone' );
-} # TODO
+  # } 
 
     # TODO: limit set_floating with a start=>dt_floating;
     #       ask for next( dt_with_tz_before_start ) 
     #       and next( dt_with_another_tz_before_start )
+    #       and next( dt_floating_before_start )
     #       and check for caching problems
 
 }
