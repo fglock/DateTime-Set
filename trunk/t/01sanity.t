@@ -1,7 +1,7 @@
 use strict;
 
 use Test::More;
-plan tests => 4;
+plan tests => 7;
 
 use DateTime;
 use DateTime::Set;
@@ -26,6 +26,13 @@ ok( $s1->min->ymd eq '1810-11-22',
 
 ok( $s1->max->ymd eq '1900-11-22',
     'got 1900-11-22 - max' );
+
+eval { DateTime::Set->from_datetimes() };
+ok( $@, 'Cannot call from_datetimes without dates parameter' );
+
+my $empty = DateTime::Set->empty_set;
+is( $empty->min, undef, 'empty set ->min should be undef' );
+is( $empty->max, undef, 'empty set ->max should be undef' );
 
 1;
 
