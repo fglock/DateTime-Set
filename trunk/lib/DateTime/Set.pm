@@ -64,69 +64,13 @@ sub add_duration {
     return $set;
 }
 
-# note: the constructor must clone its DateTime parameters, such that
+# note: the constructors must clone its DateTime parameters, such that
 # the set elements become immutable
+
 sub new {
     my $class = shift;
-    carp "new( \%param ) is deprecated. Use from_recurrence() / from_datetimes() instead,"
-        if @_;
-    my %args = validate( @_,
-                         { start =>
-                           { type => OBJECT,
-                             optional => 1,
-                           },
-                           end =>
-                           { type => OBJECT,
-                             optional => 1,
-                           },
-                           recurrence =>      # "next" alias 
-                           { type => CODEREF,
-                             optional => 1,
-                           },
-                           next =>
-                           { type => CODEREF,
-                             optional => 1,
-                           },
-                           previous =>
-                           { type => CODEREF,
-                             optional => 1,
-                           },
-                           dates => 
-                           { type => ARRAYREF,
-                             optional => 1,
-                           },
-                         }
-                       );
-    my $self = {};
-
-    $args{next} = $args{recurrence} if exists $args{recurrence};
-
-    if (exists $args{dates}) {
-        $self->{set} = Set::Infinite->new;
-        # warn "new: inserting @{ $args{dates} }";
-        for( @{ $args{dates} } ) {
-            # warn "new: inserting ".$_->ymd;
-            $self->{set} = $self->{set}->union( $_->clone );
-        }
-    }
-    elsif (exists $args{next}) {
-        # Set::Infinity->iterate() builds a "set-function" with a callback:
-        my $start = ( exists $args{start} ) ? $args{start} : NEG_INFINITY;
-        my $end =   ( exists $args{end} )   ? $args{end}   : INFINITY;
-        $start = $start->clone if ref($start);
-        $end =   $end->clone   if ref($end);
-        my $tmp_set = Set::Infinite->new( $start, $end );
-        $self->{set} = _recurrence_callback( $tmp_set, $args{next} );  
-    }
-    elsif (exists $args{previous}) {
-        die '"previous =>" argument not implemented';
-    }
-    else {
-        # no arguments => return an empty set (or should die?)
-        $self->{set} = Set::Infinite->new;
-    }
-    bless $self, $class;
-    return $self;
+    carp "new is deprecated" if @_;
+    $class->empty_set;
 }
 
 sub from_recurrence {

@@ -1,7 +1,7 @@
 use strict;
 
 use Test::More;
-plan tests => 13;
+plan tests => 15;
 
 use DateTime;
 use DateTime::Duration;
@@ -140,14 +140,31 @@ my $start_set = DateTime::Set->from_recurrence(
                ),
 );
 
-my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $start_set );
+# test is the recurrence works properly
+my $set_iter = $start_set->iterator;
+my $res = $set_iter->next;
+$res = str($res);
+ok( $res eq '1810-09-20T00:00:00',
+    "recurrence works properly - got $res" );
+$res = str( $set_iter->next );
+ok( $res eq '1810-09-21T00:00:00',
+    "recurrence works properly - got $res" );
 
+my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $start_set );
 my $iter = $s1->iterator;
 
-my $res = $iter->next;
+$res = $iter->next;
 $res = str($res->min) . ".." . str($res->max);
+ok( $res eq '-inf..1810-09-20T00:00:00',
+    "start_set == end_set recurrence works properly - got $res" );
+
+eval <<'_TODO';
+$res = $iter->next;
+$res = str($res->min) . ".." . str($res->max);
+_TODO
 ok( $res eq '1810-09-20T00:00:00..1810-09-21T00:00:00',
-    "got $res" );
+    "start_set == end_set recurrence works properly - got $res" );
+
 }
 
 1;
