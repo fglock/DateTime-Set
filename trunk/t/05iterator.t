@@ -33,7 +33,7 @@ my $months = DateTime::Set->from_recurrence(
 );
 $res = $months->min;
 $res = $res->ymd if ref($res);
-ok( $res eq '1810-09-01', 
+is( $res, '1810-09-01', 
     "min() - got $res" );
 
 
@@ -44,7 +44,7 @@ for (1..3) {
         push @res, $tmp->ymd if defined $tmp;
 }
 $res = join( ' ', @res );
-ok( $res eq '1810-09-01 1810-10-01 1810-11-01',
+is( $res, '1810-09-01 1810-10-01 1810-11-01',
         "3 iterations give $res" );
 
 
@@ -79,7 +79,7 @@ ok( $res eq '1810-09-01 1810-10-01 1810-11-01',
     }
 
     $res = join( ' ', @res );
-    ok( $res eq '1810-08-22T00:00:00.000000 1810-08-22T00:00:00.000001 1810-08-22T00:00:00.000002',
+    is( $res, '1810-08-22T00:00:00.000000 1810-08-22T00:00:00.000001 1810-08-22T00:00:00.000002',
         "3 iterations give $res" );
 }
 
@@ -100,7 +100,7 @@ ok( $res eq '1810-09-01 1810-10-01 1810-11-01',
         push @res, $dt->ymd();
     }
     my $res = join( ' ', @res);
-    ok( $res eq '1810-09-01 1810-10-01 1810-11-01',
+    is( $res, '1810-09-01 1810-10-01 1810-11-01',
         "limited iterator give $res" );
 
     # And try looping just using a start date and get 4 items
@@ -112,7 +112,7 @@ ok( $res eq '1810-09-01 1810-10-01 1810-11-01',
         push @res, $dt->ymd();
     }
     $res = join( ' ', @res);
-    ok( $res eq '1810-09-01 1810-10-01 1810-11-01 1810-12-01',
+    is( $res, '1810-09-01 1810-10-01 1810-11-01 1810-12-01',
         "limited iterator give $res" );
 }
  
