@@ -171,12 +171,22 @@ sub from_sets {
 }
 
 sub start_set {
+    if ( exists $_[0]->{set}{method} &&
+         $_[0]->{set}{method} eq 'until' )
+    {
+        return bless { set => $_[0]->{set}{parent}[0] }, 'DateTime::Set';
+    }
     my $return = DateTime::Set->empty_set;
     $return->{set} = $_[0]->{set}->start_set;
     $return;
 }
 
 sub end_set {
+    if ( exists $_[0]->{set}{method} &&
+         $_[0]->{set}{method} eq 'until' )
+    {
+        return bless { set => $_[0]->{set}{parent}[1] }, 'DateTime::Set';
+    }
     my $return = DateTime::Set->empty_set;
     $return->{set} = $_[0]->{set}->end_set;
     $return;
@@ -377,8 +387,17 @@ sub intersected_spans {
 
 sub intersects {
     my ($set1, $set2) = ( shift, shift );
+    
+    unless ( $set2->can( 'union' ) )
+    {
+        for ( $set2, @_ )
+        {
+            return 1 if $set1->contains( $_ );
+        }
+        return 0;
+    }
+    
     my $class = ref($set1);
-    my $tmp = $class->empty_set();
     $set2 = $set2->as_spanset
         if $set2->can( 'as_spanset' );
     $set2 = $set2->as_set
@@ -390,8 +409,32 @@ sub intersects {
 
 sub contains {
     my ($set1, $set2) = ( shift, shift );
+    
+    unless ( $set2->can( 'union' ) )
+    {
+        if ( exists $set1->{set}{method} &&
+             $set1->{set}{method} eq 'until' )
+        {
+            my $start_set = $set1->start_set;
+            my $end_set =   $set1->end_set;
+
+            for ( $set2, @_ )
+            {
+                my $start = $start_set->next( $set2 );
+                my $end =   $end_set->next( $set2 );
+
+                goto ABORT unless defined $start && defined $end;
+            
+                return 0 if $start < $end;
+            }
+            return 1;
+
+            ABORT: ;
+            # don't know 
+        }
+    }
+    
     my $class = ref($set1);
-    my $tmp = $class->empty_set();
     $set2 = $set2->as_spanset
         if $set2->can( 'as_spanset' );
     $set2 = $set2->as_set

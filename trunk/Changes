@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+- optimized SpanSet methods for special cases:
+  start_set()
+  end_set()
+  contains( $dt )
+  intersects( $dt )
 - added an example to count(), by David Nicol.
 - added a note about how the result of min()/max() is just a copy of the 
   actual set boundary.  Reported by Ron Hill.

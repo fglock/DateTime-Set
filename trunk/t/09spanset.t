@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 46;
+plan tests => 53;
 
 use DateTime;
 use DateTime::Duration;
@@ -236,7 +236,7 @@ sub span_str { eval { str($_[0]->min) . '..' . str($_[0]->max) } }
                ),
     );
 
-# test is the recurrence works properly
+# test if the recurrence works properly
     my $set_iter = $start_set->iterator;
 
     my $res = str( $set_iter->next );
@@ -321,7 +321,26 @@ sub span_str { eval { str($_[0]->min) . '..' . str($_[0]->max) } }
         "limited iterator works properly" );
     is( $res_a, '1812-11-22T00:00:00..1813-12-23T00:00:00',
         "limited iterator doesn't break regular iterator" );
+}
 
+{
+# start_set / end_set
+
+    my $start1 = new DateTime( year => '1810', month => '9',  day => '20' );
+    my $end1   = new DateTime( year => '1811', month => '10', day => '21' );
+    my $start2 = new DateTime( year => '1812', month => '11', day => '22' );
+    my $end2   = new DateTime( year => '1813', month => '12', day => '23' );
+    my $end3   = new DateTime( year => '1813', month => '12', day => '1' );
+	
+    my $start_set = DateTime::Set->from_datetimes( 
+            dates => [ $start1, $start2 ] );
+    my $end_set   = DateTime::Set->from_datetimes( 
+            dates => [ $end1, $end2 ] );
+    
+    my $s1 = DateTime::SpanSet->from_sets( 
+            start_set => $start_set, 
+            end_set => $end_set );
+ 
     isa_ok( $s1->start_set , "DateTime::Set" , "start_set" );
     isa_ok( $s1->end_set , "DateTime::Set" , "end_set" );
 
@@ -329,5 +348,52 @@ sub span_str { eval { str($_[0]->min) . '..' . str($_[0]->max) } }
     is( "".$s1->end_set->{set}, "".$end_set->{set} , "end_set" );
 }
 
-1;
+{
+# start_set / end_set using recurrences
+
+    my $start_set = DateTime::Set->from_recurrence(
+       next  => sub { $_[0]->truncate( to => 'day' )
+                           ->add( days => 1 ) },
+    );
+
+    my $span_set = DateTime::SpanSet->from_set_and_duration(
+                       set => $start_set, hours => 1 );
+
+    my $dt = new DateTime( 
+            year => '1810', month => '9',  day => '20', hour => 12 );
+    my $res;
+    
+    $res = span_str( $span_set->next( $dt ) );
+    is( $res, '1810-09-21T00:00:00..1810-09-21T01:00:00',
+        "next span_set occurrence - got $res" );
+
+    my $set1 = $span_set->start_set;
+    $res = $set1->next( $dt );
+    is( $res->datetime, '1810-09-21T00:00:00',
+        "next span_set-start occurrence - got $res" );
+
+    my $set2 = $span_set->end_set;
+    $res = $set2->next( $dt );
+    is( $res->datetime, '1810-09-21T01:00:00',
+        "next span_set-end occurrence - got $res" );
+
+    ok( ! $span_set->contains( $dt ), 
+            "span_set recurrence does not contain" );
+
+    ok( $span_set->contains( 
+            DateTime->new(
+                year => '1810', month => '9',  day => '20', hour => 0 ) ),
+            "span_set recurrence contains, dt == start" );
+
+    ok( ! $span_set->contains( 
+            DateTime->new(
+                year => '1810', month => '9',  day => '20', hour => 1 ) ),
+            "span_set recurrence does not contain, dt == end" );
+    
+    ok( ! $span_set->intersects( 
+            DateTime->new(
+                year => '1810', month => '9',  day => '20', hour => 1 ) ),
+            "span_set recurrence does not intersect, dt == end" );
+}
+
 
