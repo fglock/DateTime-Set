@@ -32,9 +32,6 @@ my $s1 = DateTime::Set->from_datetimes( dates => [ $t1, $t2 ] );
 
 # ------------- test a simple recurrence
 
-TODO: {
-   local $TODO = 'max is broken if recurrence is intersected';
-
 my $month_callback = sub {
             $_[0]->truncate( to => 'month' );
             $_[0]->add( months => 1 );
@@ -42,10 +39,14 @@ my $month_callback = sub {
         };
 my $recurr_months = DateTime::Set->from_recurrence(
     recurrence => $month_callback,
-    end => $t1,
+    end => $t1, # 1810-08-22
 );
-is( test($recurr_months), '1810-09-01 1810-08-01 1810-07-01',
+is( test($recurr_months), '1810-08-01 1810-07-01 1810-06-01',
     "months" );
+
+
+TODO: {
+    local $TODO = 'the test is ok, expected is wrong';
 
 # --------- test a more complex recurrence
 

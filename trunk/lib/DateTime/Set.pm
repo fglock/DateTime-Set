@@ -91,24 +91,22 @@ sub from_recurrence {
 
         unless ( $param{previous} ) {
             my $data = {};
-
             $param{previous} =
                 sub {
                     _callback_previous ( $_[0], $param{next}, $data );
-                    }
+                }
         }
 
         unless ( $param{current} ) {
             $param{current} =
                 sub {
                     _callback_current ( $_[0], $param{next} );
-                    }
+                }
         }
 
-        $self->{next} = $param{next} if $param{next};
-        $self->{current} = $param{current} if $param{current};
+        $self->{next} =     $param{next}     if $param{next};
+        $self->{current} =  $param{current}  if $param{current};
         $self->{previous} = $param{previous} if $param{previous};
-        $self->{span} = $param{span} if $param{span};
 
         $self->{set} = _recurrence_callback( 
             Set::Infinite->new( NEG_INFINITY, INFINITY ), 
@@ -201,16 +199,9 @@ sub _setup_infinite_recurrence {
     return $set->new( INFINITY ) 
         if $set->min == INFINITY && $set->max == INFINITY;
 
-    # set up a hash to store additional info on the callback,
-    # such as direction (next/previous) and the 
-    # approximate time between events
-    # $callback_info = { 
-    #     freq => undef,
-    # } unless defined $callback_info;
-
     # return an internal "_function", such that we can 
     # backtrack and solve the equation later.
-    $set = $set->copy;
+    $set = $set->copy;  # prevent circular references
     my $func = $set->_function( 'iterate', 
         sub {
             _recurrence_callback( 
@@ -229,15 +220,17 @@ sub _setup_infinite_recurrence {
     # because Set::Infinite has no hint of how to do it.
     if ($set->min == INFINITY || $set->min == NEG_INFINITY) {
         # warn "RECURR: start in ".$set->min;
-        # added: $func->copy to make it recursive
+        # $func->copy make it recursive without circular references
         $func->{first} = [ $set->new( $set->min ), $func->copy ];
     }
     else {
-        my $min = $func->min;
-        my $next = $callback_next->($min->clone);
-        # warn "RECURR: preparing first: ".$min->ymd." ; ".$next->ymd;
+        my $min = $set->min;
+        $min = $callback_current->( $min->clone );
+        $func->{min} = [ $min, 1 ];
+
+        my $next = $callback_next->( $min->clone );
         my $next_set = $set->intersection( $next->clone, INFINITY );
-        # warn "next_set min is ".$next_set->min->ymd;
+
         my @first = ( 
             $set->new( $min->clone ), 
             $next_set->_function( 'iterate',
@@ -245,25 +238,23 @@ sub _setup_infinite_recurrence {
                     _recurrence_callback( 
                         $_[0], $callback_next, $callback_current, $callback_previous );
                 } ) );
-        # warn "RECURR: preparing first: $min ; $next; got @first";
         $func->{first} = \@first;
     }
 
     # Now are setting up the last() cache directly
     if ($set->max == INFINITY || $set->max == NEG_INFINITY) {
         # warn "RECURR: end in ".$set->max;
-        # added: $func->copy to make it recursive
+        # $func->copy make it recursive without circular references
         $func->{last} = [ $set->new( $set->max ), $func->copy ];
     }
     else {
-        my $max = $func->max;
-        # iterate to find previous value
+        my $max = $set->max;
+        $max = $callback_current->( $max->clone );
+        $max = $callback_previous->( $max->clone ) unless $max == $set->max;
+        $func->{max} = [ $max, 1 ];
+ 
         my $previous = $callback_previous->( $max->clone );
-        # warn "previous: ".$previous->ymd;
-        my $previous2 = $callback_previous->( $previous->clone );
-        # warn "RECURR: preparing last: ".$previous2->ymd." ; ".$previous3->ymd;
-        my $previous_set = $set->intersection( NEG_INFINITY, $previous2->clone );
-        # warn "previous_set max is ".$previous_set->max->ymd;
+        my $previous_set = $set->intersection( NEG_INFINITY, $previous->clone );
         my @last = (
             $set->new( $max->clone ),
             $previous_set->_function( 'iterate',
@@ -271,7 +262,6 @@ sub _setup_infinite_recurrence {
                     _recurrence_callback( 
                         $_[0], $callback_next, $callback_current, $callback_previous );
                 } ) );
-        # warn "RECURR: preparing last: $max ; $previous; got @last";
         $func->{last} = \@last;
     }
 
@@ -288,14 +278,12 @@ sub _setup_finite_recurrence {
     return unless defined $min;
     my $max = $set->max;
     $min = $callback_current->( $min );
-    my $result = $set->new( $min->clone );
-    return $result if $min > $max;
-    do {
+    my $result = $set->new();
+    while (1) {
+        return $result if ! defined $min || $min > $max;
+        $result = $result->union( $min->clone );
         $min = $callback_next->( $min );
-        $result = $result->union( $min->clone )
-            if defined $min;
-    } while ( defined $min && $min <= $max );
-    return $result;
+    };
 }
 
 # default callback that returns the 
@@ -316,9 +304,6 @@ sub _callback_current {
 sub _callback_previous {
     my ($value, $callback_next, $callback_info) = @_; 
     my $previous = $value->clone;
-
-    # TODO: memoize.
-    # TODO: binary search to find out what's the best subtract() unit.
 
     my $freq = $callback_info->{freq};
     unless (defined $freq) { 
@@ -503,6 +488,13 @@ sub intersection {
     my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
 
+    # It looks like this is not worth optimizing - it never happens in tests
+    # if ( ( $set1->{next} && $set2->{method} eq 'intersection' ) ||
+    #      ( $set2->{next} && $set1->{method} eq 'intersection' ) )
+    # {
+    #     warn "optimize this!";
+    # }
+
     # optimization - use function composition if both sets are recurrences
     if ( $set1->{next} && $set2->{next} &&
          $set1->{previous} && $set2->{previous} )
@@ -522,13 +514,10 @@ sub intersection {
                                    $tmp2 = $set2->{previous}->( $set2->{next}->( $next1->clone ) );
                                    return $next1 if $next1 == $tmp2;
                             
-
                                    $next2 = $set2->{next}->( $arg->clone );
                                    $tmp1 = $set1->{previous}->( $set1->{next}->( $next2->clone ) );
-  #warn "intersection arg ".$arg->datetime." 1 ".$tmp1_next->datetime." 2 ".$next2->datetime." ";
                                    return $next2 if $next2 == $tmp1;
                                   
-
                                    $arg = $next1 > $next2 ? $next1 : $next2;
                                    return if $iterate++ == $max_iterate;
                                }
@@ -580,6 +569,33 @@ sub union {
     my $class = ref($set1);
     my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+
+    if ( $set1->{next} && $set2->{next} &&
+         $set1->{previous} && $set2->{previous} )
+    {
+        # TODO: add tests
+
+        # warn "compose union";
+        return $class->from_recurrence(
+                  next =>  sub {
+                               # union of parent 'next' callbacks
+                               my $arg = shift;
+                               my ($next1, $next2);
+                               $next1 = $set1->{next}->( $arg->clone );
+                               $next2 = $set2->{next}->( $arg->clone );
+                               return $next1 < $next2 ? $next1 : $next2;
+                           },
+                  previous => sub {
+                               # union of parent 'previous' callbacks
+                               my $arg = shift;
+                               my ($previous1, $previous2);
+                               $previous1 = $set1->{previous}->( $arg->clone );
+                               $previous2 = $set2->{previous}->( $arg->clone );
+                               return $previous1 > $previous2 ? $previous1 : $previous2;;
+                           },
+               );
+    }
+
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
     bless $tmp, 'DateTime::SpanSet' 
         if $set2->isa('DateTime::Span') or $set2->isa('DateTime::SpanSet');
