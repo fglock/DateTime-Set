@@ -161,7 +161,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.10';
+    $VERSION = '0.11';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
 
@@ -200,6 +200,7 @@ sub set_time_zone {
         sub {
             $_[0]{list}[0]{a}->set_time_zone( $tz ) if ref $_[0]{list}[0]{a};
             $_[0]{list}[0]{b}->set_time_zone( $tz ) if ref $_[0]{list}[0]{b};
+            $_[0];
         }
     );
 

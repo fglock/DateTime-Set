@@ -25,3 +25,4 @@ lib/DateTime/Set.pm
 lib/DateTime/Span.pm
 lib/DateTime/SpanSet.pm
 
+META.yml                                Module meta-data (added by MakeMaker)

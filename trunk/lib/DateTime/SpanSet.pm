@@ -25,6 +25,7 @@ sub set_time_zone {
         sub {
             $_[0]{list}[0]{a}->set_time_zone( $tz ) if ref $_[0]{list}[0]{a};
             $_[0]{list}[0]{b}->set_time_zone( $tz ) if ref $_[0]{list}[0]{b};
+            $_[0];
         }
     );
 

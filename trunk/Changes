@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.11   2003-09-19
+- Fixed callback return value on set_time_zone. 
+  This caused the start date to be equal to the end date.
+  Bug found by Dan Kubb.
+
 0.10   2003-09-02
 - DateTime::Span->duration now uses the new subtract_datetime_absolute
 method, which means that the duration is always given in seconds.
