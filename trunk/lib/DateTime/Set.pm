@@ -9,13 +9,14 @@ use strict;
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
-use vars qw( @ISA $PRETTY_PRINT );
+use vars qw( @ISA $PRETTY_PRINT $max_iterate );
 
 @ISA = qw( Set::Infinite );
 use Set::Infinite 0.5305;
 
 BEGIN {
     $PRETTY_PRINT = 1;   # enable Set::Infinite debug
+    $max_iterate = 20;
 
     # TODO: inherit %Set::Infinite::_first / _last 
     #       in a more "object oriented" way
@@ -123,27 +124,101 @@ sub _recurrence {
 
 sub _is_recurrence 
 {
-    exists $_[0]->{method} && $_[0]->{method} eq '_recurrence'
+    # TODO: simplify this, or memoize
+    exists $_[0]->{method}           && 
+    $_[0]->{method} eq '_recurrence' &&
+    $#{ $_[0]->{parent}{list} } == 0 &&
+    $_[0]->{parent}->max == INFINITY &&
+    $_[0]->{parent}->min == NEG_INFINITY
 }
 
-# TODO: breaks when used with _is_recurrence
-sub _XXX_intersection
+sub intersection
 {
+    # TODO: put back the optimization that intersects recurrences+spans
+    #   It will no longer break, because _is_recurrence is more restrictive now
+    #   Add tests first!
+
     my ($s1, $s2) = (shift,shift);
-    if ( $s1->_is_recurrence ) 
+    if ( $s1->_is_recurrence && 
+         ref($s2) && _is_recurrence( $s2 ) )
     {
-        unless( ref($s1) eq ref($s2) )
-        {
-            $s2 = $s1->new( $s2, @_ );
-            @_ = ();
-        }
-        unless( $s2->is_too_complex ) 
-        {
-            my $inter = $s1->{parent} ->intersection( $s2 );
-            return $inter->_recurrence( @{ $s1->{param} } );
-        }
+        my ( $next1, $current1, $previous1 ) = @{ $s1->{param} };
+        my ( $next2, $current2, $previous2 ) = @{ $s2->{param} };
+        return $s1->{parent}->_function( '_recurrence', 
+                  sub {
+                               # intersection of parent 'next' callbacks
+                               my ($n1, $n2);
+                               my $iterate = 0;
+                               $n2 = $next2->( $_[0] );
+                               while(1) { 
+                                   $n1 = $current1->( $n2 );
+                                   return $n1 if $n1 == $n2;
+                                   $n2 = $current2->( $n1 );
+                                   return if $iterate++ == $max_iterate;
+                               }
+                  },
+                  sub {
+                               # intersection of parent 'current' callbacks
+                               my ($n1, $n2);
+                               my $iterate = 0;
+                               $n2 = $current2->( $_[0] );
+                               while(1) {
+                                   $n1 = $current1->( $n2 );
+                                   return $n1 if $n1 == $n2;
+                                   $n2 = $current2->( $n1 );
+                                   return if $iterate++ == $max_iterate;
+                               }
+                  },
+                  sub {
+                               # intersection of parent 'previous' callbacks
+                               my $arg = $_[0];
+                               my ($tmp1, $p1, $p2);
+                               my $iterate = 0;
+                               while(1) { 
+                                   $p1 = $previous1->( $arg );
+                                   $p2 = $current2->( $p1 ); 
+                                   return $p1 if $p1 == $p2;
+
+                                   $p2 = $previous2->( $arg ); 
+                                   $tmp1 = $current1->( $p2 ); 
+                                   return $p2 if $p2 == $tmp1;
+
+                                   $arg = $p1 < $p2 ? $p1 : $p2;
+                                   return if $iterate++ == $max_iterate;
+                               }
+                  },
+               );
     }
     return $s1->SUPER::intersection( $s2, @_ );
+}
+
+sub union
+{
+    my ($s1, $s2) = (shift,shift);
+    if ( $s1->_is_recurrence &&
+         ref($s2) && _is_recurrence( $s2 ) )
+    {
+        my ( $next1, $current1, $previous1 ) = @{ $s1->{param} };
+        my ( $next2, $current2, $previous2 ) = @{ $s2->{param} };
+        return $s1->{parent}->_function( '_recurrence',
+                  sub {  # next
+                               my $n1 = $next1->( $_[0] );
+                               my $n2 = $next2->( $_[0] );
+                               return $n1 < $n2 ? $n1 : $n2;
+                  },
+                  sub {  # current
+                               my $n1 = $current1->( $_[0] );
+                               my $n2 = $current2->( $_[0] );
+                               return $n1 < $n2 ? $n1 : $n2;
+                  },
+                  sub {  # previous
+                               my $p1 = $previous1->( $_[0] );
+                               my $p2 = $previous2->( $_[0] );
+                               return $p1 > $p2 ? $p1 : $p2;
+                  },
+               );
+    }
+    return $s1->SUPER::union( $s2, @_ );
 }
 
 package DateTime::Set;
@@ -156,7 +231,7 @@ use DateTime::Duration;
 use DateTime::Span;
 use Set::Infinite 0.50;  
 
-use vars qw( $VERSION $neg_nanosecond );
+use vars qw( $VERSION $neg_nanosecond $forever );
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -165,6 +240,8 @@ BEGIN {
     $VERSION = '0.1202';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
+
+$forever = Set::Infinite::_recurrence->new( NEG_INFINITY, INFINITY );
 
 sub add { shift->add_duration( DateTime::Duration->new(@_) ) }
 
@@ -197,7 +274,7 @@ sub set_time_zone {
         sub {
             my %tmp = %{ $_[0]->{list}[0] };
             $tmp{a} = $tmp{a}->clone->set_time_zone( $tz ) if ref $tmp{a};
-            $tmp{b} = $tmp{a};  # ->clone->set_time_zone( $tz ) if ref $tmp{b};
+            $tmp{b} = $tmp{a};  
             \%tmp;
         }
     );
@@ -275,13 +352,8 @@ sub from_recurrence {
                 }
         }
 
-        $self->{next} =     $param{next};     
-        $self->{current} =  $param{current}; 
-        $self->{previous} = $param{previous};
-
         $self->{set} = 
-            Set::Infinite::_recurrence->new( NEG_INFINITY, INFINITY )->
-            _recurrence(
+            $forever->_recurrence(
                 $param{next}, 
                 $param{current},
                 $param{previous} 
@@ -443,7 +515,7 @@ sub next {
     {
         if ( $self->{set}->_is_recurrence )
         {
-            return $self->{next}->( $_[0] );
+            return $self->{set}->{param}[0]->( $_[0] );
         }
         else 
         {
@@ -468,7 +540,7 @@ sub previous {
     {
         if ( $self->{set}->_is_recurrence ) 
         {
-            return $self->{previous}->( $_[0] );
+            return $self->{set}->{param}[2]->( $_[0] );
         }
         else 
         {
@@ -491,7 +563,7 @@ sub current {
 
     if ( $self->{set}->_is_recurrence )
     {
-        my $tmp = $self->{current}->( $_[0] );
+        my $tmp = $self->{set}->{param}[1]->( $_[0] );
         return $tmp if $tmp == $_[0];
         return $self->previous( $_[0] );
     }
@@ -553,47 +625,6 @@ sub intersection {
     my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
         unless $set2->can( 'union' );
-
-    # optimization - use function composition if both sets are recurrences
-    if ( $set1->{set}->_is_recurrence && $set2->{set}->_is_recurrence ) 
-    {
-        # TODO: add tests
-
-        # warn "compose intersection";
-        return $class->from_recurrence(
-                  next =>  sub {
-                               # intersection of parent 'next' callbacks
-                               my ($next1, $next2);
-                               my $iterate = 0;
-                               $next2 = $set2->{next}->( $_[0] );
-                               while(1) { 
-                                   $next1 = $set1->{current}->( $next2 );
-                                   return $next1 if $next1 == $next2;
-                                   $next2 = $set2->{current}->( $next1 );
-                                   return if $iterate++ == $max_iterate;
-                               }
-                           },
-                  previous => sub {
-                               # intersection of parent 'previous' callbacks
-                               my $arg = $_[0];
-                               my ($tmp1, $previous1, $previous2);
-                               my $iterate = 0;
-                               while(1) { 
-                                   $previous1 = $set1->{previous}->( $arg );
-                                   $previous2 = $set2->{current}->( $previous1 ); 
-                                   return $previous1 if $previous1 == $previous2;
-
-                                   $previous2 = $set2->{previous}->( $arg ); 
-                                   $tmp1 = $set1->{current}->( $previous2 ); 
-                                   return $previous2 if $previous2 == $tmp1;
-
-                                   $arg = $previous1 < $previous2 ? $previous1 : $previous2;
-                                   return if $iterate++ == $max_iterate;
-                               }
-                           },
-               );
-    }
-
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
     return $tmp;
 }
@@ -607,7 +638,7 @@ sub intersects {
         {
             for ( $set2, @_ )
             {
-                return 1 if $set1->{current}->( $_ ) == $_;
+                return 1 if $set1->{set}->{param}[1]->( $_ ) == $_;
             }
             return 0;
         }
@@ -625,7 +656,7 @@ sub contains {
         {
             for ( $set2, @_ ) 
             {
-                return 0 unless $set1->{current}->( $_ ) == $_;
+                return 0 unless $set1->{set}->{param}[1]->( $_ ) == $_;
             }
             return 1;
         }
@@ -640,26 +671,6 @@ sub union {
     my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
         unless $set2->can( 'union' );
-
-    if ( $set1->{set}->_is_recurrence && $set2->{set}->_is_recurrence )
-    {
-        # TODO: add tests
-
-        # warn "compose union";
-        return $class->from_recurrence(
-                  next =>  sub {
-                               my $next1 = $set1->{next}->( $_[0] );
-                               my $next2 = $set2->{next}->( $_[0] );
-                               return $next1 < $next2 ? $next1 : $next2;
-                           },
-                  previous => sub {
-                               my $previous1 = $set1->{previous}->( $_[0] );
-                               my $previous2 = $set2->{previous}->( $_[0] ); 
-                               return $previous1 > $previous2 ? $previous1 : $previous2;
-                           },
-               );
-    }
-
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
     bless $tmp, 'DateTime::SpanSet' 
         if $set2->isa('DateTime::Span') or $set2->isa('DateTime::SpanSet');

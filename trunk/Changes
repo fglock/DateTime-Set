@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+- removed an intersection optimization :(
+- refactored union / intersection
+- _is_recurrence test prevents error when programming subroutine methods
+
 0.1202  2003-09-24
 - fixed set_time_zone and add_duration: 
   was not clearing 'next' upon return, when arg was a recurrence.
