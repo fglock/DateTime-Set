@@ -1,3 +1,5 @@
+- Set::Infinite gives "deep recursion" when calling a DateTime:Set recurrence.
+
 - Add support for first() into new methods.
 
 - Redefine Set::Infinite::Arithmetic hashes, to use DateTime

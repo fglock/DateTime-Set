@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.11
+- iterator, next
+
 0.10
 - union, intersection
 

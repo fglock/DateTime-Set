@@ -11,7 +11,7 @@ use Set::Infinite;
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.00_10';
+$VERSION = '0.00_11';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -129,6 +129,21 @@ sub _recurrence {
     return $result;
 }
 
+
+# iterator() doesn't do much yet.
+# This might change as the API gets more complex.
+sub iterator {
+    return $_[0]->clone;
+}
+
+# next() gets the next element from an iterator()
+sub next {
+    my ($self) = shift;
+    my ($head, $tail) = $self->{set}->first;
+    $self->{set} = $tail;
+    return $head->min;
+}
+
 # Set::Infinite methods
 
 sub intersection {
@@ -211,6 +226,11 @@ this module is finished.
     $date = $set1->min;           # first date of the set
     $date = $set1->max;           # last date of the set
 
+    $iter = $set1->iterator;
+    while ( $dt = $iter->next ) {
+        print $dt->ymd;
+    };
+
 =head1 DESCRIPTION
 
 DateTime::Set is a module for date/time sets. It allows you to generate
@@ -264,6 +284,17 @@ Example:
     $meetings_2004 = $meetings_2003->add( year => 1 );
 
 See C<DateTime::add()> for full syntax description.
+
+=item * iterator / next
+
+    $iter = $set1->iterator;
+    while ( $dt = $iter->next ) {
+        print $dt->ymd;
+    };
+
+Extract dates from a set. 
+
+next() returns undef when there are no more dates.
 
 =back
 

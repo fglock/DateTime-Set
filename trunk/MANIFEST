@@ -10,4 +10,5 @@ t/01sanity.t
 t/02immutable.t
 t/03add_duration.t
 t/04recurrence.t
+t/05iterator.t
 lib/DateTime/Set.pm
