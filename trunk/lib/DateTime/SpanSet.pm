@@ -180,9 +180,9 @@ DateTime::SpanSet is a module for sets of date/time spans or time-ranges.
 
 Creates a new span set. 
 
-   $dates = DateTime::Set->new( spans => [ $dt_span ] );  # from DateTime::Span
+   $dates = DateTime::SpanSet->new( spans => [ $dt_span ] );  # from DateTime::Span
 
-   $dates = DateTime::Set->new( sets => [ $dt_set ] );    # from DateTime::Set
+   $dates = DateTime::SpanSet->new( sets => [ $dt_set ] );    # from DateTime::Set
 
 =back
 
