@@ -16,6 +16,25 @@ $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
+sub set_time_zone {
+    my ( $self, $tz ) = @_;
+
+    my $result = $self->{set}->iterate( 
+        sub {
+            $_[0]{list}[0]{a}->set_time_zone( $tz ) if ref $_[0]{list}[0]{a};
+            $_[0]{list}[0]{b}->set_time_zone( $tz ) if ref $_[0]{list}[0]{b};
+        }
+    );
+
+    ### this code enables 'subroutine method' behaviour
+    $self->{set} = $result;
+    return $self;
+
+    ### this code enables 'function method' behaviour
+    # my $set = $self->clone;
+    # $set->{set} = $result;
+    # return $set;
+}
 
 # note: the constructor must clone its DateTime parameters, such that
 # the set elements become immutable
@@ -332,6 +351,18 @@ Creates a new span.
        after => $dt1, hours => 12 );
 
 The new "end of the set" is I<open> by default.
+
+=item * set_time_zone( $tz )
+
+This method accepts either a time zone object or a string that can be
+passed as the "name" parameter to C<< DateTime::TimeZone->new() >>.
+If the new time zone's offset is different from the old time zone,
+then the I<local> time is adjusted accordingly.
+
+If the old time zone was a floating time zone, then no adjustments to
+the local time are made, except to account for leap seconds.  If the
+new time zone is floating, then the I<UTC> time is adjusted in order
+to leave the local time untouched.
 
 =item * duration
 
