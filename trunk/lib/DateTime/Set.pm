@@ -161,7 +161,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.0901';
+    $VERSION = '0.10';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
 
