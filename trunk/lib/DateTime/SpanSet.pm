@@ -30,8 +30,6 @@ sub from_spans {
     return $self;
 }
 
-*new = \&from_spans;
-
 sub from_set_and_duration {
     # die "from_set_and_duration() not implemented yet";
     # set => $dt_set, days => 1
@@ -114,7 +112,7 @@ sub next {
 sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
     return $tmp;
@@ -123,7 +121,7 @@ sub intersection {
 sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
@@ -131,7 +129,7 @@ sub intersects {
 sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
@@ -139,7 +137,7 @@ sub contains {
 sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
     return $tmp;
@@ -148,7 +146,7 @@ sub union {
 sub complement {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = $class->empty_set();
     if (defined $set2) {
         $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
