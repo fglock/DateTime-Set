@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+- recurrence functions can generate bounded sets.
+  See: t/16bounded_recurrence.t
+
 0.1401  2003-11-06
 - span() was returning the set, instead of the result.
 

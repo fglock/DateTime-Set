@@ -24,8 +24,12 @@ BEGIN {
     $Set::Infinite::_first{_recurrence} = 
         sub {
             my $self = $_[0];
-            my ($callback_next, $callback_current) = @{ $self->{param} };
+            my ($callback_next, $callback_current, $callback_previous) = @{ $self->{param} };
             my ($min, $min_open) = $self->{parent}->min_a;
+
+            # parameter correction for bounded recurrences
+            $min = $callback_next->( DateTime::Infinite::Past->new ) unless ref( $min );
+
             if ( $min_open )
             {
                 $min = $callback_next->( $min );
@@ -34,6 +38,7 @@ BEGIN {
             {
                 $min = $callback_current->( $min );
             }
+
             return ( $self->new( $min ),
                      $self->new( $callback_next->( $min ), 
                                  $self->{parent}->max )->
@@ -44,6 +49,10 @@ BEGIN {
             my $self = $_[0];
             my (undef, $callback_current, $callback_previous) = @{ $self->{param} };
             my ($max, $max_open) = $self->{parent}->max_a;
+
+            # parameter correction for bounded recurrences
+            $max = $callback_previous->( DateTime::Infinite::Future->new ) unless ref( $max );
+
             if ( $max_open )
             {
                 $max = $callback_previous->( $max );
@@ -54,6 +63,7 @@ BEGIN {
                 $max = $callback_previous->( $max ) 
                     if $max > $self->{parent}->max;
             }
+
             return ( $self->new( $max ),
                      $self->new( $self->{parent}->min, 
                                  $callback_previous->( $max ) )->

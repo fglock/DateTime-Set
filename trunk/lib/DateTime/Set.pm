@@ -198,9 +198,16 @@ sub _callback_current {
 # This is used to simulate a 'previous' callback,
 # when then 'previous' argument in 'from_recurrence' is missing.
 #
+use DateTime::Infinite;
+
 sub _callback_previous {
     my ($value, $callback_next, $callback_info) = @_; 
     my $previous = $value->clone;
+
+    # warn "# previous parameter is ". $previous->datetime;
+    # warn "# previous isa ". ref( $previous )."\n";
+    return DateTime::Infinite::Future->new 
+        if UNIVERSAL::isa( $previous, 'DateTime::Infinite::Future' );
 
     my $freq = $callback_info->{freq};
     unless (defined $freq) 
@@ -242,6 +249,9 @@ sub _callback_previous {
 sub _callback_next {
     my ($value, $callback_previous, $callback_info) = @_; 
     my $next = $value->clone;
+
+    return DateTime::Infinite::Past->new
+        if UNIVERSAL::isa( $next, 'DateTime::Infinite::Past' );
 
     my $freq = $callback_info->{freq};
     unless (defined $freq) 
