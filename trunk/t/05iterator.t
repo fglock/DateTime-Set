@@ -1,7 +1,7 @@
 use strict;
 
 use Test::More;
-plan tests => 5;
+plan tests => 6;
 
 use DateTime;
 use DateTime::Duration;
@@ -88,10 +88,12 @@ is( $res, '1810-09-01 1810-10-01 1810-11-01',
     # Make a recurrence that returns all months
     my $all_months = DateTime::Set->from_recurrence( recurrence => $month_callback );
 
-    # Make an iterator over a short time range
     my $t1 = new DateTime( year => '1810', month => '08', day => '22' );
     my $t2 = new DateTime( year => '1810', month => '11', day => '24' );
-    my $iter = $all_months->iterator( start => $t1, end => $t2 );
+    my $span = DateTime::Span->from_datetimes( start => $t1, end => $t2 );
+
+    # make an iterator with an explicit span argument
+    my $iter = $all_months->iterator( span => $span );
     
     # And make sure that we run on the correct months only
     my $limit = 4; # Make sure we don't hit an infinite iterator
@@ -100,6 +102,19 @@ is( $res, '1810-09-01 1810-10-01 1810-11-01',
         push @res, $dt->ymd();
     }
     my $res = join( ' ', @res);
+    is( $res, '1810-09-01 1810-10-01 1810-11-01',
+        "limited iterator give $res" );
+
+    # Make another iterator over a short time range
+    $iter = $all_months->iterator( start => $t1, end => $t2 );
+    
+    # And make sure that we run on the correct months only
+    $limit = 4; # Make sure we don't hit an infinite iterator
+    @res = ();
+    while ( my $dt = $iter->next() and $limit--) {
+        push @res, $dt->ymd();
+    }
+    $res = join( ' ', @res);
     is( $res, '1810-09-01 1810-10-01 1810-11-01',
         "limited iterator give $res" );
 
