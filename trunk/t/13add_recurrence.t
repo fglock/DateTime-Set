@@ -52,7 +52,7 @@ my $month_callback = sub {
         recurrence => $month_callback,
     );
     $res = $months->intersection(
-               new DateTime::Span( after => $t1 )
+               DateTime::Span->from_datetimes( after => $t1 )
            )->min;
     $res = $res->ymd if ref($res);
     ok( $res eq '1810-09-01',
@@ -60,7 +60,7 @@ my $month_callback = sub {
 
     $res = $months->add_duration( $dur )
            ->intersection(
-               new DateTime::Span( after => $t1 )
+               DateTime::Span->from_datetimes( after => $t1 )
            )->min;
     $res = $res->datetime if ref($res);
     ok( $res eq '1810-09-01T01:00:00',
@@ -84,7 +84,7 @@ my $month_callback = sub {
     );
 
     $res = $spans->intersection(
-               new DateTime::Span( after => $t1 )
+               DateTime::Span->from_datetimes( after => $t1 )
            );
     # this was written step-by-step to help debugging
     my $first_span = $res->{set}->first;
