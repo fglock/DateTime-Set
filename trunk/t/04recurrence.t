@@ -153,11 +153,11 @@ is( $res, '1810-11-01',
 my $set = DateTime::SpanSet->from_spans(
     spans => [
         DateTime::Span->from_datetimes(
-            start => new DateTime( year => '1800', month => '08', day => '22' ),
+            start => new DateTime( year => '1950', month => '08', day => '22' ),
             end   => new DateTime( year => '2000', month => '08', day => '22' ),
         ),
         DateTime::Span->from_datetimes(
-            start => new DateTime( year => '2200', month => '08', day => '22' ),
+            start => new DateTime( year => '2350', month => '08', day => '22' ),
             end   => new DateTime( year => '2400', month => '08', day => '22' ),
         ),
     ],
@@ -167,7 +167,8 @@ my $months = DateTime::Set->from_recurrence(
 );
 my $bounded = $months->intersection( $set );
 
-ok( ! defined $bounded->count, "will not count: there are too many elements" );
+# ok( ! defined $bounded->count, "will not count: there are too many elements" );
+is( $bounded->count, 1200, "too many elements - iterate" );
 
 }
 

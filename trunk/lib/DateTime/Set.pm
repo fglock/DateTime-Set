@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.20';
+    $VERSION = '0.21';
 }
 
 
@@ -502,8 +502,12 @@ sub as_list {
     $set = $set->intersection( $span ) if $span;
 
     # Note: removing this line means we may end up in an infinite loop!
-    return undef if $set->{set}->is_too_complex;  # undef = no begin/end
+    ## return undef if $set->{set}->is_too_complex;  # undef = no begin/end
  
+    return undef
+        if $set->max->is_infinite ||
+           $set->min->is_infinite;
+
     # return if $set->{set}->is_null;  # nothing = empty
     my @result;
     # we should extract _copies_ of the set elements,
@@ -632,8 +636,18 @@ sub count {
 
     my $set = $self->clone;
     $set = $set->intersection( $span ) if $span;
-    return undef if $set->{set}->is_too_complex;
-    return $set->{set}->count;
+
+    return $set->{set}->count
+        unless $set->{set}->is_too_complex;
+
+    return undef
+        if $set->max->is_infinite ||
+           $set->min->is_infinite;
+
+    my $count = 0;
+    my $iter = $set->iterator;
+    $count++ while $iter->next;
+    return $count;
 }
 
 1;
