@@ -49,10 +49,19 @@ sub iterator {
 # next() gets the next element from an iterator()
 sub next {
     my ($self) = shift;
+
+    # TODO: this is fixing an error from elsewhere
+    # - find out what's going on! (with "sunset.pl")
+    return undef unless defined $self->{set};
+
     my ($head, $tail) = $self->{set}->first;
     $self->{set} = $tail;
-    bless $head, 'DateTime::Span' if ref $head;
-    return $head;
+    return $head unless ref $head;
+    my $return = {
+        set => $head,
+    };
+    bless $return, 'DateTime::Span';
+    return $return;
 }
 
 # Set::Infinite methods
