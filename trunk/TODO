@@ -10,8 +10,6 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
   Note: this should be further discussed in datetime@perl.org before 
         implementing, because it might break other modules tests!
 
-- implement 'previous-only recurrences' in DT::Set.pm
-
 - implement as_list() in DT::SpanSet.pm
 
 - implement previous() in DT::SpanSet.pm

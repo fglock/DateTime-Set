@@ -224,9 +224,11 @@ sub from_recurrence {
     $param{span} = DateTime::Span->new( %args ) if keys %args;
 
     my $self = {};
-    if ($param{next} || $param{previous}) {
+    if ($param{next} || $param{previous}) 
+    {
 
-        unless ( $param{previous} ) {
+        if ( ! $param{previous} ) 
+        {
             my $data = {};
             $param{previous} =
                 sub {
@@ -234,7 +236,17 @@ sub from_recurrence {
                 }
         }
 
-        unless ( $param{current} ) {
+        if ( ! $param{next} ) 
+        {
+            my $data = {};
+            $param{next} =
+                sub {
+                    _callback_next ( $_[0], $param{previous}, $data );
+                }
+        }
+
+        if ( ! $param{current} ) 
+        {
             $param{current} =
                 sub {
                     _callback_current ( $_[0], $param{next} );
@@ -334,7 +346,7 @@ sub _callback_previous {
         my @freq = $freq->deltas;
         print STDERR "_callback_previous: Delta components are: @freq\n";
         warn "_callback_previous: iterator can't find a previous value, got ".
-            $previous->ymd." before ".$value->ymd;
+            $previous->ymd." after ".$value->ymd;
     }
     my $previous1;
     while (1) 
@@ -345,6 +357,46 @@ sub _callback_previous {
     }
 }
 
+# default callback that returns the 
+# "next" value in a callback recurrence.
+#
+# This is used to simulate a 'next' callback,
+# when then 'next' argument in 'from_recurrence' is missing.
+#
+sub _callback_next {
+    my ($value, $callback_previous, $callback_info) = @_; 
+    my $next = $value->clone;
+
+    my $freq = $callback_info->{freq};
+    unless (defined $freq) 
+    { 
+        # This is called just once, to setup the recurrence frequency
+        my $next =     $callback_previous->( $value->clone );
+        my $previous = $callback_previous->( $next->clone );
+        $freq = 2 * ( $next - $previous );
+        # save it for future use with this same recurrence
+        $callback_info->{freq} = $freq;
+    }
+
+    $next->add_duration( $freq );  
+    $next = $callback_previous->( $next );
+    if ($next <= $value) 
+    {
+        # This error happens if the event frequency oscilates widely
+        # (more than 100% of difference from one interval to next)
+        my @freq = $freq->deltas;
+        print STDERR "_callback_next: Delta components are: @freq\n";
+        warn "_callback_next: iterator can't find a previous value, got ".
+            $next->ymd." before ".$value->ymd;
+    }
+    my $next1;
+    while (1) 
+    {
+        $next1 = $next->clone;
+        $next =  $callback_previous->( $next );
+        return $next1 if $next >= $value;
+    }
+}
 
 sub iterator {
     my $self = shift;
@@ -740,9 +792,9 @@ case, if there is a C<span> parameter it will be ignored.
     );
 
 The recurrence will be passed a single parameter, a DateTime.pm
-object.  The recurrence must generate the I<next> event before or
+object.  The recurrence must generate the I<next> event 
 after that object.  There is no guarantee as to what the object will
-be set to, only that it will be greater or lesser than the last object
+be set to, only that it will be greater than the last object
 passed to the recurrence.
 
 For example, if you wanted a recurrence that generated datetimes in
@@ -763,12 +815,12 @@ increments of 30 seconds would look like this:
 Of course, this recurrence ignores leap seconds, but we'll leave that
 as an exercise for the reader ;)
 
-It is also possible to create a recurrence by specifying both
+It is also possible to create a recurrence by specifying either or both
 'next' and 'previous' callbacks.
 
 See also C<DateTime::Event::Recurrence> and the other C<DateTime::Event>
-modules for generating specialized recurrences, such as sunrise and sunset time, 
-and holidays.
+modules for generating specialized recurrences, such as sunrise and sunset
+time, and holidays.
 
 =item * empty_set
 

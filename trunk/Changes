@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- added _callback_next - "previous-only recurrences"
+
 0.0805
 - optimizes intersection of recurrence with span
 
