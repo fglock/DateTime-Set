@@ -1,9 +1,10 @@
 Changes for DateTime::Set
 
-0.13  2003-11-02
+0.14  2003-11-02
 - duration() should not set $@ for sets with infinity duration.
   Reported by Dan Kubb.
 
+0.13
 0.1205  2003-10-16
 - requires Set::Infinite 0.54 (it is the "published" version of 0.5307)
 - DateTime::Set add_duration mutates the set. This is more compatible
