@@ -681,7 +681,7 @@ This object method returns a replica of the given object.
 =item * add_duration( $duration )
 
     $dtd = new DateTime::Duration( year => 1 );
-    $new_set = $set->add( duration => $dtd );
+    $new_set = $set->add_duration( $dtd );
 
 This method returns a new set which is the same as the existing set
 with the specified duration added to every element of the set.
