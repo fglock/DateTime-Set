@@ -10,11 +10,11 @@ use DateTime::Set;
 use DateTime::SpanSet;
 
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
-# use Set::Infinite '0.44';
-# $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
+use vars qw( $VERSION );
 
 use constant INFINITY     => DateTime::INFINITY;
 use constant NEG_INFINITY => DateTime::NEG_INFINITY;
+$VERSION = $DateTime::Set::VERSION;
 
 sub set_time_zone {
     my ( $self, $tz ) = @_;
@@ -282,8 +282,11 @@ sub end_is_closed { $_[0]->end_is_open ? 0 : 1 }
 # span == $self
 sub span { @_ }
 
-sub duration { my $dur = $_[0]->end->subtract_datetime_absolute( $_[0]->start );
-	       defined $dur ? $dur : INFINITY }
+sub duration { 
+    my $dur;
+    eval { $dur = $_[0]->end->subtract_datetime_absolute( $_[0]->start ) };
+    defined $dur ? $dur : INFINITY 
+}
 *size = \&duration;
 
 1;

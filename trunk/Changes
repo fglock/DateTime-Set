@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.1204  2003-10-10
+- DateTime::SpanSet and DateTime::Span inherit DateTime::Set $VERSION
+- Trying to subtract infinity from a datetime is not fatal in duration()
+  Bug report by Dan Kubb.
 - new method 'iterate'
 - requires Set::Infinite 0.5307 (pass new backtracking tests)
 - added more tests for add_duration, subtract_duration

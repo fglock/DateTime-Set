@@ -11,12 +11,11 @@ use DateTime::SpanSet;
 
 use Carp;
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
-
-# use Set::Infinite '0.44';
-# $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
+use vars qw( $VERSION );
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
+$VERSION = $DateTime::Set::VERSION;
 
 sub set_time_zone {
     my ( $self, $tz ) = @_;
@@ -212,14 +211,18 @@ sub max {
 
 # returns a DateTime::Span
 sub span { 
-  my $set = $_[0]->{set}->span;
-  my $self = { set => $set };
-  bless $self, 'DateTime::Span';
-  return $set;
+    my $set = $_[0]->{set}->span;
+    my $self = { set => $set };
+    bless $self, 'DateTime::Span';
+    return $set;
 }
 
 # returns a DateTime::Duration
-sub duration { my $dur = $_[0]->{set}->size; defined $dur ? $dur : INFINITY }
+sub duration { 
+    my $dur; 
+    eval { $dur = $_[0]->{set}->size };
+    defined $dur ? $dur : INFINITY 
+}
 *size = \&duration;
 
 1;
