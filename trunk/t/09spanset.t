@@ -1,7 +1,7 @@
 use strict;
 
 use Test::More;
-plan tests => 16;
+plan tests => 17;
 
 use DateTime;
 use DateTime::Duration;
@@ -116,10 +116,8 @@ ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
 }
 
 # special case: start_set == end_set == recurrence
-TODO:
 {
-local $TODO = "can't build spanset from recurrence";
-my $start_set = DateTime::Set->from_recurrence(
+    my $start_set = DateTime::Set->from_recurrence(
        next  => sub { $_[0]->truncate( to => 'day' )
                            ->add( days => 1 ) },
        span => new DateTime::Span(
@@ -127,31 +125,33 @@ my $start_set = DateTime::Set->from_recurrence(
                                           month => '9',  
                                           day =>   '20' )
                ),
-);
+    );
 
 # test is the recurrence works properly
-my $set_iter = $start_set->iterator;
+    my $set_iter = $start_set->iterator;
 
-$res = str( $set_iter->next );
-ok( $res eq '1810-09-20T00:00:00',
-    "recurrence works properly - got $res" );
-$res = str( $set_iter->next );
-ok( $res eq '1810-09-21T00:00:00',
-    "recurrence works properly - got $res" );
+    $res = str( $set_iter->next );
+    ok( $res eq '1810-09-20T00:00:00',
+        "recurrence works properly - got $res" );
+    $res = str( $set_iter->next );
+    ok( $res eq '1810-09-21T00:00:00',
+        "recurrence works properly - got $res" );
 
-my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $start_set );
-my $iter = $s1->iterator;
+# create spanset
+    my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $start_set );
+    my $iter = $s1->iterator;
 
-$res = span_str( $iter->next );
-ok( $res eq '-inf..1810-09-20T00:00:00',
-    "start_set == end_set recurrence works properly - got $res" );
+    $res = span_str( $iter->next );
+    ok( $res eq '-inf..1810-09-20T00:00:00',
+        "start_set == end_set recurrence works properly - got $res" );
 
-eval <<'_TODO';
-$res = span_str( $iter->next );
-_TODO
-ok( $res eq '1810-09-20T00:00:00..1810-09-21T00:00:00',
-    "start_set == end_set recurrence works properly - got $res" );
+    $res = span_str( $iter->next );
+    ok( $res eq '1810-09-20T00:00:00..1810-09-21T00:00:00',
+        "start_set == end_set recurrence works properly - got $res" );
 
+    $res = span_str( $iter->next );
+    ok( $res eq '1810-09-21T00:00:00..1810-09-22T00:00:00',
+        "start_set == end_set recurrence works properly - got $res" );
 }
 
 1;
