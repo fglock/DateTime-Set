@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+- parameter checking: The 'dates' argument to from_datetimes() 
+  must be a list of DateTime objects
+
 0.1601  2004-03-30
 - more parameter checking;
   Sets should interoperate better with objects of 

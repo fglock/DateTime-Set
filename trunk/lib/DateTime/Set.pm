@@ -247,6 +247,10 @@ sub from_datetimes {
     # possible optimization: sort dates and use "push"
     for( @{ $args{dates} } ) 
     {
+        carp "The 'dates' argument to from_datetimes() must be a ".
+             "DateTime object"
+            unless UNIVERSAL::can( $_, 'utc_rd_values' );
+
         $self->{set} = $self->{set}->union( $_->clone );
     }
 
