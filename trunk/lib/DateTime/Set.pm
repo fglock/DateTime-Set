@@ -693,8 +693,8 @@ This builds a DateTime array of events that happen inside the span.
 =item * union / intersection / complement
 
 Set operations may be performed not only with C<DateTime::Set>
-objects, but also with C<DateTime::Span> and C<DateTime::SpanSet>
-objects.
+objects, but also with C<DateTime::Span>, C<DateTime::SpanSet>,
+and C<DateTime> objects.
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
