@@ -90,16 +90,13 @@ sub from_recurrence {
     $param{span}->{set} = Set::Infinite->new( NEG_INFINITY, INFINITY )
         unless exists $param{span}->{set};
     my $self = {};
-    if (exists $param{next}) {
-        $self->{next} = $param{next};
-        $self->{previous} = $param{previous} if exists $param{previous};
+    if ($param{next} || $param{previous}) {
+        $self->{next} = $param{next} if $param{next};
+        $self->{previous} = $param{previous} if $param{previous};
 
         $self->{set} = _recurrence_callback( 
             $param{span}->{set}, $param{next}, $param{previous} );
         bless $self, $class;
-    }
-    elsif (exists $param{previous}) {
-        die 'previous-only sets not implemented in from_recurrence()';
     }
     else {
         die "Not enough arguments in from_recurrence()";
@@ -210,7 +207,7 @@ sub _setup_infinite_recurrence {
     }
     else {
         my $min = $func->min;
-        my $next = &$callback_next($min->clone);
+        my $next = $callback_next->($min->clone);
         # warn "RECURR: preparing first: ".$min->ymd." ; ".$next->ymd;
         my $next_set = $set->intersection( $next->clone, INFINITY );
         # warn "next_set min is ".$next_set->min->ymd;
@@ -272,7 +269,7 @@ sub _setup_finite_recurrence {
 
     do {
         # warn " generate from ".$min->ymd;
-        $min = &$callback_next( $min );
+        $min = $callback_next->( $min );
         # warn " generate got ".$min->ymd;
         $result = $result->union( $min->clone );
     } while ( $min <= $max );
@@ -286,14 +283,14 @@ sub _callback_previous {
     my $previous = $value->clone;
 
     if ( $callback_previous ) {
-        return &$callback_previous( $previous );
+        return $callback_previous->( $previous );
     }
 
     # go back at least an year...
     # TODO: memoize.
     # TODO: binary search to find out what's the best subtract() unit.
 
-    my $freq = ${$callback_info}{freq};
+    my $freq = $callback_info->{freq};
     unless (defined $freq) { 
 
         # This is called just once, to setup the recurrence frequency
@@ -302,14 +299,14 @@ sub _callback_previous {
         # The program will warn() if it this is not working properly.
 
         my $next = $value->clone;
-        $next = &$callback_next( $next );
+        $next = $callback_next->( $next );
         $freq = $next - $previous;
         my %freq = $freq->deltas;
         $freq{$_} = -int( $freq{$_} * 2 ) for keys %freq; 
         $freq = new DateTime::Duration( %freq );
 
         # save it for future use with this same recurrence
-        ${$callback_info}{freq} = $freq;
+        $callback_info->{freq} = $freq;
 
         # my @freq = $freq->deltas;
         # warn "freq is @freq";
@@ -318,7 +315,7 @@ sub _callback_previous {
     $previous->add_duration( $freq );  
     # warn "callback is $callback";
     # warn "current is ".$value->ymd." previous is ".$previous->ymd;
-    $previous = &$callback_next( $previous );
+    $previous = $callback_next->( $previous );
     # warn " previous got ".$previous->ymd;
     if ($previous >= $value) {
         # This error might happen if the event frequency oscilates widely
@@ -328,7 +325,7 @@ sub _callback_previous {
     my $previous1;
     while (1) {
         $previous1 = $previous->clone;
-        $previous = &$callback_next( $previous );
+        $previous = $callback_next->( $previous );
         return $previous1 if $previous >= $value;
     }
 }
@@ -346,7 +343,7 @@ sub next {
     return undef unless ref( $self->{set} );
 
     if ( @_ ) {
-        if ( exists $self->{next} )
+        if ( $self->{next} )
         {
             return $self->{next}->( $_[0]->clone );
         }
@@ -375,7 +372,7 @@ sub previous {
         }
         else {
             my $span = new DateTime::Span( before => $_[0] );
-            return $self->as_set->intersection( $span )->previous;
+            return $self->intersection( $span )->previous;
         }
     }
 
