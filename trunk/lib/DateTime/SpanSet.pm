@@ -453,7 +453,10 @@ sub span {
 sub duration { 
     my $dur; 
 
-    eval { $dur = $_[0]->{set}->size };
+    eval { 
+        local $SIG{__DIE__};   # don't want to trap this (rt ticket 5434)
+        $dur = $_[0]->{set}->size 
+    };
     $@ = undef;  # clear the eval() error message
 
     return $dur if defined $dur && ref( $dur );

@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.18    2004-11-25
+- ignore "__DIE__" signal while calculating durations.
+  Reported by michelle.agnew (rt ticket 5434)
+
 0.17    2004-08-17
 - bugfix: it was trying to set the time zone of an "undef" value; 
   this has broken some DT::Event::Recurrence tests - reported by Bill Moseley
