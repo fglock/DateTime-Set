@@ -20,21 +20,20 @@ use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 sub new {
     my $class = shift;
     my %args = validate( @_,
-                         { span =>
-                           { type => OBJECT,
+                         { spans =>
+                           { type => ARRAY,
                              optional => 1,
                            },
-                           set =>
-                           { type => OBJECT,
+                           sets =>
+                           { type => ARRAY,
                              optional => 1,
                            },
                          }
                        );
     my $self = {};
-    my $set;
-    $set = $args{span}->{set} if exists $args{span};
-    $set = $args{set}->{set}  if exists $args{set};
-    $set = Set::Infinite->new() unless defined $set;
+    my $set = Set::Infinite->new();
+    $set = $set->union( $_->{set} ) for @{ $args{spans} };
+    $set = $set->union( $_->{set} ) for @{ $args{sets} };
     $self->{set} = $set;
     bless $self, $class;
     return $self;
@@ -121,8 +120,14 @@ sub max {
     ref($tmp) ? $tmp->clone : $tmp; 
 }
 
-sub span { return $_[0]->{set}->span }
+# returns a DateTime::Span
+sub span { 
+  my $set = $_[0]->{set}->span;
+  bless $set, 'DateTime::Span';
+  return $set;
+}
 
+# returns a DateTime
 sub size { return $_[0]->{set}->size }
 
 # unsupported Set::Infinite methods
@@ -136,13 +141,13 @@ __END__
 
 =head1 NAME
 
-DateTime::SpanSet - Date/time set of spans
+DateTime::SpanSet - set of DateTime spans
 
 =head1 SYNOPSIS
 
-    $set1 = DateTime::SpanSet->new( set => $dt_set );
+    $set1 = DateTime::SpanSet->new( sets => [ $dt_set, $dt_set ] );
 
-    $set1 = DateTime::SpanSet->new( span => $dt_span );
+    $set1 = DateTime::SpanSet->new( spans => [ $dt_span, $dt_span ] );
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
@@ -175,16 +180,35 @@ DateTime::SpanSet is a module for sets of date/time spans or time-ranges.
 
 Creates a new span set. 
 
-   $dates = DateTime::Set->new( span => $dt_span );  # from a DateTime::Span
-   $dates = DateTime::Set->new( set => $dt_set );    # from a DateTime::Set
+   $dates = DateTime::Set->new( spans => [ $dt_span ] );  # from DateTime::Span
+
+   $dates = DateTime::Set->new( sets => [ $dt_set ] );    # from DateTime::Set
 
 =back
 
+=item * min / max
+
+First or last dates in the set.
+
 =item * size
 
-The size of the span, as a DateTime::Duration.
+The total size of the set, as a DateTime::Duration.
+
+=item * span
+
+The span of the set, as a DateTime::Span.
 
 =item * union / intersection / complement
+
+...
+
+=item intersects / contains
+
+...
+
+=item * iterator / next
+
+...
 
 =head1 SUPPORT
 
@@ -195,6 +219,8 @@ Please report bugs using rt.cpan.org
 =head1 AUTHOR
 
 Flavio Soibelmann Glock <fglock@pucrs.br>
+
+The API was developed together with Dave Rolsky and the DateTime Community.
 
 =head1 COPYRIGHT
 

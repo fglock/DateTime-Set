@@ -12,7 +12,7 @@ $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.00_13';
+$VERSION = '0.00_14';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -383,6 +383,14 @@ Extract dates from a set.
 
 next() returns undef when there are no more dates.
 
+=item union / intersection / complement
+
+...
+
+=item intersects / contains
+
+...
+
 =back
 
 =head1 SUPPORT
@@ -394,6 +402,8 @@ Please report bugs using rt.cpan.org
 =head1 AUTHOR
 
 Flavio Soibelmann Glock <fglock@pucrs.br>
+
+The API was developed together with Dave Rolsky and the DateTime Community.
 
 =head1 COPYRIGHT
 

@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.14
+- added DateTime::Span and DateTime::SpanSet
+- put "..." to mark where we need more docs
+- DateTime::Set and DateTime::Span API look ok.
+
 0.13
 - added tests for set operations with recurrences/add
 

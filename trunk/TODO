@@ -1,7 +1,7 @@
-- Document the part of the API that was inherited from Set::Infinite. 
+- discuss DateTime::SpanSet begin_set/end_set constructor
+  or: implement until() into DateTime::Set
 
-- The type of the object returned by DateTime::Set::union() and
-  DateTime::Set::complement() should probably be DateTime::SpanSet
+- Document the part of the API that was inherited from Set::Infinite. 
 
 - Tests for DateTime::Span
 

@@ -42,19 +42,30 @@ sub new {
                          }
                        );
     my $self = {};
-    my ( $start, $open_start, $end, $open_end );
-    ( $start, $open_start ) = ( NEG_INFINITY,  0 );
-    ( $start, $open_start ) = ( $args{start},  0 ) if exists $args{start};
-    ( $start, $open_start ) = ( $args{after},  1 ) if exists $args{after};
-    ( $end,   $open_end   ) = ( INFINITY,      0 );
-    ( $end,   $open_end   ) = ( $args{end},    0 ) if exists $args{end};
-    ( $end,   $open_end   ) = ( $args{before}, 1 ) if exists $args{before};
-
-    my $set = Set::Infinite->new( $start, $end );
-    if ( $start != $end ) {
-      $set = $set->complement( $start );
-      $set = $set->complement( $end );
+    my $set;
+    if ( ! exists( $args{start} ) && 
+         ! exists( $args{end} ) &&
+         ! exists( $args{after} ) &&
+         ! exists( $args{before} ) ) {
+        # no-args -> empty set
+        $set = Set::Infinite->new();
     }
+    else {
+        my ( $start, $open_start, $end, $open_end );
+        ( $start, $open_start ) = ( NEG_INFINITY,  0 );
+        ( $start, $open_start ) = ( $args{start},  0 ) if exists $args{start};
+        ( $start, $open_start ) = ( $args{after},  1 ) if exists $args{after};
+        ( $end,   $open_end   ) = ( INFINITY,      0 );
+        ( $end,   $open_end   ) = ( $args{end},    0 ) if exists $args{end};
+        ( $end,   $open_end   ) = ( $args{before}, 1 ) if exists $args{before};
+
+        my $set = Set::Infinite->new( $start, $end );
+        if ( $start != $end ) {
+            $set = $set->complement( $start );
+            $set = $set->complement( $end );
+        }
+    }
+
     $self->{set} = $set;
     bless $self, $class;
     return $self;
@@ -152,7 +163,7 @@ sub max {
 sub span { @_ }
 
 # size is a DateTime::Duration
-sub size { return $_[0]->max - $_[0]->min; }
+sub size { return $_[0]->{set}->size; }
 
 # unsupported Set::Infinite methods
 
@@ -219,6 +230,10 @@ These spans end, or start, in an imaginary 'forever' date:
 
    $dates = DateTime::Set->new( start => $dt1 );
    $dates = DateTime::Set->new( end => $dt2 );
+   $dates = DateTime::Set->new( after => $dt1 );
+   $dates = DateTime::Set->new( before => $dt2 );
+
+C<new()> without arguments creates an empty set.
 
 =back
 
@@ -230,6 +245,10 @@ The size of the span, as a DateTime::Duration.
 
 These set operations result in a DateTime::SpanSet.
 
+=item intersects / contains
+
+...
+
 =head1 SUPPORT
 
 Support is offered through the C<datetime@perl.org> mailing list.
@@ -239,6 +258,8 @@ Please report bugs using rt.cpan.org
 =head1 AUTHOR
 
 Flavio Soibelmann Glock <fglock@pucrs.br>
+
+The API was developed together with Dave Rolsky and the DateTime Community.
 
 =head1 COPYRIGHT
 
