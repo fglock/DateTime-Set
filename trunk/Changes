@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.20   2005-02-28
+- changed tests to use en_US instead of pt_BR (which changes every year) 
+  by Dave Rolsky.
 - optimized SpanSet methods for special cases:
   start_set()
   end_set()
