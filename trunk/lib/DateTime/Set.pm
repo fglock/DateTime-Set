@@ -121,11 +121,16 @@ sub _recurrence {
     return $func;
 }
 
-sub intersection
+sub _is_recurrence 
+{
+    exists $_[0]->{method} && $_[0]->{method} eq '_recurrence'
+}
+
+# TODO: breaks when used with _is_recurrence
+sub _XXX_intersection
 {
     my ($s1, $s2) = (shift,shift);
-    if ( $s1->is_too_complex && 
-         $s1->{method} eq '_recurrence' ) 
+    if ( $s1->_is_recurrence ) 
     {
         unless( ref($s1) eq ref($s2) )
         {
@@ -182,7 +187,6 @@ sub add_duration {
     ### this code enables 'function method' behaviour
     my $set = $self->clone;
     $set->{set} = $result;
-    undef $self->{next};
     return $set;
 }
 
@@ -200,7 +204,6 @@ sub set_time_zone {
 
     ### this code enables 'subroutine method' behaviour
     $self->{set} = $result;
-    undef $self->{next};
     return $self;
 }
 
@@ -438,7 +441,7 @@ sub next {
 
     if ( @_ ) 
     {
-        if ( $self->{next} )
+        if ( $self->{set}->_is_recurrence )
         {
             return $self->{next}->( $_[0] );
         }
@@ -463,7 +466,7 @@ sub previous {
 
     if ( @_ ) 
     {
-        if ( exists $self->{previous} ) 
+        if ( $self->{set}->_is_recurrence ) 
         {
             return $self->{previous}->( $_[0] );
         }
@@ -486,7 +489,7 @@ sub current {
 
     return undef unless ref( $self->{set} );
 
-    if ( $self->{current} )
+    if ( $self->{set}->_is_recurrence )
     {
         my $tmp = $self->{current}->( $_[0] );
         return $tmp if $tmp == $_[0];
@@ -552,7 +555,7 @@ sub intersection {
         unless $set2->can( 'union' );
 
     # optimization - use function composition if both sets are recurrences
-    if ( $set1->{next} && $set2->{next} ) 
+    if ( $set1->{set}->_is_recurrence && $set2->{set}->_is_recurrence ) 
     {
         # TODO: add tests
 
@@ -600,7 +603,7 @@ sub intersects {
     my $class = ref($set1);
     unless ( $set2->can( 'union' ) )
     {
-        if ( $set1->{next} )
+        if ( $set1->{set}->_is_recurrence )
         {
             for ( $set2, @_ )
             {
@@ -618,7 +621,7 @@ sub contains {
     my $class = ref($set1);
     unless ( $set2->can( 'union' ) )
     {
-        if ( $set1->{next} )
+        if ( $set1->{set}->_is_recurrence )
         {
             for ( $set2, @_ ) 
             {
@@ -638,7 +641,7 @@ sub union {
     $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
         unless $set2->can( 'union' );
 
-    if ( $set1->{next} && $set2->{next} )
+    if ( $set1->{set}->_is_recurrence && $set2->{set}->_is_recurrence )
     {
         # TODO: add tests
 
