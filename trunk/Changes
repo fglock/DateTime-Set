@@ -1,5 +1,6 @@
 Changes for DateTime::Set
 
+0.12   2003-09-22
 - implement previous() in DT::SpanSet.pm
 - Fixed: set_time_zone would mutate a clone.
 
