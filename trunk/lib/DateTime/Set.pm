@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.14';
+    $VERSION = '0.1401';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
 
@@ -505,8 +505,8 @@ sub max {
 # returns a DateTime::Span
 sub span {
   my $set = $_[0]->{set}->span;
-  bless { set => $set }, 'DateTime::Span';
-  return $set;
+  my $self = bless { set => $set }, 'DateTime::Span';
+  return $self;
 }
 
 sub count {

@@ -266,9 +266,8 @@ sub max {
 # returns a DateTime::Span
 sub span { 
     my $set = $_[0]->{set}->span;
-    my $self = { set => $set };
-    bless $self, 'DateTime::Span';
-    return $set;
+    my $self = bless { set => $set }, 'DateTime::Span';
+    return $self;
 }
 
 # returns a DateTime::Duration
