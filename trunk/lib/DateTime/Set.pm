@@ -203,7 +203,8 @@ sub _setup_infinite_recurrence {
     # because Set::Infinite has no hint of how to do it.
     if ($set->min == INFINITY || $set->min == NEG_INFINITY) {
         # warn "RECURR: start in ".$set->min;
-        $func->{first} = [ $set->new( $set->min ), $set ];
+        # added: $func->copy to make it recursive
+        $func->{first} = [ $set->new( $set->min ), $func->copy ];
     }
     else {
         my $min = $func->min;
@@ -224,7 +225,8 @@ sub _setup_infinite_recurrence {
     # Now are setting up the last() cache directly
     if ($set->max == INFINITY || $set->max == NEG_INFINITY) {
         # warn "RECURR: end in ".$set->max;
-        $func->{last} = [ $set->new( $set->max ), $set ];
+        # added: $func->copy to make it recursive
+        $func->{last} = [ $set->new( $set->max ), $func->copy ];
     }
     else {
         my $max = $func->max;
@@ -348,7 +350,13 @@ sub next {
             return $self->{next}->( $_[0]->clone );
         }
         else {
-            my $span = new DateTime::Span( after => $_[0] );
+            # TODO: this should work! gives an error in
+            #       DateTime::Event::Recurrence !!
+            # my $span = new DateTime::Span( after => $_[0] );
+
+            my $tmp = $_[0]->clone->add( nanoseconds => 1 );
+            my $span = new DateTime::Span( start => $tmp );
+ 
             return $self->intersection( $span )->next;
         }
     }
