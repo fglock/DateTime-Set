@@ -35,11 +35,11 @@ my $months = DateTime::Set->from_recurrence(
 );
 $res = $months->min;
 $res = $res->ymd if ref($res);
-ok( $res eq '1810-09-01', 
+is( $res, '1810-09-01', 
     "min() - got $res" );
 $res = $months->max;
 $res = $res->ymd if ref($res);
-ok( $res eq INFINITY,
+is( $res, INFINITY,
     "max() - got $res" );
 
 # "END"
@@ -49,11 +49,11 @@ my $months = DateTime::Set->from_recurrence(
 );
 $res = $months->min;
 $res = $res->ymd if ref($res);
-ok( $res eq NEG_INFINITY,
+is( $res, NEG_INFINITY,
     "min() - got $res" );
 $res = $months->max;
 $res = $res->ymd if ref($res);
-ok( $res eq '1810-09-01',
+is( $res, '1810-09-01',
     "max() - got $res" );
 
 # "START+END"
@@ -64,11 +64,11 @@ my $months = DateTime::Set->from_recurrence(
 );
 $res = $months->min;
 $res = $res->ymd if ref($res);
-ok( $res eq '1810-09-01',
+is( $res, '1810-09-01',
     "min() - got $res" );
 $res = $months->max;
 $res = $res->ymd if ref($res);
-ok( $res eq '1810-12-01',
+is( $res, '1810-12-01',
     "max() - got $res" );
 
 
@@ -82,11 +82,11 @@ my $months = DateTime::Set->from_recurrence(
 );
 $res = $months->min;
 $res = $res->ymd if ref($res);
-ok( $res eq '1810-08-01',
+is( $res, '1810-08-01',
     "min() - got $res" );
 $res = $months->max;
 $res = $res->ymd if ref($res);
-ok( $res eq '1810-12-01',
+is( $res, '1810-12-01',
     "max() - got $res" );
 
 
@@ -95,7 +95,7 @@ ok( $res eq '1810-12-01',
 $res = $months->intersection( DateTime->new( year=>1810, month=>12, day=>1 ) );
 $res = $res->max;
 $res = $res->ymd if ref($res);
-ok( $res eq '1810-12-01',
+is( $res, '1810-12-01',
     "intersection at the recurrence - got $res" );
 
 1;
