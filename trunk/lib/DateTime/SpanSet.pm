@@ -24,16 +24,16 @@ sub new {
                            { type => ARRAY,
                              optional => 1,
                            },
-                           sets =>
-                           { type => ARRAY,
-                             optional => 1,
-                           },
+                           # sets =>
+                           # { type => ARRAY,
+                           #   optional => 1,
+                           # },
                          }
                        );
     my $self = {};
     my $set = Set::Infinite->new();
     $set = $set->union( $_->{set} ) for @{ $args{spans} };
-    $set = $set->union( $_->{set} ) for @{ $args{sets} };
+    # $set = $set->union( $_->{set} ) for @{ $args{sets} };
     $self->{set} = $set;
     bless $self, $class;
     return $self;
@@ -145,8 +145,6 @@ DateTime::SpanSet - set of DateTime spans
 
 =head1 SYNOPSIS
 
-    $set1 = DateTime::SpanSet->new( sets => [ $dt_set, $dt_set ] );
-
     $set1 = DateTime::SpanSet->new( spans => [ $dt_span, $dt_span ] );
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
@@ -164,8 +162,8 @@ DateTime::SpanSet - set of DateTime spans
     $iter = $set1->iterator;
     while ( $dt = $iter->next ) {
         # $dt is a DateTime::Span
-        print $dt->min->ymd;   # first date of span
-        print $dt->max->ymd;   # last date of span
+        print $dt->start->ymd;   # first date of span
+        print $dt->end->ymd;     # last date of span
     };
 
 =head1 DESCRIPTION

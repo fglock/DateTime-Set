@@ -157,15 +157,32 @@ sub complement {
     return $tmp;
 }
 
-sub min { 
+sub start { 
     my $tmp = $_[0]->{set}->min;
     ref($tmp) ? $tmp->clone : $tmp; 
 }
 
-sub max { 
+sub end { 
     my $tmp = $_[0]->{set}->max;
     ref($tmp) ? $tmp->clone : $tmp; 
 }
+
+sub start_is_open {
+    # min_a returns info about the set boundary 
+    my ($min, $open) = $_[0]->{set}->min_a;
+    return $open;
+}
+
+sub start_is_close { $_[0]->start_is_open ? 0 : 1 }
+
+sub end_is_open {
+    # max_a returns info about the set boundary 
+    my ($max, $open) = $_[0]->{set}->max_a;
+    return $open;
+}
+
+sub end_is_close { $_[0]->end_is_open ? 0 : 1 }
+
 
 # span == $self
 sub span { @_ }
@@ -204,8 +221,8 @@ DateTime::Span - Date/time spans
     if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
 
     # data extraction 
-    $date = $set1->min;           # first date of the span
-    $date = $set1->max;           # last date of the span
+    $date = $set1->start;           # first date of the span
+    $date = $set1->end;             # last date of the span
 
 =head1 DESCRIPTION
 
@@ -250,6 +267,24 @@ will cause the C<new()> method to die.
 
 Return a DateTime::Duration object that represents the length of the
 span.
+
+=item * start / end
+
+First or last dates in the span.
+
+=item * start_is_close / end_is_close
+
+Return true if the first or last dates belong to the span ( begin <= x <= end ).
+
+=item * start_is_open / end_is_open
+
+Return true if the first or last dates are out of the span ( begin < x < end ).
+
+=item * duration
+
+The duration of the span, as a DateTime::Duration.
+
+This is the sum of the durations of all spans.
 
 =item * union / intersection / complement
 

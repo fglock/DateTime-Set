@@ -12,7 +12,7 @@ $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.00_14';
+$VERSION = '0.00_15';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -289,9 +289,15 @@ sub max {
     ref($tmp) ? $tmp->clone : $tmp; 
 }
 
+# returns a DateTime::Span
+sub span {
+  my $set = $_[0]->{set}->span;
+  bless $set, 'DateTime::Span';
+  return $set;
+}
+
 # unsupported Set::Infinite methods
 
-sub span { die "span() not supported - would generate a span!"; }
 sub size { die "size() not supported - would be zero!"; }
 sub offset { die "offset() not supported"; }
 sub quantize { die "quantize() not supported"; }
@@ -402,6 +408,14 @@ This method takes the same parameters as allowed by
 C<DateTime->add()>.  It can also take a "duration" parameter, which
 should be a C<DateTime::Duration> object.  If this parameter is given
 then all others are ignored.
+
+=item * min / max
+
+First or last dates in the set.
+
+=item * span
+
+The total span of the set, as a DateTime::Span.
 
 =item * iterator / next
 
