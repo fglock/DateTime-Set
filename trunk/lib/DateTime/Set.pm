@@ -276,10 +276,10 @@ sub _setup_finite_recurrence {
 
     # start at 'less-than-min', because next(min) would return 
     # 'bigger-than-min', and we want 'bigger-or-equal-to-min'
-    $min = $min->clone->subtract( nanoseconds => 1 );
+    # $min = $min->clone->subtract( nanoseconds => 1 );
 
     # TODO: this should work !!!
-    # $min = $callback_previous->( $min->clone );
+    $min = $callback_previous->( $min->clone );
 
     my $max = $set->max;
     # warn "_recurrence_callback called with ".$min->ymd."..".$max->ymd;
@@ -312,18 +312,24 @@ sub _callback_previous {
         # This is called just once, to setup the recurrence frequency
         # The program will warn() if it this is not working properly.
 
-        my $next = $value->clone;
-        $next = $callback_next->( $next );
+        my $previous = $callback_next->( $value->clone );
+        my $next =     $callback_next->( $previous->clone );
         $freq = $next - $previous;
-        my %freq = $freq->deltas;
-        $freq{$_} = -int( $freq{$_} * 2 ) for keys %freq; 
-        $freq = new DateTime::Duration( %freq );
+        # my %freq = $freq->deltas;
+        # $freq{$_} = - abs ( int( $freq{$_} * 2 ) ) for keys %freq; 
+
+        $freq->{$_} = - abs ( int( $freq->{$_} * 2 ) ) for keys %$freq;
+
+        # my @freq = %freq;
+        # warn "freq 1 is @freq";
+
+        # $freq = new DateTime::Duration( %freq );
 
         # save it for future use with this same recurrence
         $callback_info->{freq} = $freq;
 
         # my @freq = $freq->deltas;
-        # warn "freq is @freq";
+        # warn "freq 2 is @freq";
     }
 
     $previous->add_duration( $freq );  

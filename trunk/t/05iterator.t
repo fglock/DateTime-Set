@@ -59,7 +59,7 @@ is( $res, '1810-09-01 1810-10-01 1810-11-01',
             # warn "nanosec = ".$_[0]->datetime.'.'.sprintf('%06d',$_[0]->microsecond);
 
             # guard against an infinite loop error
-            return INFINITY if $count++ > 20;  
+            return INFINITY if $count++ > 50;  
 
             return $_[0];
     };
