@@ -476,6 +476,8 @@ First or last dates in the set.
 
 The total span of the set, as a DateTime::Span.
 
+=item * iterator / next
+
 These methods can be used to iterate over the dates in a set.
 
     $iter = $set1->iterator;
@@ -483,12 +485,11 @@ These methods can be used to iterate over the dates in a set.
         print $dt->ymd;
     }
 
-The C<next()> or C<previous()> return C<undef> when there are no 
-more datetimes in the iterator.  
+The C<next()> or C<previous()> return C<undef> when there are no more
+datetimes in the iterator.
 
-Obviously, if a set is specified as a recurrence and has no
-fixed end datetime, then it may never stop returning datetimes.  User
-beware!
+Obviously, if a set is specified as a recurrence and has no fixed end
+datetime, then it may never stop returning datetimes.  User beware!
 
 =item union / intersection / complement
 
