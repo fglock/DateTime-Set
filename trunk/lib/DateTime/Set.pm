@@ -37,17 +37,17 @@ sub _add_callback {
     }
     my $result = $set->new( $min );
     return $result;
-}; 
+}
 
-sub add {
-    my ($self, %parm) = @_;
-    my $dur;
-    if (exists $parm{duration}) {
-        $dur = $parm{duration}->clone;
-    }
-    else {
-        $dur = new DateTime::Duration( %parm );
-    }
+sub add { shift->add_duration( DateTime::Duration->new(@_) ) }
+
+sub subtract { return shift->subtract_duration( DateTime::Duration->new(@_) ) }
+
+sub subtract_duration { return $_[0]->add_duration( $_[1]->inverse ) }
+
+sub add_duration {
+    my ( $self, $dur ) = @_;
+
     my $result = $self->{set}->iterate( \&_add_callback, $dur );
 
     ### this code would enable 'subroutine method' behaviour
@@ -592,26 +592,36 @@ In this case, if there is a C<span> parameter it will be ignored.
 
 Creates a new empty set.
 
-=item * add
-
-    $new_set = $set->add( year => 1 );
+=item * add_duration( $duration )
 
     $dtd = new DateTime::Duration( year => 1 );
     $new_set = $set->add( duration => $dtd );
 
 This method returns a new set which is the same as the existing set
-plus the specified duration.
+with the specified duration added to every element of the set.
+
+=item * add
 
     $meetings_2004 = $meetings_2003->add( years => 1 );
 
-This method takes the same parameters as allowed by
-C<DateTime->add()>.  It can also take a "duration" parameter, which
-should be a C<DateTime::Duration> object.  If this parameter is given
-then all others are ignored.
+This method creates a new C<DateTime::Duration> object based on the
+parameters given and passes it to the C<add_duration()> method.
+
+=item * subtract_duration( $duration_object )
+
+When given a C<DateTime::Duration> object, this method simply calls
+C<invert()> on that object and passes that new duration to the
+C<add_duration> method.
+
+=item * subtract( DateTime::Duration->new parameters )
+
+Like C<add()>, this is syntactic sugar for the C<subtract_duration()>
+method.
 
 =item * min / max
 
-First or last dates in the set.
+The first and last dates in the set.  These methods may return
+C<undef> if the set is empty.
 
 =item * span
 
@@ -626,8 +636,8 @@ These methods can be used to iterate over the dates in a set.
         print $dt->ymd;
     }
 
-The C<next()> or C<previous()> return C<undef> when there are no more
-datetimes in the iterator.
+The C<next()> or C<previous()> method will return C<undef> when there
+are no more datetimes in the iterator.
 
 Obviously, if a set is specified as a recurrence and has no fixed end
 datetime, then it may never stop returning datetimes.  User beware!
@@ -637,9 +647,9 @@ datetime, then it may never stop returning datetimes.  User beware!
 Returns a list of C<DateTime> objects.
 
 If a set is specified as a recurrence and has no fixed begin or end
-datetimes, then C<as_list> will return C<undef>.
-
-If the set is empty, then C<as_list> will return nothing.
+datetimes, then C<as_list> will return C<undef>.  Please note that
+this is explicitly not an empty list, since an empty list is a valid
+return value for empty sets!
 
 =item * union / intersection / complement
 
