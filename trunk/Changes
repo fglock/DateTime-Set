@@ -1,5 +1,6 @@
 Changes for DateTime::Set
 
+0.04
 - change "closest" code to avoid duration comparison
 
 0.03     2003-04-27
