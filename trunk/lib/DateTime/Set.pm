@@ -624,7 +624,7 @@ case, if there is a C<span> parameter it will be ignored.
 The recurrence will be passed a single parameter, a DateTime.pm
 object.  The recurrence must generate the I<next> event 
 after that object.  There is no guarantee as to what the object will
-be set to, only that it will be greater than the last object
+be set to, only that it will be greater than the object
 passed to the recurrence.
 
 For example, if you wanted a recurrence that generated datetimes in
@@ -656,21 +656,28 @@ time, and holidays.
 
 Creates a new empty set.
 
+    $set = DateTime::Set->empty_set;
+
 =item * clone
 
 This object method returns a replica of the given object.
 
+C<clone> is useful if you want to apply a transformation to a set,
+but you want to keep the previous value:
+
+    $set2 = $set1->clone;
+    $set2->add_duration( year => 1 );  # $set1 is unaltered
+
 =item * add_duration( $duration )
+
+This method adds the specified duration added to every element of the set.
 
     $dtd = new DateTime::Duration( year => 1 );
     $new_set = $set->add_duration( $dtd );
 
-This method returns a new set which is the same as the existing set
-with the specified duration added to every element of the set.
-
 The original set is modified. The method returns the set object.
 
-The result for a given set element 
+Note: The result of adding a duration to a given set element 
 is expected to be within the span of the
 C<previous> and the C<next> element in the original set.
 
@@ -684,9 +691,9 @@ before calling C<add_duration>.
 
 =item * add
 
-    $meetings_2004 = $meetings_2003->add( years => 1 );
-
 This method is syntactic sugar around the C<add_duration()> method.
+
+    $meetings_2004 = $meetings_2003->add( years => 1 );
 
 =item * subtract_duration( $duration_object )
 
@@ -694,7 +701,7 @@ When given a C<DateTime::Duration> object, this method simply calls
 C<invert()> on that object and passes that new duration to the
 C<add_duration> method.
 
-The original set is not modified. The method returns the set object.
+The original set is modified. The method returns the set object.
 
 =item * subtract( DateTime::Duration->new parameters )
 
@@ -747,7 +754,7 @@ you can pass any parameters that would work for one of the
 C<DateTime::Span> class's constructors, and an object will be created
 for you.
 
-Obviously, if the span you specify does is not restricted both at the
+Obviously, if the span you specify is not restricted both at the
 start and end, then your iterator may iterate forever, depending on
 the nature of your set.  User beware!
 
@@ -756,7 +763,7 @@ are no more datetimes in the iterator.
 
 =item * as_list
 
-Returns a list of C<DateTime> objects.
+Returns the set elements as a list of C<DateTime> objects.
 
   my @dt = $set->as_list( span => $span );
 
@@ -837,7 +844,7 @@ datetime in the set.
 
 =item * iterate
 
-Experimental method - subject to change.
+I<Experimental method - subject to change.>
 
 This method apply a callback subroutine to all elements of a set.
 
