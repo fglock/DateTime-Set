@@ -23,8 +23,8 @@ my $build = Module::Build->new(
 		# 'DateTime-Event-Lunar'        =>
 		# 'DateTime-Event-SolarTerm'    =>
 	},
-	sign               => 1,
-        create_makefile_pl => 'passthrough'
+	# sign               => 1,
+        # create_makefile_pl => 'passthrough'
 );
 $build->create_build_script;
 

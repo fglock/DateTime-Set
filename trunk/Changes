@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.1411  2004-03-27
+- Makefile.PL.  Suggested by Randal L. Schwartz.
+
 0.1410  2004-03-26
 - Build.PL
 
