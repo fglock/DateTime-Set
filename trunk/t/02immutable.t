@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 9;
+plan tests => 11;
 
 use DateTime;
 use DateTime::Set;
@@ -26,6 +26,14 @@ ok( $t1->ymd eq '1810-11-25',
 
 ok( $s1->min->ymd eq '1810-11-22',
     'still getting '. $s1->min->ymd . ' - after changing original object' );
+
+$s1->set_time_zone( 'America/Sao_Paulo' );
+is( $s1->min->time_zone_long_name, 'America/Sao_Paulo',
+    'changing object time zone in place' );
+
+$s1->add( hours => 2 );
+is( $s1->min->hour, 2 ,
+    'changing object hour in place' );
 
 # map
 

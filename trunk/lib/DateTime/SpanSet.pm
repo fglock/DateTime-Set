@@ -83,13 +83,13 @@ sub set_time_zone {
     );
 
     ### this code enables 'subroutine method' behaviour
-    # $self->{set} = $result;
-    # return $self;
+    $self->{set} = $result;
+    return $self;
 
     ### this code enables 'function method' behaviour
-    my $set = $self->clone;
-    $set->{set} = $result;
-    return $set;
+    # my $set = $self->clone;
+    # $set->{set} = $result;
+    # return $set;
 }
 
 sub from_spans {
@@ -553,8 +553,6 @@ If the old time zone was a floating time zone, then no adjustments to
 the local time are made, except to account for leap seconds.  If the
 new time zone is floating, then the I<UTC> time is adjusted in order
 to leave the local time untouched.
-
-The method returns a new object.
 
 =item * min
 

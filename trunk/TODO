@@ -1,5 +1,12 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
+- fix set_time_zone backtracking
+
+- add "mutability" tests for DT::Span, DT::SpanSet
+  see 02immutable.t
+
+- implement add/subtract in DT::Span, DT::SpanSet
+
 2004-06-25
 
 - cleanup the examples in POD that use

@@ -1,5 +1,13 @@
 Changes for DateTime::Set
 
+- the following methods are now mutators:
+  set_time_zone( $tz )
+  set( locale => $locale )
+  add( unit => $n )
+  add_duration( $dur )
+  subtract( unit => $n )
+  subtract_duration( $dur )
+
 - fixed max/min of an infinite SpanSet
 - added test for infinite duration
 

@@ -52,6 +52,12 @@ sub iterate {
     $return;
 }
 
+sub _iterate_inplace {
+    my $self = shift;
+    $self->{set} = $self->iterate( @_ )->{set};
+    return $self;
+}
+
 sub map {
     my ( $self, $callback ) = @_;
     my $class = ref( $self );
@@ -100,14 +106,14 @@ sub subtract_duration { return $_[0]->add_duration( $_[1]->inverse ) }
 sub add_duration {
     my ( $self, $dur ) = @_;
     $dur = $dur->clone;  # $dur must be "immutable"
-    return $self->iterate(
+    return $self->_iterate_inplace(
         sub { $_[0]->add_duration( $dur ) }
     );
 }
 
 sub set_time_zone {
     my ( $self, $tz ) = @_;
-    return $self->iterate( 
+    return $self->_iterate_inplace( 
         sub { $_[0]->set_time_zone( $tz ) }
     );
 }
@@ -119,7 +125,7 @@ sub set {
                                        default => undef },
                          }
                        );
-    return $self->iterate( 
+    return $self->_iterate_inplace( 
         sub { $_[0]->set( %args ) }
     );
 }
@@ -778,10 +784,12 @@ but you want to keep the previous value:
 
 This method adds the specified duration added to every element of the set.
 
-    $dtd = new DateTime::Duration( year => 1 );
-    $set->add_duration( $dtd );
+    $dt_dur = new DateTime::Duration( year => 1 );
+    $set->add_duration( $dt_dur );
 
-The original set is not modified. The method returns a new set object.
+The original set is modified. If you want to keep the old values use:
+
+    $new_set = $set->clone->add_duration( $dt_dur );
 
 Note: The result of adding a duration to a given set element 
 is expected to be within the span of the
@@ -803,14 +811,14 @@ When given a C<DateTime::Duration> object, this method simply calls
 C<invert()> on that object and passes that new duration to the
 C<add_duration> method.
 
-The original set is not modified. The method returns a new set object.
-
 =item * subtract( DateTime::Duration->new parameters )
 
 Like C<add()>, this is syntactic sugar for the C<subtract_duration()>
 method.
 
 =item * set_time_zone( $tz )
+
+This method can be used to change the time zone of a date time set.
 
 This method accepts either a time zone object or a string that can be
 passed as the "name" parameter to C<< DateTime::TimeZone->new() >>.
@@ -822,15 +830,9 @@ the local time are made, except to account for leap seconds.  If the
 new time zone is floating, then the I<UTC> time is adjusted in order
 to leave the local time untouched.
 
-The original set C<time zone> is not modified. 
-The method returns a new set object.
-
 =item * set( locale => .. )
 
 This method can be used to change the C<locale> of a date time set.
-
-The original set C<locale> is not modified. 
-The method returns a new set object.
 
 =item * min
 
