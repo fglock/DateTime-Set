@@ -286,10 +286,6 @@ sub duration { my $dur = $_[0]->end->subtract_datetime_absolute( $_[0]->start );
 	       defined $dur ? $dur : INFINITY }
 *size = \&duration;
 
-# unsupported Set::Infinite methods
-# sub offset { die "offset() not supported"; }
-# sub quantize { die "quantize() not supported"; }
-
 1;
 
 __END__
@@ -354,7 +350,7 @@ These spans end, or start, in an imaginary 'forever' date:
    $span = DateTime::Span->from_datetimes( before => $dt2 );
 
 You cannot give both a "start" and "after" argument, nor can you give
-both an "end" and "before" argument.  Either of these conditions cause
+both an "end" and "before" argument.  Either of these conditions 
 will cause the C<from_datetimes()> method to die.
 
 =item * from_datetime_and_duration

@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 5;
+plan tests => 6;
 
 use DateTime;
 use DateTime::Duration;
@@ -36,6 +36,10 @@ is( $s3->min->ymd, '1811-11-22',
 my $s4 = $s3->subtract( years => 1 );
 is( $s4->min->ymd, '1810-11-22',
     'got 1810-11-22 - min' );
+
+# check for immutability
+is( $s2->min->ymd, '1811-12-22',
+    'got 1811-12-22 - min' );
 
 
 1;

@@ -206,10 +206,6 @@ sub span {
 sub duration { my $dur = $_[0]->{set}->size; defined $dur ? $dur : INFINITY }
 *size = \&duration;
 
-# unsupported Set::Infinite methods
-# sub offset { die "offset() not supported"; }
-# sub quantize { die "quantize() not supported"; }
-
 1;
 
 __END__
