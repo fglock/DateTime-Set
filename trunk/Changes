@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+- recurrence constructor adds '->clone' to recurrence function 
+- refactored _recurrence method;
+  first/last of recurrences are calculated 'on demand'
+- requires Set::Infinite 0.5305
+
 0.12   2003-09-22
 - implement previous() in DT::SpanSet.pm
 - Fixed: set_time_zone would mutate a clone.
