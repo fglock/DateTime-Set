@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.18';
+    $VERSION = '0.19';
 }
 
 
@@ -198,8 +198,6 @@ sub from_recurrence {
     $param{next} = delete $args{recurrence} || delete $args{next};
     $param{previous} = delete $args{previous};
 
-    ## $param{detect_bounded} = delete $args{detect_bounded} or 0;
-
     $param{span} = delete $args{span};
     # they might be specifying a span using begin / end
     $param{span} = DateTime::Span->new( %args ) if keys %args;
@@ -244,19 +242,10 @@ sub from_recurrence {
     }
 
     my ( $min, $max );
-    ## if ( $param{detect_bounded} )
-    {
-        $max = $param{previous}->( DateTime::Infinite::Future->new );
-        $min = $param{next}->( DateTime::Infinite::Past->new );
-        $max = INFINITY if $max->is_infinite;
-        $min = NEG_INFINITY if $min->is_infinite;
-    }
-        
-    # else
-    # {
-    #    $max = INFINITY;
-    #    $min = NEG_INFINITY;
-    # }
+    $max = $param{previous}->( DateTime::Infinite::Future->new );
+    $min = $param{next}->( DateTime::Infinite::Past->new );
+    $max = INFINITY if $max->is_infinite;
+    $min = NEG_INFINITY if $min->is_infinite;
         
     my $base_set = Set::Infinite::_recurrence->new( $min, $max );
     $base_set = $base_set->intersection( $param{span}->{set} )
@@ -920,17 +909,32 @@ are no more datetimes in the iterator.
 
 Returns the set elements as a list of C<DateTime> objects.
 
-  my @dt = $set->as_list( span => $span );
+    my @dt = $set->as_list( span => $span );
 
 Just as with the C<iterator()> method, the C<as_list()> method can be
 limited by a span.  
 
-If a set is specified as a recurrence and has no
-fixed begin and end datetimes, then C<as_list> will return C<undef>
-unless you limit it with a span. Please note that this is explicitly
-not an empty list, since an empty list is a valid return value for
-empty sets!
+Applying C<as_list()> to a large recurrence set is a very expensive operation, both in 
+CPU time and in the memory used.
 
+For this reason, when C<as_list()> operates on large recurrence sets, it will return 
+at most approximately 200 datetimes. For larger sets, and for I<infinite> sets, 
+C<as_list()> will return C<undef>.
+
+Please note that this is explicitly not an empty list, since an empty list is a valid
+return value for empty sets!
+
+If you I<really> need to extract elements from a large set, you can:
+
+- limit the set with a shorter span:
+
+    my @short_list = $large_set->as_list( span => $short_span );
+
+- use an iterator:
+
+    my @large_list;
+    my $iter = $large_set->iterator;
+    push @large_list, $dt while $dt = $iter->next;
 
 =item * count
 
@@ -941,12 +945,27 @@ Returns a count of C<DateTime> objects in the set.
 Just as with the C<iterator()> method, the C<count()> method can be
 limited by a span.  
 
-If a set is specified as a recurrence and has no
-fixed begin and end datetimes, then C<count> will return C<undef>,
-unless you limit it with a span. Please note that this is explicitly
-not a scalar C<zero>, since a zero count is a valid return value for
-empty sets!
+Applying C<count()> to a large recurrence set is a very expensive operation, 
+both in CPU time and in the memory used.
 
+For this reason, when C<count()> operates on large recurrence sets, it will return
+at most approximately C<200>. For larger sets, and for I<infinite> sets,
+C<count()> will return C<undef>.
+
+Please note that this is explicitly not a scalar zero, since a zero count
+is a valid return value for empty sets!
+
+If you I<really> need to count elements from a large set, you can:
+
+- limit the set with a shorter span:
+
+    my $count = $large_set->count( span => $short_span );
+
+- use an iterator:
+
+    my $count = 0;
+    my $iter = $large_set->iterator;
+    $count++ while $iter->next;
 
 =item * union
 

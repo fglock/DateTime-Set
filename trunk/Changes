@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.19    2003-11-29
+- added more comments on as_list() and count() behaviour on large sets.
+  Reported by Rick Frankel (rt ticket 8611)
+
 0.18    2004-11-25
 - ignore "__DIE__" signal while calculating durations.
   Reported by michelle.agnew (rt ticket 5434)

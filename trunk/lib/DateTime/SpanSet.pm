@@ -640,16 +640,32 @@ returns more than one span.
 
 Returns a list of C<DateTime::Span> objects.
 
-  my @dt = $set->as_list( span => $span );
+  my @dt_span = $set->as_list( span => $span );
 
 Just as with the C<iterator()> method, the C<as_list()> method can be
 limited by a span.
 
-If a set is specified as a recurrence and has no
-fixed begin and end datetimes, then C<as_list> will return C<undef>
-unless you limit it with a span.  Please note that this is explicitly
-not an empty list, since an empty list is a valid return value for
-empty sets!
+Applying C<as_list()> to a large recurring spanset is a very expensive operation, 
+both in CPU time and in the memory used.
+
+For this reason, when C<as_list()> operates on large recurrence sets, it will 
+return at most approximately 200 spans. For larger sets, and for I<infinite> 
+sets, C<as_list()> will return C<undef>.
+
+Please note that this is explicitly not an empty list, since an empty list is a 
+valid return value for empty sets!
+
+If you I<really> need to extract spans from a large set, you can:
+
+- limit the set with a shorter span:
+
+    my @short_list = $large_set->as_list( span => $short_span );
+
+- use an iterator:
+
+    my @large_list;
+    my $iter = $large_set->iterator;
+    push @large_list, $dt while $dt = $iter->next;
 
 =item * union
 

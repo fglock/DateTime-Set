@@ -11,6 +11,10 @@ KNOWN BUGS
 
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
+2004-11-29
+
+- DateTime::SpanSet has no count() method
+
 2004-07-03
 
 - what happens if the recurrence function returns an 'undef' ?
