@@ -107,7 +107,7 @@ sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
     return $tmp;
 }
@@ -116,7 +116,7 @@ sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
 
@@ -124,7 +124,7 @@ sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
 
@@ -132,7 +132,7 @@ sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
-    $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
     return $tmp;
 }
@@ -142,7 +142,7 @@ sub complement {
     my $class = ref($set1);
     my $tmp = $class->new();
     if (defined $set2) {
-        $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
+        $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
     }
     else {
@@ -188,7 +188,7 @@ DateTime::SpanSet - set of DateTime spans
 
 =head1 SYNOPSIS
 
-    $set1 = DateTime::SpanSet->new( spans => [ $dt_span, $dt_span ] );
+    $set1 = DateTime::SpanSet->from_spans( spans => [ $dt_span, $dt_span ] );
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
