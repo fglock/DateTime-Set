@@ -61,6 +61,8 @@ BEGIN {
         };
 }
 
+my $forever = Set::Infinite::_recurrence->new( NEG_INFINITY, INFINITY );
+
 # $si->_recurrence(
 #     \&callback_next, \&callback_current, \&callback_previous )
 #
@@ -138,17 +140,23 @@ sub _is_recurrence
 
 sub intersection
 {
-    # TODO: put back the optimization that intersects recurrences+spans
-    #   It will no longer break, because _is_recurrence is more restrictive now
-    #   Add tests first!
-
     my ($s1, $s2) = (shift,shift);
-    if ( $s1->_is_recurrence && 
-         ref($s2) && _is_recurrence( $s2 ) )
+
+    if ( exists $s1->{method} && $s1->{method} eq '_recurrence' )
     {
-        my ( $next1, $current1, $previous1 ) = @{ $s1->{param} };
-        my ( $next2, $current2, $previous2 ) = @{ $s2->{param} };
-        return $s1->{parent}->_function( '_recurrence', 
+        # optimize: recurrence && span
+        return $s1->{parent}->
+            intersection( $s2, @_ )->
+            _recurrence( @{ $s1->{param} } )
+                unless ref($s2) && exists $s2->{method};
+
+        # optimize: recurrence && recurrence
+        if ( $s1->{parent}->is_forever && 
+            ref($s2) && _is_recurrence( $s2 ) )
+        {
+            my ( $next1, $current1, $previous1 ) = @{ $s1->{param} };
+            my ( $next2, $current2, $previous2 ) = @{ $s2->{param} };
+            return $s1->{parent}->_function( '_recurrence', 
                   sub {
                                # intersection of parent 'next' callbacks
                                my ($n1, $n2);
@@ -192,6 +200,7 @@ sub intersection
                                }
                   },
                );
+        }
     }
     return $s1->SUPER::intersection( $s2, @_ );
 }
@@ -202,6 +211,7 @@ sub union
     if ( $s1->_is_recurrence &&
          ref($s2) && _is_recurrence( $s2 ) )
     {
+        # optimize: recurrence || recurrence
         my ( $next1, $current1, $previous1 ) = @{ $s1->{param} };
         my ( $next2, $current2, $previous2 ) = @{ $s2->{param} };
         return $s1->{parent}->_function( '_recurrence',
