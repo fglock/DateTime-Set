@@ -146,7 +146,7 @@ sub clone {
 sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = {};  # $class->new();
     $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
 
@@ -175,7 +175,7 @@ sub contains {
 sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = {};   # $class->new();
     $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
  

@@ -1,3 +1,11 @@
+- intersection() function composition in DateTime::Set
+    - check 'span'
+    - add tests
+    - 'union' too ?
+
+- check 'span' in next/previous methods
+    - add tests
+
 - as_list in SpanSet.pm
 - previous in SpanSet for iterators
 

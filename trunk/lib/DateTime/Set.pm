@@ -87,6 +87,7 @@ sub from_recurrence {
     if ($param{next} || $param{previous}) {
         $self->{next} = $param{next} if $param{next};
         $self->{previous} = $param{previous} if $param{previous};
+        $self->{span} = $param{span} if $param{span};
 
         $self->{set} = _recurrence_callback( 
             $param{span}->{set}, $param{next}, $param{previous} );
@@ -435,11 +436,76 @@ sub as_list {
 
 # Set::Infinite methods
 
+my $max_iterate = 10;
+
 sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->empty_set();
     $set2 = $class->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+
+    # optimization - use function composition if both sets are recurrences
+    if ( $set1->{next} && $set2->{next} &&
+         $set1->{previous} && $set2->{previous} )
+    {
+        # TODO: check 'span' - also in next/previous methods!
+        # TODO: add tests
+
+        # warn "compose intersection";
+        # my $span;
+        # $span = $set1->{span} if defined $set1->{span};
+        # if ( defined $set2->{span} ) {
+        #    $span = $span ? 
+        #            $span->intersection( $set2->{span} ) :
+        #            $set2->{span};
+        # }
+        return $class->from_recurrence(
+                  next =>  sub {
+                               # intersection of parent 'next' callbacks
+                               my $arg = shift;
+                               my ($tmp1, $tmp2);
+                               my ($next1, $next2);
+                               my $iterate = 0;
+                               while(1) { 
+                                   $next1 = $set1->{next}->( $arg->clone );
+                                   $tmp2 = $set2->{previous}->( $set2->{next}->( $next1->clone ) );
+  #warn "intersection arg ".$arg->datetime." 1 ".$tmp1_next->datetime." 2 ".$tmp2_next->datetime." ";
+                                   return $next1 if $next1 == $tmp2;
+                            
+
+                                   $next2 = $set2->{next}->( $arg->clone );
+                                   $tmp1 = $set1->{previous}->( $set1->{next}->( $next2->clone ) );
+  #warn "intersection arg ".$arg->datetime." 1 ".$tmp1_next->datetime." 2 ".$next2->datetime." ";
+                                   return $next2 if $next2 == $tmp1;
+                                  
+
+                                   $arg = $next1 > $next2 ? $next1 : $next2;
+                                   return if $iterate++ == $max_iterate;
+                               }
+                           },
+                  previous => sub {
+                               # intersection of parent 'previous' callbacks
+                               my $arg = shift;
+                               my ($tmp1, $tmp2, $cmp);
+                               my ($previous1, $previous2);
+                               my $iterate = 0;
+                               while(1) { 
+                                   $previous1 = $set1->{previous}->( $arg->clone );
+                                   $tmp2 = $set2->{previous}->( $set2->{next}->( $previous1->clone ) );
+                                   return $previous1 if $previous1 == $tmp2;
+
+                                   $previous2 = $set2->{previous}->( $arg->clone );
+                                   $tmp1 = $set1->{previous}->( $set1->{next}->( $previous2->clone ) );
+                                   return $previous2 if $previous2 == $tmp1;
+
+                                   $arg = $previous1 < $previous2 ? $previous1 : $previous2;
+                                   return if $iterate++ == $max_iterate;
+                               }
+                           },
+                  # ( $span ? ( span => $set1->{span}->intersection( $set2->{span} ) ) : () )
+               );
+    }
+
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
     return $tmp;
 }
