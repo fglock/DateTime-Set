@@ -12,17 +12,15 @@ $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( @ISA $VERSION );
 
-# $VERSION = '0.00_13';
-
 sub new {
     my $class = shift;
     my %args = validate( @_,
                          { spans =>
-                           { type => ARRAY,
+                           { type => ARRAYREF,
                              optional => 1,
                            },
                            # sets =>
-                           # { type => ARRAY,
+                           # { type => ARRAYREF,
                            #   optional => 1,
                            # },
                          }

@@ -285,23 +285,25 @@ sub _callback_previous {
         $next = &$callback( $next );
         $freq = $next - $previous;
         my %freq = $freq->deltas;
-        $freq{$_} = -int( $freq{$_} * 1.5 ) for keys %freq;
+        $freq{$_} = -int( $freq{$_} * 2 ) for keys %freq; 
         $freq = new DateTime::Duration( %freq );
 
         # save it for future use with this same recurrence
         ${$callback_info}{freq} = $freq;
 
         # my @freq = $freq->deltas;
-        # warn "freq is now @freq";
+        # warn "freq is @freq";
     }
 
     $previous->add_duration( $freq );  
+    # warn "callback is $callback";
     # warn "current is ".$value->ymd." previous is ".$previous->ymd;
     $previous = &$callback( $previous );
+    # warn " previous got ".$previous->ymd;
     if ($previous >= $value) {
         # This error might happen if the event frequency oscilates widely
         # (more than 50% of difference from one interval to next)
-        die "_callback_previous iterator can't find a previous value, got ".$previous->ymd." before ".$value->ymd;
+        warn "_callback_previous iterator can't find a previous value, got ".$previous->ymd." before ".$value->ymd;
     }
     my $previous1;
     while (1) {
