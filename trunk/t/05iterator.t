@@ -41,15 +41,13 @@ ok( $res eq '1810-09-01',
 
 my $iterator = $months->iterator;
 my @res;
-TODO: {
-    local $TODO = "Set::Infinite gives deep-recursion";
-    for (1..3) {
-        #### push @res, $iterator->next->ymd;
-    }
-    $res = join( ' ', @res );
-    ok( $res eq ' ',
-        "3 iterations give $res" );
+for (1..3) {
+        my $tmp = $iterator->next;
+        push @res, $tmp->ymd if defined $tmp;
 }
+$res = join( ' ', @res );
+ok( $res eq '1810-09-01 1810-10-01 1810-11-01',
+        "3 iterations give $res" );
 
 1;
 

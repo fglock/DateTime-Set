@@ -7,19 +7,25 @@ package DateTime::Set;
 use strict;
 
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
-use Set::Infinite;
+use Set::Infinite 0.43;
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.00_11';
+$VERSION = '0.00_12';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 # TODO: do we really need this method?
 sub add { 
-    my ($self, $dt) = @_;
-    $dt = $dt->clone;
+    my ($self, %parm) = @_;
+    my $dt;
+    if (exists $parm{duration}) {
+        $dt = $parm{duration}->clone;
+    }
+    else {
+        $dt = new DateTime::Duration( %parm );
+    }
     my $result = $self->{set}->iterate( 
         sub {
             my $set = shift;
@@ -91,6 +97,7 @@ sub clone {
 }
 
 # _recurrence( &callback )
+# Internal function
 #
 # Generates "recurrences" from a callback.
 # These recurrences are simple lists of dates.
@@ -102,6 +109,9 @@ sub clone {
 sub _recurrence {
     # warn "_recurrence args: @_";
     my ( $self, $callback ) = @_;    
+
+    # test for the special case when we have an infinite recurrence
+
     if ($self->min == NEG_INFINITY ||
         $self->max == INFINITY) {
         # warn "_recurrence called with inf argument";
@@ -109,13 +119,42 @@ sub _recurrence {
         return INFINITY if $self->min == INFINITY && $self->max == INFINITY;
         # return an internal "_function", such that we can 
         # backtrack and solve the problem later.
-        return $self->_function( 'iterate', 
+        my $func = $self->_function( 'iterate', 
             sub {
                 _recurrence( $_[0], $callback );
             }
         );
+
+        # -- begin hack
+
+        # Since this is a custom function, the iterator will need some help.
+        # We are setting up the first() cache directly,
+        # because Set::Infinite has no hint of how to do it.
+
+        if ($self->min == INFINITY || $self->min == NEG_INFINITY) {
+            $func->{first} = [ $self->new( $self->min ), $self ];
+        }
+        else {
+            my $this = $func->min;
+            my $next = &$callback($this->clone);
+            # warn "preparing first: $this ; $next";
+            $func->{first} = [ 
+                $self->new( $func->min ), 
+                $self->_function( 'iterate',
+                    sub {
+                        _recurrence( $self->intersection( $next, INFINITY ), $callback );
+                    } ) ];
+        }
+        # -- end hack
+
+        return $func;
     }
-    my $min = $self->min->clone->subtract( seconds => 1 );
+
+    # this is a finite recurrence - generate it.
+
+    my $min = $self->min;
+    return unless defined $min;
+    $min = $min->clone->subtract( seconds => 1 );
     my $max = $self->max;
     # warn "_recurrence called with ".$min->ymd."..".$max->ymd;
     my $result = $self->new;
@@ -155,12 +194,42 @@ sub intersection {
     return $tmp;
 }
 
+sub intersects {
+    my ($set1, $set2) = @_;
+    my $class = ref($set1);
+    my $tmp = $class->new();
+    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+    return $set1->{set}->intersects( $set2->{set} );
+}
+
+sub contains {
+    my ($set1, $set2) = @_;
+    my $class = ref($set1);
+    my $tmp = $class->new();
+    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+    return $set1->{set}->contains( $set2->{set} );
+}
+
 sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = $class->new();
     $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
+    return $tmp;
+}
+
+sub complement {
+    my ($set1, $set2) = @_;
+    my $class = ref($set1);
+    my $tmp = $class->new();
+    if (defined $set2) {
+        $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+        $tmp->{set} = $set1->{set}->complement( $set2->{set} );
+    }
+    else {
+        $tmp->{set} = $set1->{set}->complement;
+    }
     return $tmp;
 }
 
@@ -275,6 +344,9 @@ The start and end parameters are optional.
 =item * add
 
     $set->add( year => 1 );
+
+    $dtd = new DateTime::Duration( year => 1 );
+    $set->add( duration => $dtd );
 
 This method adds a value to the current datetime set.
 It moves the whole set values ahead or back in time.

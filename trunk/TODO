@@ -1,17 +1,2 @@
-- Set::Infinite gives "deep recursion" when calling a DateTime:Set recurrence.
-
-- Add support for first() into new methods.
-
-- Redefine Set::Infinite::Arithmetic hashes, to use DateTime
-  functions instead of epoch-related internals.
-  Actually, it might be better to redo the implementations
-  of offset() and quantize()
-
-- Define the new API. 
-
-- Make Set::Infinite::intersects() accept objects as
-  parameters (it currently only accepts sets or scalars)
-  Such that we can directly check a set against some date.
-
-- Move 'round' procedure from create_recurrence to DateTime.pm
+- Document the part of the API that was inherited from Set::Infinite. 
 

@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.12
+- iterator passes all tests
+- the API is complete, as described in SYNOPSIS
+- small fix in add() syntax; accepts a duration=> parameter
+
 0.11
 - iterator, next
 
