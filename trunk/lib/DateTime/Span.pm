@@ -286,6 +286,9 @@ sub duration {
     my $dur;
     eval { $dur = $_[0]->end->subtract_datetime_absolute( $_[0]->start ) };
     return $dur if defined $dur;
+
+    # TODO: shouldn't need this:
+
     $@ = undef;  # clear the eval() error message
     return INFINITY;
 }

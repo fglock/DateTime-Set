@@ -1,5 +1,21 @@
 Changes for DateTime::Set
 
+0.1407  2004-03-16
+- New methods:
+  DateTime::SpanSet::current
+  DateTime::Spanset::closest
+
+- "Fixed" DateTime::SpanSet::next / previous 
+  no longer "split" the returned spans.
+
+- Added examples and parameter validation to map / grep
+
+- DateTime::SpanSet::duration may return an 'infinite' 
+  DateTime::Duration, instead of scalar infinity.
+
+- Bugfix: DateTime::Spanset::union / intersection / ...
+  correctly accept DateTime parameters.
+
 0.1406  2004-03-15
 - New methods: 
   DateTime::Set::map / grep

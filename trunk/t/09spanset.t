@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 44;
+plan tests => 46;
 
 use DateTime;
 use DateTime::Duration;
@@ -23,7 +23,7 @@ sub str {
     return $_[0];
 }
 
-sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
+sub span_str { eval { str($_[0]->min) . '..' . str($_[0]->max) } }
 
 #======================================================================
 # SPANSET TESTS
@@ -72,61 +72,97 @@ sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
     isa_ok ( $spans[0], 'DateTime::Span' );
     $res = span_str( $spans[0] );
     is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
-        "got $res" );
+        "as_list got $res" );
 
     # intersected_spans
     my $intersected = $s1->intersected_spans( $end1 );
     $res = span_str( $intersected );
     # diag "intersected with ". span_str( $s1 );
     is( $res, $end1->datetime .'..'.$start2->datetime,
-        "got $res" );
+        "intersected got $res" );
     
 
   {
     # next( $dt )
+    my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $end_set );
+
     my $dt = new DateTime( year => '1809', month => '8',  day => '19' );
     my $next = $s1->next( $dt );
     $res = span_str( $next );
-    is( $res, '1809-08-19T00:00:00..1810-09-20T00:00:00',
+    is( $res, '1810-09-20T00:00:00..1811-10-21T00:00:00',
         "next dt got $res" );
     is( $next->end_is_open, 1, 'end is open' );
-    is( $next->start_is_open, 1, 'start is open' );
+    is( $next->start_is_open, 0, 'start is closed' );
     # next( $span )
     $next = $s1->next( $next );
     $res = span_str( $next );
-    is( $res, '1811-10-21T00:00:00..1812-11-22T00:00:00',
+    is( $res, '1812-11-22T00:00:00..1813-12-23T00:00:00',
         "next span got $res" );
     is( $next->end_is_open, 1, 'end is open' );
-    isnt( $next->start_is_open, 1, 'start is closed' );
+    is( $next->start_is_open, 0, 'start is closed' );
   }
 
   {
     # previous( $dt )
-    my $dt = new DateTime( year => '1812', month => '8',  day => '19' );
+    my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $end_set );
+
+    my $dt = new DateTime( year => '1812', month => '11',  day => '25' );
     my $previous = $s1->previous( $dt );
     $res = span_str( $previous );
-    is( $res, '1811-10-21T00:00:00..1812-08-19T00:00:00',
+    is( $res, '1810-09-20T00:00:00..1811-10-21T00:00:00',
+        "previous dt got $res" );
+
+    my $current = $s1->current( $dt );
+    $res = span_str( $current );
+    is( $res, '1812-11-22T00:00:00..1813-12-23T00:00:00',
+        "current dt got $res" );
+
+    my $closest = $s1->closest( $dt );
+    $res = span_str( $closest );
+    is( $res, '1812-11-22T00:00:00..1813-12-23T00:00:00',
+        "closest dt got $res" );
+
+    $dt = new DateTime( year => '1812', month => '11', day => '20' );
+    $closest = $s1->closest( $dt );
+    $res = span_str( $closest );
+    is( $res, '1812-11-22T00:00:00..1813-12-23T00:00:00',
+        "closest dt got $res" );
+
+    $dt = new DateTime( year => '1811', month => '10', day => '25' );
+    $closest = $s1->closest( $dt );
+    $res = span_str( $closest );
+    is( $res, '1810-09-20T00:00:00..1811-10-21T00:00:00',
+        "closest dt got $res" );
+
+    $dt = new DateTime( year => '1812', month => '8',  day => '19' );
+    $previous = $s1->previous( $dt );
+    $res = span_str( $previous );
+    is( $res, '1810-09-20T00:00:00..1811-10-21T00:00:00',
         "previous dt got $res" );
     is( $previous->end_is_open, 1, 'end is open' );
-    isnt( $previous->start_is_open, 1, 'start is closed' );
+    is( $previous->start_is_open, 0, 'start is closed' );
     # previous( $span )
     $previous = $s1->previous( $previous );
-    $res = span_str( $previous );
-    is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
-        "previous span got $res" );
-    is( $previous->end_is_open, 1, 'end is open' );
-    is( $previous->start_is_open, 1, 'start is open' );
-    is( $previous->duration->delta_seconds, INFINITY, 'span size is infinite' );
+    is( $previous, undef , 'no previous' );
+
+    #$res = span_str( $previous );
+    #is( $res, NEG_INFINITY.'..1810-09-20T00:00:00',
+    #    "previous span got $res" );
+    #is( eval{ $previous->end_is_open }, 1, 'end is open' );
+    #is( eval{ $previous->start_is_open }, 1, 'start is open' );
+    #is( eval{ $previous->duration->delta_seconds }, INFINITY, 'span size is infinite' );
   }
 
-  TODO: {
-    local $TODO = 'spanset duration should be an object';
-    eval { 
+    # TODO: {
+    # local $TODO = 'spanset duration should be an object';
+    # eval { 
+
       is ( $s1->duration->delta_seconds, INFINITY, 
         'spanset size is infinite' );
-    } or
-        ok( 0, 'not a duration object' );
-  }
+
+    # } or
+    #    ok( 0, 'not a duration object' );
+    # }
 
 }
 

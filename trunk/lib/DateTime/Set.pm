@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1406';
+    $VERSION = '0.1407';
 }
 
 sub iterate {
@@ -35,6 +35,8 @@ sub iterate {
 sub map {
     my ( $self, $callback ) = @_;
     my $class = ref( $self );
+    die "The callback parameter to map() must be a subroutine reference"
+        unless ref( $callback ) eq 'CODE';
     my $return = $class->empty_set;
     $return->{set} = $self->{set}->iterate( 
         sub {
@@ -53,6 +55,8 @@ sub map {
 sub grep {
     my ( $self, $callback ) = @_;
     my $class = ref( $self );
+    die "The callback parameter to grep() must be a subroutine reference"
+        unless ref( $callback ) eq 'CODE';
     my $return = $class->empty_set;
     $return->{set} = $self->{set}->iterate( 
         sub {
@@ -465,6 +469,9 @@ sub closest {
     # return $_[0] if $self->contains( $_[0] );
     my $dt1 = $self->current( $_[0] );
     my $dt2 = $self->next( $_[0] );
+
+    return $dt2 unless defined $dt1;
+    return $dt1 unless defined $dt2;
 
     my $delta = $_[0] - $dt1;
     return $dt1 if ( $dt2 - $delta ) >= $_[0];
@@ -1008,6 +1015,13 @@ datetime in the set.
 
 =item * map ( sub { ... } )
 
+    # example: remove the hour:minute:second information
+    $set = $set2->map( 
+        sub {
+            return $_->truncate( to => day );
+        }
+    );
+
 This method is the "set" version of Perl "map".
 
 It evaluates a subroutine for each element of
@@ -1027,7 +1041,21 @@ The callback subroutine may not be called immediately.
 Don't count on subroutine side-effects. For example,
 a C<print> inside the subroutine may happen later than you expect.
 
+The callback return value is expected to be within the span of the
+C<previous> and the C<next> element in the original set.
+
+For example: given the set C<[ 2001, 2010, 2015 ]>,
+the callback result for the value C<2010> is expected to be
+within the span C<[ 2001 .. 2015 ]>.
+
 =item * grep ( sub { ... } )
+
+    # example: filter out any sundays
+    $set = $set2->grep( 
+        sub {
+            return ( $_->day_of_week != 7 );
+        }
+    );
 
 This method is the "set" version of Perl "grep".
 
