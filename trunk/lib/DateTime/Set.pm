@@ -134,15 +134,15 @@ sub _recurrence_callback {
     if ($set->min == NEG_INFINITY ||
         $set->max == INFINITY) {
 
-        return _setup_recurrence_with_infinity( $set, $callback );
+        return _setup_infinite_recurrence( $set, $callback );
     }
     else {
 
-        return _setup_recurrence_without_infinity( $set, $callback );
+        return _setup_finite_recurrence( $set, $callback );
     }
 }
 
-sub _setup_recurrence_with_infinity {
+sub _setup_infinite_recurrence {
     my ( $set, $callback ) = @_;
 
     # warn "_recurrence called with inf argument";
@@ -217,7 +217,7 @@ sub _setup_recurrence_with_infinity {
     return $func;
 }
 
-sub _setup_recurrence_without_infinity {
+sub _setup_finite_recurrence {
     my ( $set, $callback ) = @_;
 
     # this is a finite recurrence - generate it.
