@@ -165,8 +165,7 @@ sub max {
 # span == $self
 sub span { @_ }
 
-# size is a DateTime::Duration
-sub size { return $_[0]->{set}->size; }
+sub duration { return $_[0]->{set}->size; }
 
 # unsupported Set::Infinite methods
 
@@ -242,9 +241,10 @@ will cause the C<new()> method to die.
 
 =back
 
-=item * size
+=item * duration
 
-The size of the span, as a DateTime::Duration.
+Return a DateTime::Duration object that represents the length of the
+span.
 
 =item * union / intersection / complement
 
