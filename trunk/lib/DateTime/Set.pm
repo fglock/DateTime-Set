@@ -5,7 +5,7 @@
 package DateTime::Set;
 
 use strict;
-use Carp;
+
 use Set::Infinite;
 use DateTime::Duration;
 
@@ -26,12 +26,36 @@ use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 sub quantize { die "quantize() method is not supported. Please use create_recurrence instead." }
 sub offset   { die "offset() method is not supported. Please use add_duration() instead." }
 
+my %set =
+    ( years =>
+      { month => 1, day => 1, hour => 0, minute => 0, second => 0 },
+
+      months =>
+      { day => 1, hour => 0, minute => 0, second => 0 },
+
+      days =>
+      { hour => 0, minute => 0, second => 0 },
+
+      hours =>
+      { minute => 0, second => 0 },
+
+      minutes =>
+      { second => 0 },
+    );
+
 # generates simple recurrences of "months", "hours", etc.
 sub create_recurrence {
-    my ($self, %parm) = @_;
-    die "create_recurrence() needs a time_unit parameter" unless exists $parm{time_unit};
+    my $self = shift;
+    my %parm = validate( @_,
+                         { time_unit =>
+                           { type => SCALAR,
+                             regex => qr/^years|months|days|hours|minutes|seconds$/,
+                           },
+                         }
+                       );
+
     # $parm{interval} = 1 unless $parm{interval};
- 
+
     unless (ref $self) {
         $self = __PACKAGE__->new( NEG_INFINITY, INFINITY );
     }
@@ -46,17 +70,14 @@ sub create_recurrence {
     my $max = $self->max;
     my $duration = new DateTime::Duration( $parm{time_unit} => 1 );
 
-    # round the start time according to the time_unit 
-    $this->set( month => 1, day => 1, hour => 0, minute => 0, second => 0 ) if $parm{time_unit} eq 'years';
-    $this->set( day => 1, hour => 0, minute => 0, second => 0 ) if $parm{time_unit} eq 'months';
-    $this->set( hour => 0, minute => 0, second => 0 ) if $parm{time_unit} eq 'days';
-    $this->set( minute => 0, second => 0 ) if $parm{time_unit} eq 'hours';
-    $this->set( second => 0 ) if $parm{time_unit} eq 'minutes';
+    # round the start time according to the time_unit
+    $this->set( %{ $set{ $parm{time_unit} } )
+
     # $this->set(  ) if $parm{time_unit} eq 'seconds';
     if ($parm{time_unit} eq 'weeks') {
         my $dow = $this->day_of_week - 1;  # 0 is monday
         $this->subtract( days => $dow );
-        $this->set( hour => 0, minute => 0, second => 0 );
+        $this->set( %{ $set{weeks} } );
     }
 
     my $result = $self->new->no_cleanup;
@@ -77,6 +98,7 @@ sub create_recurrence {
         ## note: this wouldn't work here: $result = $result->union( $subset ); 
         push @{$result->{list}}, $subset->{list}[0] if exists $subset->{list}[0];
     }
+
     return $result;
 }
 
@@ -245,11 +267,13 @@ Example:
 
 NOTE: this is an experimental feature.
 
-Generates recurrence intervals of "years", "months", "weeks", "days", "hours", "minutes", or "seconds".
+Generates recurrence intervals of "years", "months", "weeks", "days",
+"hours", "minutes", or "seconds".
 
     $months = DateTime::Set->create_recurrence( time_unit => 'months' );
 
-Recurrences can be filtered and combined, in order to build more complex recurrences.
+Recurrences can be filtered and combined, in order to build more
+complex recurrences.
 
 Example:
 
