@@ -5,7 +5,7 @@
 package DateTime::Set;
 
 use strict;
-
+use Carp;
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use Set::Infinite '0.44_04';
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
@@ -63,6 +63,8 @@ sub add {
 # the set elements become immutable
 sub new {
     my $class = shift;
+    carp "new( \%param ) is deprecated. Use from_recurrence() / from_datetimes() instead,"
+        if @_;
     my %args = validate( @_,
                          { start =>
                            { type => OBJECT,
@@ -113,6 +115,70 @@ sub new {
     }
     elsif (exists $args{previous}) {
         die '"previous =>" argument not implemented';
+    }
+    else {
+        # no arguments => return an empty set (or should die?)
+        $self->{set} = Set::Infinite->new;
+    }
+    bless $self, $class;
+    return $self;
+}
+
+sub from_recurrence {
+    my $class = shift;
+    my %args = validate( @_,
+                         { recurrence =>      # "next" alias
+                           { type => CODEREF,
+                             optional => 1,
+                           },
+                           next =>
+                           { type => CODEREF,
+                             optional => 1,
+                           },
+                           previous =>       
+                           { type => CODEREF,
+                             optional => 1,
+                           },
+                           span => 
+                           { type => OBJECT,
+                             optional => 1,
+                           },
+                         }
+                       );
+    my $self = {};
+    $args{next} = $args{recurrence} if exists $args{recurrence};
+    if (exists $args{next}) {
+        my $tmp_set = Set::Infinite->new( NEG_INFINITY, INFINITY );
+        $self->{set} = _recurrence_callback( $tmp_set, $args{next} );  
+        $self->{set} = $self->{set}->intersection( $args{span}->{set} ) 
+            if exists $args{span};
+    }
+    elsif (exists $args{previous}) {
+        die '"previous =>" argument not implemented';
+    }
+    else {
+        # no arguments => return an empty set (or should die?)
+        $self->{set} = Set::Infinite->new;
+    }
+    bless $self, $class;
+    return $self;
+}
+
+sub from_datetimes {
+    my $class = shift;
+    my %args = validate( @_,
+                         { dates => 
+                           { type => ARRAYREF,
+                             optional => 1,
+                           },
+                         }
+                       );
+    my $self = {};
+    if (exists $args{dates}) {
+        $self->{set} = Set::Infinite->new;
+        for( @{ $args{dates} } ) {
+            $self->{set} = $self->{set}->union( $_->clone );
+        }
     }
     else {
         # no arguments => return an empty set (or should die?)
@@ -280,6 +346,9 @@ sub _callback_previous {
     unless (defined $freq) { 
 
         # This is called just once, to setup the recurrence frequency
+        # The use of 'next' to simulate 'previous' might be
+        # considered a hack. 
+        # The program will warn() if it this is not working properly.
 
         my $next = $value->clone;
         $next = &$callback( $next );
@@ -302,7 +371,7 @@ sub _callback_previous {
     # warn " previous got ".$previous->ymd;
     if ($previous >= $value) {
         # This error might happen if the event frequency oscilates widely
-        # (more than 50% of difference from one interval to next)
+        # (more than 100% of difference from one interval to next)
         warn "_callback_previous iterator can't find a previous value, got ".$previous->ymd." before ".$value->ymd;
     }
     my $previous1;
@@ -426,20 +495,19 @@ DateTime::Set - Date/time sets math
     use DateTime::Set;
 
     $date1 = DateTime->new( year => 2002, month => 3, day => 11 );
-    $set1 = DateTime::Set->new( dates => [ $date1 ] );
+    $set1 = DateTime::Set->from_datetimes( dates => [ $date1 ] );
     #  set1 = 2002-03-11
 
     $date2 = DateTime->new( year => 2003, month => 4, day => 12 );
-    $set2 = DateTime::Set->new( dates => [ $date1, $date2 ] );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $date1, $date2 ] );
     #  set2 = 2002-03-11, and 2003-04-12
 
     # a 'monthly' recurrence:
-    $set = DateTime::Set->new( 
+    $set = DateTime::Set->from_recurrence( 
         recurrence => sub {
             $_[0]->truncate( to => 'month' )->add( months => 1 )
         },
-        start => $date1,    # optional
-        end => $date2,      # optional
+        span => $date_span1,    # optional span
     );
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
@@ -482,25 +550,26 @@ Wednesday between 2003-03-05 and 2004-01-07".
 
 =item * new
 
-Creates a new set.  The set can either be a list of dates, or it can
-be specified via a "recurrence" callback.
+Creates a new empty set.
 
-To create a set from a list of dates:
+=item * from_datetimes
 
-   $dates = DateTime::Set->new( dates => [ $dt1, $dt2, $dt3 ] );
+Creates a new set from a list of dates.
 
-To create a set as a recurrence:
+   $dates = DateTime::Set->from_datetimes( dates => [ $dt1, $dt2, $dt3 ] );
 
-    $months = DateTime::Set->new( 
-        start => $today, 
-        end => $today_plus_one_year,
-        recurrence => sub { $_[0]->truncate( to => 'month' )->add( months => 1 ) }, 
+=item * from_recurrence
+
+Creates a new set specified via a "recurrence" callback.
+
+    $months = DateTime::Set->from_recurrence( 
+        span => $this_year,    # optional span
+        recurrence => sub { 
+            $_[0]->truncate( to => 'month' )->add( months => 1 ) 
+        }, 
     );
 
-The "start" and "end" parameters are both optional.  If no "start"
-parameter is given then the set is assumed to start at negative
-infinity.  Similarly, if no "end" parameter is given then the set is
-assumed to end at infinity.
+The "span" parameter is optional.  
 
 =item * add
 
