@@ -393,7 +393,7 @@ sub iterator {
 # next() gets the next element from an iterator()
 # next( $dt ) returns the next element after a datetime.
 sub next {
-    my ($self) = shift;
+    my $self = shift;
     return undef unless ref( $self->{set} );
 
     if ( @_ ) {
@@ -416,7 +416,7 @@ sub next {
 # previous() gets the last element from an iterator()
 # previous( $dt ) returns the previous element before a datetime.
 sub previous {
-    my ($self) = shift;
+    my $self = shift;
     return undef unless ref( $self->{set} );
 
     if ( @_ ) {
@@ -436,9 +436,19 @@ sub previous {
     return $head;
 }
 
-
+# "current" means less-or-equal to a DateTime
 sub current {
     my $self = shift;
+
+    return undef unless ref( $self->{set} );
+
+    if ( $self->{current} )
+    {
+        my $tmp = $self->{current}->( $_[0]->clone );
+        return $tmp if $tmp == $_[0];
+        return $self->previous( $_[0] );
+    }
+
     return $_[0] if $self->contains( $_[0] );
     $self->previous( $_[0] );
 }
@@ -497,17 +507,9 @@ sub intersection {
     if ( $set1->{next} && $set2->{next} &&
          $set1->{previous} && $set2->{previous} )
     {
-        # TODO: check 'span' - also in next/previous methods!
         # TODO: add tests
 
         # warn "compose intersection";
-        # my $span;
-        # $span = $set1->{span} if defined $set1->{span};
-        # if ( defined $set2->{span} ) {
-        #    $span = $span ? 
-        #            $span->intersection( $set2->{span} ) :
-        #            $set2->{span};
-        # }
         return $class->from_recurrence(
                   next =>  sub {
                                # intersection of parent 'next' callbacks
@@ -518,7 +520,6 @@ sub intersection {
                                while(1) { 
                                    $next1 = $set1->{next}->( $arg->clone );
                                    $tmp2 = $set2->{previous}->( $set2->{next}->( $next1->clone ) );
-  #warn "intersection arg ".$arg->datetime." 1 ".$tmp1_next->datetime." 2 ".$tmp2_next->datetime." ";
                                    return $next1 if $next1 == $tmp2;
                             
 
@@ -551,7 +552,6 @@ sub intersection {
                                    return if $iterate++ == $max_iterate;
                                }
                            },
-                  # ( $span ? ( span => $set1->{span}->intersection( $set2->{span} ) ) : () )
                );
     }
 
@@ -597,6 +597,7 @@ sub complement {
     else {
         $tmp->{set} = $set1->{set}->complement;
     }
+    bless $tmp, 'DateTime::SpanSet' unless @_;
     return $tmp;
 }
 
