@@ -2,12 +2,8 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
 
 - implement set( locale => .. ) in Span and SpanSet
 
-- implement as_list() in DT::SpanSet.pm
-
 - specify what these DT::SpanSet methods should return -
   a datetime, a span, or what - under discussion in datetime@perl.org 
-    next( $dt )
-    previous( $dt )
     current( $dt )
     closest( $dt )
 - these functions should probably accept both a dt or a span as a parameter, 
@@ -25,6 +21,7 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
 
 - functions like before(), after(), during() might be useful
   in DT::Span
+  or maybe these should be called next(), previous(), current(), closest()
 
 - tests for DT::Span and DT::SpanSet 'duration()'
 - duration() returns 'Inf' scalar - should be a DT::Duration::Infinite
