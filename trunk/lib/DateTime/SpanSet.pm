@@ -121,7 +121,19 @@ sub next {
 
     # TODO: this is fixing an error from elsewhere
     # - find out what's going on! (with "sunset.pl")
-    return undef unless defined $self->{set};
+    return undef unless ref $self->{set};
+
+    if ( @_ )
+    {
+        my $max = $_[0];
+        my $open_end = 0;
+        ( $max, $open_end ) = $max->{set}->max_a if UNIVERSAL::can( $max, 'union' );
+        my $span;
+        $span = $open_end ?
+                DateTime::Span->from_datetimes( start => $max ) :
+                DateTime::Span->from_datetimes( after => $max );
+        return $self->intersection( $span )->next;
+    }
 
     my ($head, $tail) = $self->{set}->first;
     $self->{set} = $tail;
@@ -137,7 +149,19 @@ sub next {
 sub previous {
     my ($self) = shift;
 
-    return undef unless defined $self->{set};
+    return undef unless ref $self->{set};
+
+    if ( @_ )
+    {
+        my $min = $_[0];
+        my $open_start = 0;
+        ( $min, $open_start ) = $min->{set}->min_a if UNIVERSAL::can( $min, 'union' );
+        my $span;
+        $span = $open_start ?
+                DateTime::Span->from_datetimes( end => $min ) :
+                DateTime::Span->from_datetimes( before => $min );
+        return $self->intersection( $span )->previous;
+    }
 
     my ($head, $tail) = $self->{set}->last;
     $self->{set} = $tail;
@@ -371,6 +395,19 @@ Also available as C<size()>.
 =item * span
 
 The total span of the set, as a C<DateTime::Span> object.
+
+=item * previous / next 
+
+  my $span = $set->next( $dt );
+
+  my $span = $set->previous( $dt );
+
+These methods are used to find a set member relative to a given
+datetime or span.
+
+The return value may be C<undef> if there is no matching
+span in the set.
+
 
 =item * as_list
 
