@@ -9,7 +9,7 @@ my $build = Module::Build->new(
     license       => 'perl',
     requires      => {
         'DateTime'         => 0.12,
-        'Set::Infinite'    => 0.5503,
+        'Set::Infinite'    => 0.59,
         'Test::More'       => 0,
         'Params::Validate' => 0,
     },

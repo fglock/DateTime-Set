@@ -1,8 +1,13 @@
 Changes for DateTime::Set
 
-- revised documentation, some examples were rewritten.
+0.17    2004-08-17
+- bugfix: it was trying to set the time zone of an "undef" value; 
+  this has broken some DT::Event::Recurrence tests - reported by Bill Moseley
 
+0.1603  2004-07-05
+- revised documentation, some examples were rewritten.
 - deprecate "iterate" method
+- Build.PM requires Set::Infinite 0.59 - reported by Tim Muller-Seydlitz
 
 0.1602  2004-07-02
 - fixed time zone handling in the methods:

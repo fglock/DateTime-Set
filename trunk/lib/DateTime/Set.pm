@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1602';
+    $VERSION = '0.17';
 }
 
 
@@ -49,6 +49,8 @@ sub _fix_return_datetime {
 
     # TODO: set locale
 
+    return unless $dt;
+    return unless $dt_arg;
     if ( $dt_arg->can('time_zone_long_name') &&
          !( $dt_arg->time_zone_long_name eq 'floating' ) )
     {
