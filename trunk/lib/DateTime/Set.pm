@@ -6,176 +6,165 @@ package DateTime::Set;
 
 use strict;
 
+use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use Set::Infinite;
-use DateTime::Duration;
-use Params::Validate qw( validate SCALAR BOOLEAN OBJECT );
 
 use vars qw( @ISA $VERSION );
-@ISA = qw( Set::Infinite );
 
-$VERSION = '0.00_07';
+$VERSION = '0.00_10';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
-# declare our default 'leaf object' class
-### __PACKAGE__->type('DateTime');
-
-# warn about Set::Infinite methods that don't work here
-# because they use 'epoch' values internally
-#
-sub quantize { die "quantize() method is not supported. Please use create_recurrence instead." }
-sub offset   { die "offset() method is not supported. Please use add_duration() instead." }
-
-my %set =
-    ( years =>
-      { month => 1, day => 1, hour => 0, minute => 0, second => 0 },
-
-      months =>
-      { day => 1, hour => 0, minute => 0, second => 0 },
-
-      days =>
-      { hour => 0, minute => 0, second => 0 },
-
-      hours =>
-      { minute => 0, second => 0 },
-
-      minutes =>
-      { second => 0 },
+# TODO: do we really need this method?
+sub add { 
+    my ($self, $dt) = @_;
+    $dt = $dt->clone;
+    my $result = $self->{set}->iterate( 
+        sub {
+            my $set = shift;
+            my $min = $set->min;
+            $min->add_duration( $dt );
+            return $set->new( $min->clone );
+        }
     );
+    $self->{set} = $result;
+    return $self;
+}
 
-# generates simple recurrences of "months", "hours", etc.
-sub create_recurrence {
-    my $self = shift;
-    my %parm = validate( @_,
-                         { time_unit =>
-                           { type => SCALAR,
-                             regex => qr/^years|months|days|hours|minutes|seconds$/,
+# note: the constructor must clone its DateTime parameters, such that
+# the set elements become immutable
+sub new {
+    my $class = shift;
+    my %args = validate( @_,
+                         { start =>
+                           { type => OBJECT,
+                             optional => 1,
+                           },
+                           end =>
+                           { type => OBJECT,
+                             optional => 1,
+                           },
+                           recurrence =>
+                           { type => CODEREF,
+                             optional => 1,
+                           },
+                           dates => 
+                           { type => ARRAYREF,
+                             optional => 1,
                            },
                          }
                        );
-
-    # $parm{interval} = 1 unless $parm{interval};
-
-    unless (ref $self) {
-        $self = __PACKAGE__->new( NEG_INFINITY, INFINITY );
+    my $self = {};
+    if (exists $args{dates}) {
+        $self->{set} = Set::Infinite->new;
+        # warn "new: inserting @{ $args{dates} }";
+        for( @{ $args{dates} } ) {
+            # warn "new: inserting ".$_->ymd;
+            $self->{set} = $self->{set}->union( $_->clone );
+        }
     }
-    if ($self->is_too_complex ||
-        $self->min == NEG_INFINITY ||
-        $self->max == INFINITY ) {
-        return $self if $self->min == $self->max;  # it is a single inf value
-        return $self->_function( 'create_recurrence', %parm );
+    elsif (exists $args{recurrence}) {
+        # Set::Infinity->iterate() builds a "set-function" with a callback:
+        my $start = ( exists $args{start} ) ? $args{start} : NEG_INFINITY;
+        my $end =   ( exists $args{end} )   ? $args{end}   : INFINITY;
+        $self->{set} = Set::Infinite->new( $start, $end );
+        # this "sub" is a closure - $args{recurrence} won't change anymore.
+        $self->{set} = $self->{set}->iterate( 
+            sub { 
+                _recurrence( $_[0], $args{recurrence} );
+            } 
+        );
+        # new( $parm{start}->clone, INFINITY )-> .....
     }
+    else {
+        $self->{set} = Set::Infinite->new;
+    }
+    bless $self, $class;
+    return $self;
+}
 
-    my $this = $self->min;
+sub clone { 
+    bless { 
+        set => $_[0]->{set}->copy,
+        }, ref $_[0];
+}
+
+# _recurrence( &callback )
+#
+# Generates "recurrences" from a callback.
+# These recurrences are simple lists of dates.
+#
+# this is an internal callback - it is not an object method!
+#
+# The recurrence generation is based on an idea from Dave Rolsky.
+#
+sub _recurrence {
+    # warn "_recurrence args: @_";
+    my ( $self, $callback ) = @_;    
+    if ($self->min == NEG_INFINITY ||
+        $self->max == INFINITY) {
+        # warn "_recurrence called with inf argument";
+        return NEG_INFINITY if $self->min == NEG_INFINITY && $self->max == NEG_INFINITY;
+        return INFINITY if $self->min == INFINITY && $self->max == INFINITY;
+        # return an internal "_function", such that we can 
+        # backtrack and solve the problem later.
+        return $self->_function( 'iterate', 
+            sub {
+                _recurrence( $_[0], $callback );
+            }
+        );
+    }
+    my $min = $self->min->clone->subtract( seconds => 1 );
     my $max = $self->max;
-    my $duration = new DateTime::Duration( $parm{time_unit} => 1 );
-
-    # round the start time according to the time_unit
-    $this->set( %{ $set{ $parm{time_unit} } } );
-
-    # $this->set(  ) if $parm{time_unit} eq 'seconds';
-    if ($parm{time_unit} eq 'weeks') {
-        my $dow = $this->day_of_week - 1;  # 0 is monday
-        $this->subtract( days => $dow );
-        $this->set( %{ $set{weeks} } );
-    }
-
-    my $result = $self->new->no_cleanup;
-    my $prev;
+    # warn "_recurrence called with ".$min->ymd."..".$max->ymd;
+    my $result = $self->new;
     my $subset;
-    while ( $this <= $max ) {
-        #### NOTE: comment this out to enable 'full-period' semantics
-        ## $prev = $this->clone;
-        ## $this->add_duration( $duration );
-        ## $subset = $self->new( $prev, $this );
-        ## $subset = $subset->complement( $this ) unless $prev == $this; # open-end
-        #### END NOTE
-
-        # 'begin-of-period' semantics - This seems to be more like what rfc2445 expects
-        $subset = $self->new( $this, $this );  # don't use new($this) - it will clone $this just once.
-        $this->add_duration( $duration );
-
-        ## note: this wouldn't work here: $result = $result->union( $subset ); 
-        push @{$result->{list}}, $subset->{list}[0] if exists $subset->{list}[0];
-    }
-
+    do {
+        # warn " generate from ".$min->ymd;
+        $min = &$callback( $min );
+        # warn " generate got ".$min->ymd;
+        $result = $result->union( $min->clone );
+    } while ( $min <= $max );
     return $result;
 }
 
-# quantization methods must register with _quantize_span()
-#
-sub _quantize_span {
-    my $self = shift;
-    my %param = @_;
-    if ($self->{too_complex} &&
-        $self->{method} eq 'create_recurrence') {
-        my $res = $self->{parent};
-        if ($res->{too_complex}) {
-            $res = $res->_quantize_span( %param );
-            $res = $res->create_recurrence->_quantize_span( %param );
-            return $res;
-        }
-        return $self;
-    }
-    return $self->SUPER::_quantize_span( %param );
+# Set::Infinite methods
+
+sub intersection {
+    my ($set1, $set2) = @_;
+    my $class = ref($set1);
+    my $tmp = $class->new();
+    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+    $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
+    return $tmp;
 }
 
-# add_duration provides more-or-less the same functionality 
-# as Set::Infinite::offset(), without the 'epoch' limitations
-#
-sub add_duration { 
-    my ($self, %parm) = @_;
-
-    #### Uncomment this line if it is possible that 'durations' are mutable; we assume they are immutable.
-    ## $parm{$_} = $parm{$_}->clone for keys %parm;
-    ####
-
-    my $result = $self->iterate( 
-        sub {
-            my $set = shift;
-            my ($min, $open_start) = $set->min_a;
-            my ($max, $open_end)   = $set->max_a;
-            $min->add_duration( $parm{at_start} ) if exists $parm{at_start};
-            $max->add_duration( $parm{at_end} )   if exists $parm{at_end};
-            return if $min > $max;
-            my $res = $set->new( $min, $max );
-            if ( $open_start ) {
-                $res = $res->complement( $min ) unless $min == $max;  # open_start
-            }
-            if ( $open_end ) {
-                $res = $res->complement( $max ) unless $min == $max;  # open_end
-            }
-            return $res;
-        }
-    );
-    return $result;
+sub union {
+    my ($set1, $set2) = @_;
+    my $class = ref($set1);
+    my $tmp = $class->new();
+    $set2 = $class->new( dates => [ $set2 ] ) unless $set2->isa( $class );
+    $tmp->{set} = $set1->{set}->union( $set2->{set} );
+    return $tmp;
 }
 
-# the constructor must clone its DateTime parameters, so that
-# the set elements become (more-or-less) immutable
-sub new {
-    my $class = shift;
-    my @parm = @_;
-    for (0..$#parm) {
-        $parm[$_] = $parm[$_]->clone if UNIVERSAL::isa( $parm[$_], 'DateTime' );  
-    } 
-    $class->SUPER::new( @parm );
+sub min { 
+    my $tmp = $_[0]->{set}->min;
+    ref($tmp) ? $tmp->clone : $tmp; 
 }
 
-# min / max return clones, such that the program can't change
-# our set through the values returned.
-sub min {
-    my $val = $_[0]->SUPER::min;
-    return $val->clone if UNIVERSAL::isa( $val, 'DateTime' );
-    return $val;
+sub max { 
+    my $tmp = $_[0]->{set}->max;
+    ref($tmp) ? $tmp->clone : $tmp; 
 }
 
-sub max {
-    my $val = $_[0]->SUPER::max;
-    return $val->clone if UNIVERSAL::isa( $val, 'DateTime' );
-    return $val;
-}
+# unsupported Set::Infinite methods
+
+sub span { die "span() not supported - would generate a span!"; }
+sub size { die "size() not supported - would be zero!"; }
+sub offset { die "offset() not supported"; }
+sub quantize { die "quantize() not supported"; }
 
 1;
 
@@ -187,16 +176,28 @@ DateTime::Set - Date/time sets math
 
 =head1 SYNOPSIS
 
+NOTE: this is just an example of how the API will look like when
+this module is finished.
+
     use DateTime;
     use DateTime::Set;
 
     $date1 = DateTime->new( year => 2002, month => 3, day => 11 );
-    $set1 = DateTime::Set->new( $date1 );
+    $set1 = DateTime::Set->new( dates => [ $date1 ] );
     #  set1 = 2002-03-11
 
     $date2 = DateTime->new( year => 2003, month => 4, day => 12 );
-    $set2 = DateTime::Set->new( $date1, $date2 );
-    #  set2 = since 2002-03-11, until 2003-04-12
+    $set2 = DateTime::Set->new( dates => [ $date1, $date2 ] );
+    #  set2 = 2002-03-11, and 2003-04-12
+
+    # a 'monthly' recurrence:
+    $set = DateTime::Set->new( 
+        recurrence => sub {
+            $_[0]->truncate( to => 'month' )->add( months => 1 )
+        },
+        start => $date1,    # optional
+        end => $date2,      # optional
+    );
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
@@ -207,11 +208,8 @@ DateTime::Set - Date/time sets math
     if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
 
     # data extraction 
-    $date = $set1->min;           # start date
-    $date = $set1->max;           # end date
-    # disjunct sets can be split into an array of simpler sets
-    @subsets = $set1->list;
-    $date = $subsets[1]->min;
+    $date = $set1->min;           # first date of the set
+    $date = $set1->max;           # last date of the set
 
 =head1 DESCRIPTION
 
@@ -234,57 +232,38 @@ might cause strange results.
 
 =head1 METHODS
 
-All methods are inherited from Set::Infinite.
-
-Set::Infinite methods C<offset()> and C<quantize()> are disabled.
-The module will die with an error string if one of these methods are 
-called.
-
-=head2 New Methods
-
 =over 4
 
-=item * add_duration
+=item * new 
 
-NOTE: this is an experimental feature.
+Generates a new set. The set can be generated from a list of dates, or from a "recurrence" subroutine.
 
-    add_duration( at_start => $datetime_duration, 
-                  at_end =>   $datetime_duration );
+From a list of dates:
 
-This method returns a new set, which is created by adding a 
-C<DateTime::Duration> to the current datetime set.
+   $dates = DateTime::Set->new( dates => [ $dt1, $dt2, $dt3 ] );
 
+From a recurrence:
+
+    $months = DateTime::Set->new( 
+        start => $today, 
+        end => $next_year,
+        recurrence => sub { $_[0]->truncate( to => 'month' )->add( months => 1 ) }, 
+    );
+
+The start and end parameters are optional.
+
+=item * add
+
+    $set->add( year => 1 );
+
+This method adds a value to the current datetime set.
 It moves the whole set values ahead or back in time.
-It will affect the start, end, or both ends of the set intervals.
 
 Example:
 
-    $one_year = DateTime::Duration( years => 1 );
-    $meetings_2004 = $meetings_2003->add_duration( 
-         at_start => $one_year,
-         at_end   => $one_year );
+    $meetings_2004 = $meetings_2003->add( year => 1 );
 
-=item * create_recurrence 
-
-NOTE: this is an experimental feature.
-
-Generates recurrence intervals of "years", "months", "weeks", "days",
-"hours", "minutes", or "seconds".
-
-    $months = DateTime::Set->create_recurrence( time_unit => 'months' );
-
-Recurrences can be filtered and combined, in order to build more
-complex recurrences.
-
-Example:
-
-    $weeks = DateTime::Set->create_recurrence( time_unit => 'weeks' );
-    $one_day =  DateTime::Duration( days => 1 );
-    $two_days = DateTime::Duration( days => 2 );
-
-    $tuesdays = $weeks->add_duration(
-         at_start => $one_day,           # +24h from week start
-         at_end   => $two_days );        # +48h from week start
+See C<DateTime::add()> for full syntax description.
 
 =back
 

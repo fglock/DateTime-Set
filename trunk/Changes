@@ -1,17 +1,20 @@
-0.07
+Changes for DateTime::Set
 
+0.10
+- union, intersection
+
+0.09
+- experimental code to generate recurrence from a simple callback
+
+0.07
 - added experimental method create_recurrence()
 
 0.06
-
 - added experimental method add_duration()
 
 0.05
-
 - improved SYNOPSIS
-
 - added 'immutability' tests
-
 - new() will not try to clone non-DateTime parameters (such as the
   Infinity value)
 
