@@ -85,6 +85,9 @@ BEGIN {
 sub _recurrence { 
     my $set = shift;
     my ( $callback_next, $callback_previous, $delta ) = @_;
+
+    # warn "reusing delta" if defined $delta ;
+
     if ( $#{ $set->{list} } != 0 || $set->is_too_complex )
     {
         return $set->iterate( 
@@ -132,22 +135,22 @@ sub _recurrence {
             
             if ( $delta ) 
             {
-                $$delta += $min2 - $min1;
+                $delta->{delta} += $min2 - $min1;
             }
             else
             {
-                $delta = \( $min2 - $min1 );
+                $delta->{delta} = $min2 - $min1;
             }
             $min1 = $min2;
           }
-          $$delta *= 4;
+          $delta->{delta} *= 4;
         }
         else
         {
             # warn "had delta";
         }
 
-        if ( $max < $min + $$delta ) 
+        if ( $max < $min + $delta->{delta} ) 
         {
 
           for ( 1 .. 200 ) 

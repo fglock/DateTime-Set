@@ -142,5 +142,28 @@ is( $res, '1810-11-01',
     "intersection at the recurrence" );
 }
 
+# big set - "START+END" at recurrence
+{
+my $set = DateTime::SpanSet->from_spans(
+    spans => [
+        DateTime::Span->from_datetimes(
+            start => new DateTime( year => '1800', month => '08', day => '22' ),
+            end   => new DateTime( year => '2000', month => '08', day => '22' ),
+        ),
+        DateTime::Span->from_datetimes(
+            start => new DateTime( year => '2200', month => '08', day => '22' ),
+            end   => new DateTime( year => '2400', month => '08', day => '22' ),
+        ),
+    ],
+);
+my $months = DateTime::Set->from_recurrence(
+    recurrence => $month_callback,
+);
+my $bounded = $months->intersection( $set );
+
+  # TODO: write the tests :)
+
+}
+
 1;
 
