@@ -325,6 +325,8 @@ ranging from -Infinity to Infinity.
 Returns true if the set is an unbounded recurrence, 
 ranging from -Infinity to Infinity.
 
+=back
+
 =head1 CONSTANTS
 
 =over 4
