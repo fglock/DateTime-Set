@@ -5,17 +5,32 @@
 package DateTime::Set;
 
 use strict;
-
+use Carp;
 use Set::Infinite;
 
 use vars qw( @ISA $VERSION );
 @ISA = qw( Set::Infinite );
 
-$VERSION = '0.00_03';
+$VERSION = '0.00_04';
 
 # declare our default 'leaf object' class
 __PACKAGE__->type('DateTime');
 
+# warn about Set::Infinite methods that don't work here
+# because they use 'epoch' values internally
+sub quantize { die "quantize() method is not implemented." }
+sub offset   { die "offset() method is not implemented." }
+
+# the constructor must clone its parameters, so that
+# the set elements become (more-or-less) immutable
+sub new {
+    my $class = shift;
+    my @parm = @_;
+    for (0..$#parm) {
+        $parm[$_] = $parm[$_]->clone;  
+    } 
+    $class->SUPER::new( @parm );
+}
 
 1;
 
@@ -53,9 +68,11 @@ All set elements must be C<DateTime>.
 
 A DateTime set may not contain scalars.
 
+Set::Infinite methods C<offset()> and C<quantize()> are disabled.
+
 =head1 SUPPORT
 
-Support will be offered through the C<datetime@perl.org> mailing list.
+Support is offered through the C<datetime@perl.org> mailing list.
 
 Please report bugs using rt.cpan.org
 

@@ -1,7 +1,6 @@
 
-- redefine Set::Infinite::Arithmetic hashes, to use DateTime
+- Redefine Set::Infinite::Arithmetic hashes, to use DateTime
   functions instead of epoch-related internals.
-
-- modify new() to use clone() in the parameters,
-  such that they become immutable.
+  Actually, it might be better to redo the implementations
+  of offset() and quantize()
 

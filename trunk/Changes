@@ -1,3 +1,15 @@
+0.04
+
+- The program will die with an error message, 
+  if one tries to use offset() or quantize() methods
+  These methods might come back in a later version.
+
+- new() clones its parameters.
+  This means the parameters don't have to be immutable
+
+- new() will give an error message if we try to use a scalar parameter
+  instead of a DateTime
+
 0.03
 
 - Uses Set::Infinite as base class, instead of Date::Set::Timezone
