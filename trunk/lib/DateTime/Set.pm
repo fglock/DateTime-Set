@@ -126,75 +126,92 @@ sub clone {
 #
 sub _recurrence_callback {
     # warn "_recurrence args: @_";
-    # note: $self is a Set::Infinite object
-    my ( $self, $callback ) = @_;    
+    # note: $set is a Set::Infinite object
+    my ( $set, $callback ) = @_;    
 
     # test for the special case when we have an infinite recurrence
 
-    if ($self->min == NEG_INFINITY ||
-        $self->max == INFINITY) {
-        # warn "_recurrence called with inf argument";
-        return NEG_INFINITY if $self->min == NEG_INFINITY && $self->max == NEG_INFINITY;
-        return INFINITY if $self->min == INFINITY && $self->max == INFINITY;
-        # return an internal "_function", such that we can 
-        # backtrack and solve the equation later.
-        $self = $self->copy;
-        my $func = $self->_function( 'iterate', 
-            sub {
-                _recurrence_callback( $_[0], $callback );
-            }
-        );
+    if ($set->min == NEG_INFINITY ||
+        $set->max == INFINITY) {
 
-        # -- begin hack
-
-        # This code will be removed, as soon as Set::Infinite can deal directly with this type of set generation.
-        # Since this is a Set::Infinite custom function, the iterator will need some help.
-        # We are setting up the first() cache directly,
-        # because Set::Infinite has no hint of how to do it.
-
-        if ($self->min == INFINITY || $self->min == NEG_INFINITY) {
-            # warn "RECURR: start in ".$self->min;
-            $func->{first} = [ $self->new( $self->min ), $self ];
-        }
-        else {
-            my $min = $func->min;
-            my $next = &$callback($min->clone);
-            # warn "RECURR: preparing first: ".$min->ymd." ; ".$next->ymd;
-            my $next_set = $self->intersection( $next->clone, INFINITY );
-            # warn "next_set min is ".$next_set->min->ymd;
-            my @first = ( 
-                $self->new( $min->clone ), 
-                $next_set->_function( 'iterate',
-                    sub {
-                        _recurrence_callback( $_[0], $callback );
-                    } ) );
-            # warn "RECURR: preparing first: $min ; $next; got @first";
-            $func->{first} = \@first;
-        }
-        # -- end hack
-
-        # warn "func parent is ". $func->{first}[1]{parent}{list}[0]{a}->ymd;
-        return $func;
+        return _setup_recurrence_with_infinity( $set, $callback );
     }
+    else {
+
+        return _setup_recurrence_without_infinity( $set, $callback );
+    }
+}
+
+sub _setup_recurrence_with_infinity {
+    my ( $set, $callback ) = @_;
+
+    # warn "_recurrence called with inf argument";
+    return NEG_INFINITY if $set->min == NEG_INFINITY && $set->max == NEG_INFINITY;
+    return INFINITY if $set->min == INFINITY && $set->max == INFINITY;
+    # return an internal "_function", such that we can 
+    # backtrack and solve the equation later.
+    $set = $set->copy;
+    my $func = $set->_function( 'iterate', 
+        sub {
+            _recurrence_callback( $_[0], $callback );
+        }
+    );
+
+    # -- begin hack
+
+    # This code will be removed, as soon as Set::Infinite can deal directly with this type of set generation.
+    # Since this is a Set::Infinite custom function, the iterator will need some help.
+    # We are setting up the first() cache directly,
+    # because Set::Infinite has no hint of how to do it.
+
+    if ($set->min == INFINITY || $set->min == NEG_INFINITY) {
+        # warn "RECURR: start in ".$set->min;
+        $func->{first} = [ $set->new( $set->min ), $set ];
+    }
+    else {
+        my $min = $func->min;
+        my $next = &$callback($min->clone);
+        # warn "RECURR: preparing first: ".$min->ymd." ; ".$next->ymd;
+        my $next_set = $set->intersection( $next->clone, INFINITY );
+        # warn "next_set min is ".$next_set->min->ymd;
+        my @first = ( 
+            $set->new( $min->clone ), 
+            $next_set->_function( 'iterate',
+                sub {
+                    _recurrence_callback( $_[0], $callback );
+                } ) );
+        # warn "RECURR: preparing first: $min ; $next; got @first";
+        $func->{first} = \@first;
+    }
+    # -- end hack
+
+    # warn "func parent is ". $func->{first}[1]{parent}{list}[0]{a}->ymd;
+    return $func;
+}
+
+sub _setup_recurrence_without_infinity {
+    my ( $set, $callback ) = @_;
 
     # this is a finite recurrence - generate it.
     # warn "RECURR: FINITE recurrence";
-    my $min = $self->min;
+    my $min = $set->min;
     return unless defined $min;
+
     $min = $min->clone->subtract( seconds => 1 );
-    my $max = $self->max;
+
+    my $max = $set->max;
     # warn "_recurrence_callback called with ".$min->ymd."..".$max->ymd;
-    my $result = $self->new;
-    my $subset;
+    my $result = $set->new;
+
     do {
         # warn " generate from ".$min->ymd;
         $min = &$callback( $min );
         # warn " generate got ".$min->ymd;
         $result = $result->union( $min->clone );
     } while ( $min <= $max );
+
     return $result;
 }
-
 
 # iterator() doesn't do much yet.
 # This might change as the API gets more complex.
