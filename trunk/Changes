@@ -1,70 +1,70 @@
 Changes for DateTime::Set
 
-0.21
+0.00_21
 
 - Many doc tweaks.  Dave Rolsky
 - DateTime::Span->duration and DateTime::SpanSet->duration now return
 infinity instead of undef for infinite spans.  Dave Rolsky
 - Added DateTime::SpanSet->empty_set.  Dave Rolsky
 
-0.20
+0.00_20
 - Docs for DateTime::SpanSet API 
   (not implemented)
 
-0.19
+0.00_19
 - DateTime::Span API: 
   from_datetime_and_duration, from_datetimes
 
-0.18
+0.00_18
 - changes docs, changed API
   from_recurrence, from_datetimes, new()
 - as_list
 
-0.17
+0.00_17
 - previous() method (quite untested)
 
-0.16
+0.00_16
 - small API changes
 
-0.15
+0.00_15
 - revised docs, from Dave Rolsky
 - small bugfix in creating open spans
 
-0.14
+0.00_14
 - added DateTime::Span and DateTime::SpanSet
 - put "..." to mark where we need more docs
 - DateTime::Set and DateTime::Span API look ok.
 
-0.13
+0.00_13
 - added tests for set operations with recurrences/add
 
-0.12
+0.00_12
 - iterator passes all tests
 - the API is complete, as described in SYNOPSIS
 - small fix in add() syntax; accepts a duration=> parameter
 
-0.11
+0.00_11
 - iterator, next
 
-0.10
+0.00_10
 - union, intersection
 
-0.09
+0.00_09
 - experimental code to generate recurrence from a simple callback
 
-0.07
+0.00_07
 - added experimental method create_recurrence()
 
-0.06
+0.00_06
 - added experimental method add_duration()
 
-0.05
+0.00_05
 - improved SYNOPSIS
 - added 'immutability' tests
 - new() will not try to clone non-DateTime parameters (such as the
   Infinity value)
 
-0.04
+0.00_04
 
 - The program will die with an error message, 
   if one tries to use offset() or quantize() methods
@@ -76,7 +76,7 @@ infinity instead of undef for infinite spans.  Dave Rolsky
 - new() will give an error message if we try to use a scalar parameter
   instead of a DateTime
 
-0.03
+0.00_03
 
 - Uses Set::Infinite as base class, instead of Date::Set::Timezone
   This means some methods just disappeared, like event() and exclude().
