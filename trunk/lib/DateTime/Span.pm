@@ -6,6 +6,9 @@ package DateTime::Span;
 
 use strict;
 
+use DateTime::Set;
+use DateTime::SpanSet;
+
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use Set::Infinite '0.44';
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
