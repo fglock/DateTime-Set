@@ -193,7 +193,7 @@ sub union {
 sub complement {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    my $tmp = $class->new();
+    my $tmp = {};   # $class->new;
     if (defined $set2) {
         $set2 = DateTime::Set->new( dates => [ $set2 ] ) unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
