@@ -1,5 +1,12 @@
 Changes for DateTime::Set
 
+0.21
+
+- Many doc tweaks.  Dave Rolsky
+- DateTime::Span->duration and DateTime::SpanSet->duration now return
+infinity instead of undef for infinite spans.  Dave Rolsky
+- Added DateTime::SpanSet->empty_set.  Dave Rolsky
+
 0.20
 - Docs for DateTime::SpanSet API 
   (not implemented)

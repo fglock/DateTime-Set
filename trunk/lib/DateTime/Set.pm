@@ -500,7 +500,7 @@ __END__
 
 =head1 NAME
 
-DateTime::Set - Date/time sets math
+DateTime::Set - Datetime sets and set math
 
 =head1 SYNOPSIS
 
@@ -551,11 +551,11 @@ people in our family.
 
 The second type of set that it can handle is one based on the idea of
 a recurrence, such as "every Wednesday", or "noon on the 15th day of
-every month".  This type of set can be have a fixed start and end
-datetime, but neither is required.  So our "every Wednesday set" could
-be "every Wednesday from the beginning of time until the end of time",
-or "every Wednesday after 2003-03-05 until the end of time", or "every
-Wednesday between 2003-03-05 and 2004-01-07".
+every month".  This type of set can have fixed starting and ending
+datetimes, but neither is required.  So our "every Wednesday set"
+could be "every Wednesday from the beginning of time until the end of
+time", or "every Wednesday after 2003-03-05 until the end of time", or
+"every Wednesday between 2003-03-05 and 2004-01-07".
 
 =head1 METHODS
 
@@ -580,10 +580,9 @@ Creates a new set specified via a "recurrence" callback.
 
 The C<span> parameter is optional. It must be a C<DateTime::Span> object.
 
-The span can also be specified using 
-C<begin> / C<after> and C<end> / C<before> DateTime objects, 
-as in the C<DateTime::Span> constructor. 
-In this case, if there is a C<span> parameter it will be ignored.
+The span can also be specified using C<begin> / C<after> and C<end> /
+C<before> parameters, as in the C<DateTime::Span> constructor.  In
+this case, if there is a C<span> parameter it will be ignored.
 
     $months = DateTime::Set->from_recurrence(
         after => $dt_now,
@@ -608,8 +607,7 @@ with the specified duration added to every element of the set.
 
     $meetings_2004 = $meetings_2003->add( years => 1 );
 
-This method creates a new C<DateTime::Duration> object based on the
-parameters given and passes it to the C<add_duration()> method.
+This method is syntactic sugar around the C<add_duration()> method.
 
 =item * subtract_duration( $duration_object )
 
@@ -625,13 +623,14 @@ method.
 =item * min / max
 
 The first and last dates in the set.  These methods may return
-C<undef> if the set is empty.
+C<undef> if the set is empty.  It is also possible that these methods
+may return a scalar containing infinity or negative infinity.
 
 =item * span
 
 Returns the total span of the set, as a C<DateTime::Span> object.
 
-=item * iterator / next
+=item * iterator / next / previous
 
 These methods can be used to iterate over the dates in a set.
 
@@ -657,18 +656,19 @@ return value for empty sets!
 
 =item * union / intersection / complement
 
-Set operations.
+Set operations may be performed not only with C<DateTime::Set>
+objects, but also with C<DateTime::Span> and C<DateTime::SpanSet>
+objects.
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
     $set = $set1->intersection( $set2 );  # like "AND", "while"
     $set = $set1->complement;             # like "NOT", "negate", "invert"
 
-The C<union> 
-with a C<DateTime::Span> or a C<DateTime::SpanSet> object
-returns a C<DateTime::SpanSet> object.
+The C<union> of a C<DateTime::Set> with a C<DateTime::Span> or a
+C<DateTime::SpanSet> object returns a C<DateTime::SpanSet> object.
 
-All other operations always return a C<DateTime::Set>.
+All other operations will always return a C<DateTime::Set>.
 
 =item * intersects / contains
 
@@ -704,10 +704,8 @@ included with this module.
 
 Set::Infinite
 
-L<http://datetime.perl.org>.
-
 For details on the Perl DateTime Suite project please see
-L<http://perl-date-time.sf.net>.
+L<http://datetime.perl.org>.
 
 =cut
 

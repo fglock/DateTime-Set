@@ -232,7 +232,8 @@ sub end_is_closed { $_[0]->end_is_open ? 0 : 1 }
 # span == $self
 sub span { @_ }
 
-sub duration { return $_[0]->{set}->size; }
+sub duration { my $dur = $_[0]->{set}->size; defined $dur ? $dur : INFINITY }
+*size = \&duration;
 
 # unsupported Set::Infinite methods
 
@@ -245,7 +246,7 @@ __END__
 
 =head1 NAME
 
-DateTime::Span - Date/time spans
+DateTime::Span - Datetime spans
 
 =head1 SYNOPSIS
 
@@ -279,7 +280,7 @@ DateTime::Span is a module for date/time spans or time-ranges.
 
 =item * from_datetimes
 
-Creates a new span. 
+Creates a new span based on a starting and ending datetime.
 
 A 'closed' span includes its end-dates:
 
@@ -294,7 +295,7 @@ A 'semi-open' span includes one of its end-dates:
    $dates = DateTime::Set->new( start => $dt1, before => $dt2 );
    $dates = DateTime::Set->new( after => $dt1, end => $dt2 );
 
-A span might have just a begin date, or just an end date. 
+A span might have just a beginning date, or just an ending date.
 These spans end, or start, in an imaginary 'forever' date:
 
    $dates = DateTime::Set->new( start => $dt1 );
@@ -319,26 +320,31 @@ The new "end of the set" is I<open> by default.
 
 =item * duration
 
-Return a DateTime::Duration object that represents the length of the
-span.
+The total size of the set, as a C<DateTime::Duration> object, or as a
+scalar containing infinity.
 
-This is the sum of the durations of all spans.
+Also available as C<size()>.
 
 =item * start / end
 
-First or last dates in the span.
+First or last dates in the span.  It is possible that the return value
+from these methods may be a scalar containing either negative infinity
+or positive infinity.
 
 =item * start_is_closed / end_is_closed
 
-Return true if the first or last dates belong to the span ( begin <= x <= end ).
+Returns true if the first or last dates belong to the span ( begin <= x <= end ).
 
 =item * start_is_open / end_is_open
 
-Return true if the first or last dates are out of the span ( begin < x < end ).
+Returns true if the first or last dates are excluded from the span ( begin < x < end ).
 
 =item * union / intersection / complement
 
-These set operations result in a DateTime::SpanSet.
+Set operations may be performed not only with C<DateTime::Span>
+objects, but also with C<DateTime::Set> and C<DateTime::SpanSet>
+objects.  These set operations always return a C<DateTime::SpanSet>
+object.
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
@@ -347,7 +353,7 @@ These set operations result in a DateTime::SpanSet.
 
 =item intersects / contains
 
-These set functions result in a boolean value.
+These set functions return a boolean value.
 
     if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
     if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
@@ -379,10 +385,8 @@ included with this module.
 
 Set::Infinite
 
-L<http://datetime.perl.org>.
-
 For details on the Perl DateTime Suite project please see
-L<http://perl-date-time.sf.net>.
+L<http://datetime.perl.org>.
 
 =cut
 

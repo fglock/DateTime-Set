@@ -39,6 +39,12 @@ sub from_sets {
     die "from_sets() not implemented yet";
 }
 
+sub empty_set {
+    my $class = shift;
+
+    return bless { set => Set::Infinite->new }, $class;
+}
+
 sub clone { 
     bless { 
         set => $_[0]->{set}->copy,
@@ -137,8 +143,9 @@ sub span {
   return $set;
 }
 
-# returns a DateTime
-sub size { return $_[0]->{set}->size }
+# returns a DateTime::Duration
+sub duration { my $dur = $_[0]->{set}->size; defined $dur ? $dur : INFINITY }
+*size = \&duration;
 
 # unsupported Set::Infinite methods
 
@@ -221,15 +228,22 @@ defines a span like C<(-inf, $dt)>.
 If a starting date comes without an end date after it, then it defines
 a span like C<[$dt, inf)>.
 
+=item * empty_set
+
+Creates a new empty set.
+
 =item * min / max
 
-First or last dates in the set.
+First or last dates in the set.  These methods may return C<undef> if
+the set is empty.  It is also possible that these methods may return a
+scalar containing infinity or negative infinity.
 
-=item * size
+=item * duration
 
-The total size of the set, as a C<DateTime::Duration> object.
+The total size of the set, as a C<DateTime::Duration> object, or as a
+scalar containing infinity.
 
-This is the sum of the durations of all spans.
+Also available as C<size()>.
 
 =item * span
 
@@ -237,7 +251,9 @@ The total span of the set, as a C<DateTime::Span> object.
 
 =item * union / intersection / complement
 
-These set operations return the resulting SpanSet.
+Set operations may be performed not only with C<DateTime::SpanSet>
+objects, but also with C<DateTime::Set> and C<DateTime::Span> objects.
+These set operations always return a C<DateTime::SpanSet> object.
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
     $set = $set1->complement( $set2 );    # like "delete", "remove"
@@ -267,7 +283,6 @@ iterator.  Obviously, if a span set is specified as a recurrence and
 has no fixed end, then it may never stop returning spans.  User
 beware!
 
-
 =head1 SUPPORT
 
 Support is offered through the C<datetime@perl.org> mailing list.
@@ -293,10 +308,8 @@ included with this module.
 
 Set::Infinite
 
-L<http://datetime.perl.org>.
-
 For details on the Perl DateTime Suite project please see
-L<http://perl-date-time.sf.net>.
+L<http://datetime.perl.org>.
 
 =cut
 
