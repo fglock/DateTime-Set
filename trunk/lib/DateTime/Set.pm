@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1401';
+    $VERSION = '0.1402';
 }
 
 sub iterate {
@@ -30,7 +30,7 @@ sub iterate {
     $self;
 }
 
-sub add { shift->add_duration( DateTime::Duration->new(@_) ) }
+sub add { return shift->add_duration( DateTime::Duration->new(@_) ) }
 
 sub subtract { return shift->subtract_duration( DateTime::Duration->new(@_) ) }
 
@@ -39,14 +39,14 @@ sub subtract_duration { return $_[0]->add_duration( $_[1]->inverse ) }
 sub add_duration {
     my ( $self, $dur ) = @_;
     $dur = $dur->clone;  # $dur must be "immutable"
-    $self->iterate(
+    return $self->iterate(
         sub { $_[0]->add_duration( $dur ) }
     );
 }
 
 sub set_time_zone {
     my ( $self, $tz ) = @_;
-    $self->iterate( 
+    return $self->iterate( 
         sub { $_[0]->set_time_zone( $tz ) }
     );
 }
@@ -58,7 +58,7 @@ sub set {
                                        default => undef },
                          }
                        );
-    $self->iterate( 
+    return $self->iterate( 
         sub { $_[0]->set( %args ) }
     );
 }
@@ -694,6 +694,18 @@ In this case, both 'next' and 'previous' callbacks must be defined:
             $_[0]->subtract( months => 1 ) if $_[0] == $param;
             return $_[0] if $_[0] >= $dt;
             return DateTime::Infinite::Past->new;
+        },
+    );
+
+Bounded recurrences are is easier to write using span parameters:
+
+    # "monthly from $dt until forever"
+
+    $months = DateTime::Set->from_recurrence(
+        start => $dt,
+        recurrence => sub {
+            return $_[0] if $_[0]->is_infinite;
+            return $_[0]->truncate( to => 'month' )->add( months => 1 );
         },
     );
 

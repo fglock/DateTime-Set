@@ -98,7 +98,7 @@ my $month_callback = sub {
     ok( $res eq '1810-09-01',
         "min() - got $res" );
 
-diag( " after " . $t1->datetime );
+    # diag( " after " . $t1->datetime );
 
     $res = $months->clone->add_duration( $dur )
            ->intersection(

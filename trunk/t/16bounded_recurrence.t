@@ -3,30 +3,21 @@
 use strict;
 
 use Test::More;
-plan tests => 13;
+plan tests => 17;
 
 use DateTime;
 use DateTime::Duration;
 use DateTime::Set;
 use DateTime::Infinite;
-# use warnings;
-
-#======================================================================
-# recurrence
-#====================================================================== 
-
-use constant INFINITY     =>       100 ** 100 ** 100 ;
-use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 my $res;
 
 my $t0 = new DateTime( year => '1810', month => '05', day => '01' );
 my $t1 = new DateTime( year => '1810', month => '08', day => '01' );
 my $t2 = new DateTime( year => '1810', month => '11', day => '01' );
-my $s1 = DateTime::Set->from_datetimes( dates => [ $t1, $t2 ] );
 
 {
-    diag( "monthly from 1810-08-01 until infinity" );
+    # diag( "monthly from 1810-08-01 until infinity" );
 
     my $_next_month = sub {
             # warn "next of ". $_[0]->datetime;
@@ -44,10 +35,10 @@ my $s1 = DateTime::Set->from_datetimes( dates => [ $t1, $t2 ] );
             return DateTime::Infinite::Past->new;
         };
 
-my $months = DateTime::Set->from_recurrence(
-    next =>     $_next_month,
-    previous => $_previous_month,
-);
+    my $months = DateTime::Set->from_recurrence(
+        next =>     $_next_month,
+        previous => $_previous_month,
+    );
 
     # contains datetime, semi-bounded set
 
@@ -60,19 +51,18 @@ my $months = DateTime::Set->from_recurrence(
     is( $months->intersects( $t2 ), 1, "intersects datetime" );
 
 
-$res = $months->min;
-$res = $res->ymd if ref($res);
-is( $res, '1810-08-01', 
-    "min()" );
-$res = $months->max;
-# $res = $res->ymd if ref($res);
-is( ref($res), 'DateTime::Infinite::Future',
-    "max()" );
+    $res = $months->min;
+    $res = $res->ymd if ref($res);
+    is( $res, '1810-08-01', 
+        "min()" );
+    $res = $months->max;
+    is( ref($res), 'DateTime::Infinite::Future',
+        "max()" );
 
 }
 
 {
-    diag( "monthly from infinity until 1810-08-01" );
+    # diag( "monthly from infinity until 1810-08-01" );
 
     my $_next_month = sub {
             # warn "next of ". $_[0]->datetime;
@@ -94,20 +84,20 @@ is( ref($res), 'DateTime::Infinite::Future',
             return $_[0];
         };
 
-my $months = DateTime::Set->from_recurrence(
-    next =>     $_next_month,
-    previous => $_previous_month,
-);
+    my $months = DateTime::Set->from_recurrence(
+        next =>     $_next_month,
+        previous => $_previous_month,
+    );
 
-$res = $months->min;
-# $res = $res->ymd if ref($res);
-is( ref($res), 'DateTime::Infinite::Past',
-    "min()" );
+    $res = $months->min;
+    # $res = $res->ymd if ref($res);
+    is( ref($res), 'DateTime::Infinite::Past',
+        "min()" );
 
-$res = $months->max;
-$res = $res->ymd if ref($res);
-is( $res, '1810-08-01',   
-    "max()" );
+    $res = $months->max;
+    $res = $res->ymd if ref($res);
+    is( $res, '1810-08-01',   
+        "max()" );
 
     is( $months->count, undef, "count" );
 
@@ -115,7 +105,7 @@ is( $res, '1810-08-01',
 
 
 {
-    diag( "monthly from 1810-08-01 until 1810-11-01" );
+    # diag( "monthly from 1810-08-01 until 1810-11-01" );
 
     my $_next_month = sub {
             # warn "next of ". $_[0]->datetime;
@@ -135,22 +125,59 @@ is( $res, '1810-08-01',
             return $t2->clone;
         };
 
-my $months = DateTime::Set->from_recurrence(
-    next =>     $_next_month,
-    previous => $_previous_month,
-);
+    my $months = DateTime::Set->from_recurrence(
+        next =>     $_next_month,
+        previous => $_previous_month,
+    );
 
-$res = $months->min;
-$res = $res->ymd if ref($res);
-is( $res, '1810-08-01',
-    "min()" );
+    $res = $months->min;
+    $res = $res->ymd if ref($res);
+    is( $res, '1810-08-01',
+        "min()" );
 
-$res = $months->max;
-$res = $res->ymd if ref($res);
-is( $res, '1810-11-01',
-    "max()" );
+    $res = $months->max;
+    $res = $res->ymd if ref($res);
+    is( $res, '1810-11-01',
+        "max()" );
+
+    is( $months->count, 4, "count" );
 
 }
+
+
+{
+    # diag( "lists and recurrences are interchangeable" );
+
+    my $set = DateTime::Set->from_datetimes(
+        dates => [ $t0, $t1, $t2 ]
+    );
+
+
+    my $months = DateTime::Set->from_recurrence(
+        next =>  sub{ 
+            my $dt = $set->next( $_[0] ); 
+            defined $dt ? $dt : DateTime::Infinite::Future->new;
+        },
+        previous => sub{ 
+            my $dt = $set->previous( $_[0] ); 
+            defined $dt ? $dt : DateTime::Infinite::Past->new;
+        },
+    );
+
+    $res = $months->min;
+    $res = $res->ymd if ref($res);
+    is( $res , '1810-05-01',
+        "min()" );
+
+    $res = $months->max;
+    $res = $res->ymd if ref($res);
+    is( $res, '1810-11-01',   
+        "max()" );
+
+    is( $months->count, 3, "count" );
+
+}
+
 
 1;
 
