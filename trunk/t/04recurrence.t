@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 10;
+plan tests => 22;
 
 use DateTime;
 use DateTime::Duration;
@@ -31,11 +31,41 @@ my $month_callback = sub {
             return $_[0];
         };
 
+my $months = DateTime::Set->from_recurrence(
+    recurrence => $month_callback,
+);
+
+# contains datetime, unbounded set
+{
+    my $t0 = $t2->clone->truncate( to => 'month' );
+    is( $months->contains( $t1 ), 0, "does not contain datetime" );
+    is( $months->contains( $t1, $t0 ), 0, "does not contain datetime list" );
+    is( $months->contains( $t0 ), 1, "contains datetime" );
+
+    is( $months->intersects( $t1 ), 0, "does not intersect datetime" );
+    is( $months->intersects( $t1, $t0 ), 1, "intersects datetime list" );
+    is( $months->intersects( $t0 ), 1, "intersects datetime" );
+}
+
 # "START"
-my $months = DateTime::Set->from_recurrence( 
+
+$months = DateTime::Set->from_recurrence( 
     recurrence => $month_callback, 
     start => $t1,   # 1810-08-22
 );
+
+# contains datetime, semi-bounded set
+{
+    my $t0 = $t2->clone->truncate( to => 'month' );
+    is( $months->contains( $t1 ), 0, "does not contain datetime" );
+    is( $months->contains( $t1, $t0 ), 0, "does not contain datetime list" );
+    is( $months->contains( $t0 ), 1, "contains datetime" );
+
+    is( $months->intersects( $t1 ), 0, "does not intersect datetime" );
+    is( $months->intersects( $t1, $t0 ), 1, "intersects datetime list" );
+    is( $months->intersects( $t0 ), 1, "intersects datetime" );
+}
+
 $res = $months->min;
 $res = $res->ymd if ref($res);
 is( $res, '1810-09-01', 

@@ -157,7 +157,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.12';
+    $VERSION = '0.1201';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
 
@@ -199,6 +199,7 @@ sub set_time_zone {
 
     ### this code enables 'subroutine method' behaviour
     $self->{set} = $result;
+    undef $self->{next};
     return $self;
 }
 
@@ -596,16 +597,36 @@ sub intersection {
 sub intersects {
     my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
-    $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
-        unless $set2->can( 'union' );
+    unless ( $set2->can( 'union' ) )
+    {
+        if ( $set1->{next} )
+        {
+            for ( $set2, @_ )
+            {
+                return 1 if $set1->{current}->( $_ ) == $_;
+            }
+            return 0;
+        }
+        $set2 = $class->from_datetimes( dates => [ $set2, @_ ] )
+    }
     return $set1->{set}->intersects( $set2->{set} );
 }
 
 sub contains {
     my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
-    $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
-        unless $set2->can( 'union' );
+    unless ( $set2->can( 'union' ) )
+    {
+        if ( $set1->{next} )
+        {
+            for ( $set2, @_ ) 
+            {
+                return 0 unless $set1->{current}->( $_ ) == $_;
+            }
+            return 1;
+        }
+        $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
+    }
     return $set1->{set}->contains( $set2->{set} );
 }
 
@@ -630,7 +651,7 @@ sub union {
                   previous => sub {
                                my $previous1 = $set1->{previous}->( $_[0] );
                                my $previous2 = $set2->{previous}->( $_[0] ); 
-                               return $previous1 > $previous2 ? $previous1 : $previous2;;
+                               return $previous1 > $previous2 ? $previous1 : $previous2;
                            },
                );
     }

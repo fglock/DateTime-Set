@@ -1,6 +1,10 @@
 Changes for DateTime::Set
 
-- recurrence constructor adds '->clone' to recurrence function 
+- fixed set_time_zone: was not clearing 'next' upon return.
+
+0.1201  2003-09-24
+- optimized contains() and intersects() when arg is a datetime
+- recurrence constructor always adds '->clone' to recurrence function 
 - refactored _recurrence method;
   first/last of recurrences are calculated 'on demand'
 - requires Set::Infinite 0.5305
