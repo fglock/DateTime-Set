@@ -350,13 +350,7 @@ sub next {
             return $self->{next}->( $_[0]->clone );
         }
         else {
-            # TODO: this should work! gives an error in
-            #       DateTime::Event::Recurrence !!
-            # my $span = new DateTime::Span( after => $_[0] );
-
-            my $tmp = $_[0]->clone->add( nanoseconds => 1 );
-            my $span = new DateTime::Span( start => $tmp );
- 
+            my $span = new DateTime::Span( after => $_[0] );
             return $self->intersection( $span )->next;
         }
     }
