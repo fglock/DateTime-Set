@@ -13,7 +13,7 @@ $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( $VERSION );
 
-$VERSION = '0.00_22';
+$VERSION = '0.02';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -91,11 +91,15 @@ sub from_recurrence {
         unless exists $param{span}->{set};
     my $self = {};
     if (exists $param{next}) {
-        $self->{set} = _recurrence_callback( $param{span}->{set}, $param{next} );  
+        $self->{next} = $param{next};
+        $self->{previous} = $param{previous} if exists $param{previous};
+
+        $self->{set} = _recurrence_callback( 
+            $param{span}->{set}, $param{next}, $param{previous} );
         bless $self, $class;
     }
     elsif (exists $param{previous}) {
-        die '"previous =>" argument not implemented in from_recurrence()';
+        die 'previous-only sets not implemented in from_recurrence()';
     }
     else {
         die "Not enough arguments in from_recurrence()";
@@ -134,7 +138,7 @@ sub clone {
         }, ref $_[0];
 }
 
-# _recurrence_callback( $set_infinite, \&callback )
+# _recurrence_callback( $set_infinite, \&callback_next, \&callback_previous, $callback_info )
 # Internal function
 #
 # Generates "recurrences" from a callback.
@@ -148,23 +152,24 @@ sub clone {
 sub _recurrence_callback {
     # warn "_recurrence args: @_";
     # note: $_[0] is a Set::Infinite object
-    my ( $set, $callback, $callback_info ) = @_;    
+    my ( $set, $callback_next, $callback_previous, $callback_info ) = @_;    
 
     # test for the special case when we have an infinite recurrence
 
     if ($set->min == NEG_INFINITY ||
         $set->max == INFINITY) {
 
-        return _setup_infinite_recurrence( $set, $callback, $callback_info );
+        return _setup_infinite_recurrence( 
+            $set, $callback_next, $callback_previous, $callback_info );
     }
     else {
 
-        return _setup_finite_recurrence( $set, $callback );
+        return _setup_finite_recurrence( $set, $callback_next, $callback_previous );
     }
 }
 
 sub _setup_infinite_recurrence {
-    my ( $set, $callback, $callback_info ) = @_;
+    my ( $set, $callback_next, $callback_previous, $callback_info ) = @_;
 
     # warn "_recurrence called with inf argument";
 
@@ -186,7 +191,7 @@ sub _setup_infinite_recurrence {
     $set = $set->copy;
     my $func = $set->_function( 'iterate', 
         sub {
-            _recurrence_callback( $_[0], $callback, $callback_info );
+            _recurrence_callback( $_[0], $callback_next, $callback_previous, $callback_info );
         }
     );
 
@@ -205,7 +210,7 @@ sub _setup_infinite_recurrence {
     }
     else {
         my $min = $func->min;
-        my $next = &$callback($min->clone);
+        my $next = &$callback_next($min->clone);
         # warn "RECURR: preparing first: ".$min->ymd." ; ".$next->ymd;
         my $next_set = $set->intersection( $next->clone, INFINITY );
         # warn "next_set min is ".$next_set->min->ymd;
@@ -213,7 +218,7 @@ sub _setup_infinite_recurrence {
             $set->new( $min->clone ), 
             $next_set->_function( 'iterate',
                 sub {
-                    _recurrence_callback( $_[0], $callback, $callback_info );
+                    _recurrence_callback( $_[0], $callback_next, $callback_previous, $callback_info );
                 } ) );
         # warn "RECURR: preparing first: $min ; $next; got @first";
         $func->{first} = \@first;
@@ -227,10 +232,9 @@ sub _setup_infinite_recurrence {
     else {
         my $max = $func->max;
         # iterate to find previous value
-        my $previous = _callback_previous( $max, $callback, $callback_info );
+        my $previous = _callback_previous( $max, $callback_next, $callback_previous, $callback_info );
         # warn "previous: ".$previous->ymd;
-        my $previous2 = _callback_previous( $previous, $callback, $callback_info );
-        # my $previous3 = _callback_previous( $previous2, $callback );
+        my $previous2 = _callback_previous( $previous, $callback_next, $callback_previous, $callback_info );
         # warn "RECURR: preparing last: ".$previous2->ymd." ; ".$previous3->ymd;
         my $previous_set = $set->intersection( NEG_INFINITY, $previous2->clone );
         # warn "previous_set max is ".$previous_set->max->ymd;
@@ -238,7 +242,7 @@ sub _setup_infinite_recurrence {
             $set->new( $max->clone ),
             $previous_set->_function( 'iterate',
                 sub {
-                    _recurrence_callback( $_[0], $callback, $callback_info );
+                    _recurrence_callback( $_[0], $callback_next, $callback_previous, $callback_info );
                 } ) );
         # warn "RECURR: preparing last: $max ; $previous; got @last";
         $func->{last} = \@last;
@@ -251,7 +255,7 @@ sub _setup_infinite_recurrence {
 }
 
 sub _setup_finite_recurrence {
-    my ( $set, $callback ) = @_;
+    my ( $set, $callback_next, $callback_previous ) = @_;
 
     # this is a finite recurrence - generate it.
     # warn "RECURR: FINITE recurrence";
@@ -268,7 +272,7 @@ sub _setup_finite_recurrence {
 
     do {
         # warn " generate from ".$min->ymd;
-        $min = &$callback( $min );
+        $min = &$callback_next( $min );
         # warn " generate got ".$min->ymd;
         $result = $result->union( $min->clone );
     } while ( $min <= $max );
@@ -278,8 +282,13 @@ sub _setup_finite_recurrence {
 
 # returns the "previous" value in a callback recurrence
 sub _callback_previous {
-    my ($value, $callback, $callback_info) = @_; 
+    my ($value, $callback_next, $callback_previous, $callback_info) = @_; 
     my $previous = $value->clone;
+
+    if ( $callback_previous ) {
+        return &$callback_previous( $previous );
+    }
+
     # go back at least an year...
     # TODO: memoize.
     # TODO: binary search to find out what's the best subtract() unit.
@@ -293,7 +302,7 @@ sub _callback_previous {
         # The program will warn() if it this is not working properly.
 
         my $next = $value->clone;
-        $next = &$callback( $next );
+        $next = &$callback_next( $next );
         $freq = $next - $previous;
         my %freq = $freq->deltas;
         $freq{$_} = -int( $freq{$_} * 2 ) for keys %freq; 
@@ -309,7 +318,7 @@ sub _callback_previous {
     $previous->add_duration( $freq );  
     # warn "callback is $callback";
     # warn "current is ".$value->ymd." previous is ".$previous->ymd;
-    $previous = &$callback( $previous );
+    $previous = &$callback_next( $previous );
     # warn " previous got ".$previous->ymd;
     if ($previous >= $value) {
         # This error might happen if the event frequency oscilates widely
@@ -319,7 +328,7 @@ sub _callback_previous {
     my $previous1;
     while (1) {
         $previous1 = $previous->clone;
-        $previous = &$callback( $previous );
+        $previous = &$callback_next( $previous );
         return $previous1 if $previous >= $value;
     }
 }
@@ -331,9 +340,22 @@ sub iterator {
 }
 
 # next() gets the next element from an iterator()
+# next( $dt ) returns the next element after a datetime.
 sub next {
     my ($self) = shift;
     return undef unless ref( $self->{set} );
+
+    if ( @_ ) {
+        if ( exists $self->{next} )
+        {
+            return $self->{next} ( $_[0]->clone );
+        }
+        else {
+            my $span = new DateTime::Span( after => $_[0] );
+            return $self->intersection( $span )->next;
+        }
+    }
+
     my ($head, $tail) = $self->{set}->first;
     $self->{set} = $tail;
     return $head->min if defined $head;
@@ -341,24 +363,63 @@ sub next {
 }
 
 # previous() gets the last element from an iterator()
+# previous( $dt ) returns the previous element before a datetime.
 sub previous {
     my ($self) = shift;
     return undef unless ref( $self->{set} );
+
+    if ( @_ ) {
+        if ( exists $self->{previous} ) 
+        {
+            return $self->{previous} ( $_[0]->clone );
+        }
+        else {
+            my $span = new DateTime::Span( before => $_[0] );
+            return $self->as_set->intersection( $span )->previous;
+        }
+    }
+
     my ($head, $tail) = $self->{set}->last;
     $self->{set} = $tail;
     return $head->max if defined $head;
     return $head;
 }
 
+
+sub current {
+    my $self = shift;
+    return $_[0] if $self->contains( $_[0] );
+    $self->previous( $_[0] );
+}
+
+sub closest {
+    my $self = shift;
+    # return $_[0] if $self->contains( $_[0] );
+    my $dt1 = $self->current( $_[0] );
+    my $dt2 = $self->next( $_[0] );
+    return $dt1 if ( $_[0] - $dt1 ) <= ( $dt2 - $_[0] );
+    return $dt2;
+}
+
+
 sub as_list {
     my ($self) = shift;
     return undef unless ref( $self->{set} );
-    return undef if $self->{set}->is_too_complex;  # undef = no begin/end
-    return if $self->{set}->is_null;  # nothing = empty
+
+    my %args = @_;
+    my $span;
+    $span = delete $args{span};
+    $span = DateTime::Span->new( @_ ) if @_;
+
+    my $set = $self->{set};
+    $set = $set->intersection( $span->{set} ) if $span;
+
+    return undef if $set->is_too_complex;  # undef = no begin/end
+    return if $set->is_null;  # nothing = empty
     my @result;
     # we should extract _copies_ of the set elements,
     # such that the user can't modify the set indirectly
-    for ( @{ $self->{set}->{list}  } ) {
+    for ( @{ $set->{list}  } ) {
         push @result, $_->{a}->clone
             if ref( $_->{a} );   # we don't want to return INFINITY value
     }
@@ -559,6 +620,9 @@ increments of 30 seconds would look like this:
 Of course, this recurrence ignores leap seconds, but we'll leave that
 as an exercise for the reader ;)
 
+It is also possible to create a recurrence by specifying both
+'next' and 'previous' callbacks.
+
 =item * empty_set
 
 Creates a new empty set.
@@ -622,6 +686,10 @@ datetimes, then C<as_list> will return C<undef>.  Please note that
 this is explicitly not an empty list, since an empty list is a valid
 return value for empty sets!
 
+  my @dt = $r_daily->as_list( $span );
+
+This builds a DateTime array of events that happen inside the span.
+
 =item * union / intersection / complement
 
 Set operations may be performed not only with C<DateTime::Set>
@@ -644,6 +712,20 @@ These set operations result in a boolean value.
 
     if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
     if ( $set1->contains( $set2 ) ) { ...    # like "is-fully-inside"
+
+=item * previous current next closest
+
+  my $dt = $r_daily->next( $dt );
+
+  my $dt = $r_daily->previous( $dt );
+
+Returns a set event related to a datetime.
+
+C<current> returns $dt if $dt is an event. 
+It returns previous event otherwise.
+
+C<closest> returns $dt if $dt is an event. 
+Otherwise it returns the closest event (previous or next).
 
 =back
 

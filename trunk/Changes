@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.02     2003-04-20
+- added many methods from DT::Event::Recurrence
+- add 'span' parameter to as_list
+- from_recurrence now accepts next + previous
+
 0.01     2003-04-19
 
 - first "official" release.
