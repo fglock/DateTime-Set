@@ -1,5 +1,11 @@
 Changes for DateTime::Set
 
+0.xxx
+
+- DateTime::Span->duration now uses the new subtract_datetime_absolute
+method, which means that the duration is always given in seconds.
+
+
 0.0901
 - supports _huge_ recurrence sets (not infinite) with "virtual" elements.
   these sets have 'undef' count.
