@@ -1,6 +1,8 @@
 Changes for DateTime::Set
 
-- fixed set_time_zone: was not clearing 'next' upon return.
+0.1202  2003-09-24
+- fixed set_time_zone and add_duration: 
+  was not clearing 'next' upon return, when arg was a recurrence.
 
 0.1201  2003-09-24
 - optimized contains() and intersects() when arg is a datetime

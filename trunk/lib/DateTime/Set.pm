@@ -157,7 +157,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1201';
+    $VERSION = '0.1202';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
 
@@ -182,6 +182,7 @@ sub add_duration {
     ### this code enables 'function method' behaviour
     my $set = $self->clone;
     $set->{set} = $result;
+    undef $self->{next};
     return $set;
 }
 
