@@ -1,3 +1,11 @@
+- new should only be used to make empty sets (?)
+
+- DateTime::SpanSet->from_recurrences
+
+- finish DateTime::SpanSet->from_sets 
+
+- finish DateTime::SpanSet->from_set_and_duration
+
 - discuss functions like 
     is_infinite
     is_empty 
@@ -6,26 +14,13 @@
 
     cardinality ?
 
-- Tests for DateTime::Span
+- More tests for DateTime::Span
 
 - Tests for DateTime::SpanSet
 
 - New constructors-from-duration API:
 
-    $set2 = DateTime::Span->new( 
-        start => $date1, 
-        end => $date2 );                 # OK
-    $set2 = DateTime::Span->new( 
-        start => $date1, 
-        duration => $dt_duration );      # TODO
-
-    $set1 = DateTime::SpanSet->new( 
-        sets => [ $dt_set, $dt_set ] );  # OK
-    $set1 = DateTime::SpanSet->new( 
-        spans => [ $dt_span, $dt_span ], 
-        duration => $dt_duration );      # TODO
     $set1 = DateTime::SpanSet->new(
         dates => [ $dt_span, $dt_span ],
-        duration => $dt_duration );      # TODO
-
+        duration => $dt_duration );     
 

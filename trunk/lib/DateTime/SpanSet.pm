@@ -19,19 +19,24 @@ sub new {
                            { type => ARRAYREF,
                              optional => 1,
                            },
-                           # sets =>
-                           # { type => ARRAYREF,
-                           #   optional => 1,
-                           # },
                          }
                        );
     my $self = {};
     my $set = Set::Infinite->new();
     $set = $set->union( $_->{set} ) for @{ $args{spans} };
-    # $set = $set->union( $_->{set} ) for @{ $args{sets} };
     $self->{set} = $set;
     bless $self, $class;
     return $self;
+}
+
+*from_spans = \&new;
+
+sub from_set_and_duration {
+    die "from_set_and_duration() not implemented yet";
+}
+
+sub from_sets {
+    die "from_sets() not implemented yet";
 }
 
 sub clone { 
@@ -127,7 +132,8 @@ sub max {
 # returns a DateTime::Span
 sub span { 
   my $set = $_[0]->{set}->span;
-  bless $set, 'DateTime::Span';
+  my $self = { set => $set };
+  bless $self, 'DateTime::Span';
   return $set;
 }
 
@@ -182,11 +188,37 @@ DateTime::SpanSet is a module for sets of date/time spans or time-ranges.
 
 Creates a new span set. 
 
-   $dates = DateTime::SpanSet->new( spans => [ $dt_span ] );  # from DateTime::Span
-
-   $dates = DateTime::SpanSet->new( sets => [ $dt_set ] );    # from DateTime::Set
+   $dates = DateTime::SpanSet->new( spans => [ $dt_span ] );  
 
 =back
+
+=item * from_spans
+
+Creates a new span set, from C<DateTime::Span> objects.
+
+   $dates = DateTime::SpanSet->from_spans( spans => [ $dt_span ] ); 
+
+=item * from_set_and_duration
+
+Creates a new span set, from C<DateTime::Set> objects, with a duration.
+
+The duration might be a C<DateTime::Duration> object, or duration scalars such as C<days>.
+
+   $dates = DateTime::SpanSet->from_set_and_duration( set => $dt_set, days => 1 );
+
+=item * from_sets
+
+Creates a new span set, from two C<DateTime::Set> objects. 
+
+One set defines the I<starting dates>, and the other defines the I<end dates>.
+
+   $dates = DateTime::SpanSet->from_sets( start_set => $dt_set1, end_set => $dt_set2 );
+
+The spans have the starting date C<closed>, and the end date C<open>, like in C<[$dt1, $dt2)>.
+
+If an end date comes without a starting date before it, then it defines a span like C<(-inf, $dt)>.
+
+If a starting date comes without an end date after it, then it defines a span like C<[$dt, inf)>.
 
 =item * min / max
 

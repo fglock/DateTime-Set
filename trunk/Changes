@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.20
+- Docs for DateTime::SpanSet API 
+  (not implemented)
+
 0.19
 - DateTime::Span API: 
   from_datetime_and_duration, from_datetimes
