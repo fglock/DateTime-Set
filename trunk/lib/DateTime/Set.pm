@@ -346,31 +346,46 @@ this module is finished.
 
 =head1 DESCRIPTION
 
-DateTime::Set is a module for date/time sets. 
+DateTime::Set is a module for date/time sets.  It can be used to
+handle two different types of sets.
 
-It allows you to generate list of dates, and recurrences like "every wednesday".
+The first is a fixed set of predefined datetime objects.  For example,
+if we wanted to create a set of dates containing the birthdays of
+people in our family.
+
+The second type of set that it can handle is one based on the idea of
+a recurrence, such as "every Wednesday", or "noon on the 15th day of
+every month".  This type of set can be have a fixed start and end
+datetime, but neither is required.  So our "every Wednesday set" could
+be "every Wednesday from the beginning of time until the end of time",
+or "every Wednesday after 2003-03-05 until the end of time", or "every
+Wednesday between 2003-03-05 and 2004-01-07".
 
 =head1 METHODS
 
 =over 4
 
-=item * new 
+=item * new
 
-Creates a new set. The set can be generated from a list of dates, or from a "recurrence" subroutine.
+Creates a new set.  The set can either be a list of dates, or it can
+be specified via a "recurrence" callback.
 
-From a list of dates:
+To create a set from a list of dates:
 
    $dates = DateTime::Set->new( dates => [ $dt1, $dt2, $dt3 ] );
 
-From a recurrence:
+To create a set as a recurrence:
 
     $months = DateTime::Set->new( 
         start => $today, 
-        end => $next_year,
+        end => $today_plus_one_year,
         recurrence => sub { $_[0]->truncate( to => 'month' )->add( months => 1 ) }, 
     );
 
-The start and end bounding parameters are optional.
+The "start" and "end" parameters are both optional.  If no "start"
+parameter is given then the set is assumed to start at negative
+infinity.  Similarly, if no "end" parameter is given then the set is
+assumed to end at infinity.
 
 =item * add
 
@@ -379,26 +394,29 @@ The start and end bounding parameters are optional.
     $dtd = new DateTime::Duration( year => 1 );
     $new_set = $set->add( duration => $dtd );
 
-This function method adds a value to a DateTime set, generating a new set.
+This method returns a new set which is the same as the existing set
+plus the specified duration.
 
-It moves the whole set values ahead or back in time.
+    $meetings_2004 = $meetings_2003->add( years => 1 );
 
-Example:
-
-    $meetings_2004 = $meetings_2003->add( year => 1 );
-
-See C<DateTime::add()> for full syntax description.
+This method takes the same parameters as allowed by
+C<DateTime->add()>.  It can also take a "duration" parameter, which
+should be a C<DateTime::Duration> object.  If this parameter is given
+then all others are ignored.
 
 =item * iterator / next
+
+This method can be used to iterate over the dates in a set.
 
     $iter = $set1->iterator;
     while ( $dt = $iter->next ) {
         print $dt->ymd;
-    };
+    }
 
-Extract dates from a set. 
-
-next() returns undef when there are no more dates.
+The C<next()> returns C<undef> when there are no more datetimes in the
+iterator.  Obviously, if a set is specified as a recurrence and has no
+fixed end datetime, then it may never stop returning datetimes.  User
+beware!
 
 =item union / intersection / complement
 
