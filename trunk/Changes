@@ -1,11 +1,11 @@
 Changes for DateTime::Set
 
+- added more tests for add_duration, subtract_duration
 - added set( locale => .. ) to DateTime::Set
 
 0.1203  2003-09-26
 - Added docs to Set::Infinite::_recurrence;
   split into a separate file such that it doesn't mix the pods
-- removed an intersection optimization :(
 - refactored union / intersection
 - _is_recurrence test prevents error when programming subroutine methods
 
