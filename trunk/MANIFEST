@@ -15,6 +15,9 @@ t/06backtrack.t
 t/07previous.t
 t/08span.t
 t/09spanset.t
+t/10previous-2.t
+t/11next.t
+t/12iterator_intersection.t
 lib/DateTime/Set.pm
 lib/DateTime/Span.pm
 lib/DateTime/SpanSet.pm
