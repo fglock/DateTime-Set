@@ -1,7 +1,8 @@
 Changes for DateTime::Set
 
 0.00_22
-- implemented DateTime::SpanSet->from_sets
+- implemented DateTime::SpanSet->from_sets and
+  DateTime::SpanSet->from_set_and_duration
 
 0.00_21
 
