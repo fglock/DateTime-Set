@@ -1,9 +1,10 @@
 Changes for DateTime::Set
 
+- added an example to count(), by David Nicol.
 - added a note about how the result of min()/max() is just a copy of the 
   actual set boundary.  Reported by Ron Hill.
 
-0.19    2003-11-29
+0.19    2004-11-29
 - added more comments on as_list() and count() behaviour on large sets.
   Reported by Rick Frankel (rt ticket 8611)
 
