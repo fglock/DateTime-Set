@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+- new test: t/17quantize.t
+  Tests a method to make "quantization" (or "discretization")
+  of spansets.
+
 0.1407  2004-03-16
 - New methods:
   DateTime::SpanSet::current
