@@ -170,7 +170,12 @@ sub intersection {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = {};  # $class->new();
-    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $set2->as_spanset
+        if $set2->can( 'as_spanset' );
+    $set2 = $set2->as_set
+        if $set2->can( 'as_set' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) 
+        unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
 
     # intersection() can generate something more complex than a span.
@@ -182,14 +187,24 @@ sub intersection {
 sub intersects {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $set2->as_spanset
+        if $set2->can( 'as_spanset' );
+    $set2 = $set2->as_set
+        if $set2->can( 'as_set' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) 
+        unless $set2->can( 'union' );
     return $set1->{set}->intersects( $set2->{set} );
 }
 
 sub contains {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
-    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $set2->as_spanset
+        if $set2->can( 'as_spanset' );
+    $set2 = $set2->as_set
+        if $set2->can( 'as_set' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) 
+        unless $set2->can( 'union' );
     return $set1->{set}->contains( $set2->{set} );
 }
 
@@ -197,7 +212,12 @@ sub union {
     my ($set1, $set2) = @_;
     my $class = ref($set1);
     my $tmp = {};   # $class->new();
-    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+    $set2 = $set2->as_spanset
+        if $set2->can( 'as_spanset' );
+    $set2 = $set2->as_set
+        if $set2->can( 'as_set' );
+    $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) 
+        unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
  
     # union() can generate something more complex than a span.
@@ -216,7 +236,12 @@ sub complement {
     my $class = ref($set1);
     my $tmp = {};   # $class->new;
     if (defined $set2) {
-        $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) unless $set2->can( 'union' );
+        $set2 = $set2->as_spanset
+            if $set2->can( 'as_spanset' );
+        $set2 = $set2->as_set
+            if $set2->can( 'as_set' );
+        $set2 = DateTime::Set->from_datetimes( dates => [ $set2 ] ) 
+            unless $set2->can( 'union' );
         $tmp->{set} = $set1->{set}->complement( $set2->{set} );
     }
     else {

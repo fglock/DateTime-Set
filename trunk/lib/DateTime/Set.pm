@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.16';
+    $VERSION = '0.1601';
 }
 
 sub iterate {
@@ -483,6 +483,8 @@ sub intersection {
     my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
     my $tmp = $class->empty_set();
+    $set2 = $set2->as_set
+        if $set2->can( 'as_set' );
     $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
         unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->intersection( $set2->{set} );
@@ -492,6 +494,8 @@ sub intersection {
 sub intersects {
     my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
+    $set2 = $set2->as_set
+        if $set2->can( 'as_set' );
     unless ( $set2->can( 'union' ) )
     {
         if ( $set1->{set}->_is_recurrence )
@@ -510,6 +514,8 @@ sub intersects {
 sub contains {
     my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
+    $set2 = $set2->as_set
+        if $set2->can( 'as_set' );
     unless ( $set2->can( 'union' ) )
     {
         if ( $set1->{set}->_is_recurrence )
@@ -529,6 +535,8 @@ sub union {
     my ($set1, $set2) = ( shift, shift );
     my $class = ref($set1);
     my $tmp = $class->empty_set();
+    $set2 = $set2->as_set
+        if $set2->can( 'as_set' );
     $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
         unless $set2->can( 'union' );
     $tmp->{set} = $set1->{set}->union( $set2->{set} );
@@ -543,6 +551,8 @@ sub complement {
     my $tmp = $class->empty_set();
     if (defined $set2) 
     {
+        $set2 = $set2->as_set
+            if $set2->can( 'as_set' );
         $set2 = $class->from_datetimes( dates => [ $set2, @_ ] ) 
             unless $set2->can( 'union' );
         # TODO: "compose complement";
