@@ -157,18 +157,18 @@ sub _recurrence_callback {
             $func->{first} = [ $self->new( $self->min ), $self ];
         }
         else {
-            my $this = $func->min;
-            my $next = &$callback($this->clone);
-            # warn "RECURR: preparing first: ".$this->ymd." ; ".$next->ymd;
+            my $min = $func->min;
+            my $next = &$callback($min->clone);
+            # warn "RECURR: preparing first: ".$min->ymd." ; ".$next->ymd;
             my $next_set = $self->intersection( $next->clone, INFINITY );
             # warn "next_set min is ".$next_set->min->ymd;
             my @first = ( 
-                $self->new( $this->clone ), 
+                $self->new( $min->clone ), 
                 $next_set->_function( 'iterate',
                     sub {
                         _recurrence_callback( $_[0], $callback );
                     } ) );
-            # warn "RECURR: preparing first: $this ; $next; got @first";
+            # warn "RECURR: preparing first: $min ; $next; got @first";
             $func->{first} = \@first;
         }
         # -- end hack
