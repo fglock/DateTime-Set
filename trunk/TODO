@@ -1,4 +1,29 @@
+KNOWN BUGS
+
+- the 'recurrence' argument should be $_, instead of $_[0].
+  This is too late to change, because there are many DateTime modules
+  that use it.
+
+- 'set_time_zone' was published as a function, then as a mutator, 
+  then as a function, then as a mutator.
+  It settled as a mutator.
+
+
 TODO list for DT::Set, DT::Span, and DT::SpanSet
+
+2004-07-03
+
+- what happens if the recurrence function returns an 'undef' ?
+  (the program should die - add tests for this)
+
+- this POD entry is not entirely correct, it should be tested/fixed:
+
+    The callbacks can return C<DateTime::Infinite::Future> and
+    C<DateTime::Infinite::Past> objects, in order to define 
+    I<bounded recurrences>.
+    In this case, both 'next' and 'previous' callbacks must be defined:
+
+- 'truncate' method ?
 
 - add set_time_zone tests to Span & SpanSet 
 
@@ -6,6 +31,7 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
   see 02immutable.t
 
 - implement add/subtract in DT::Span, DT::SpanSet
+- implement start/end aliases in DT::Set
 
 2004-06-25
 

@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1601';
+    $VERSION = '0.1602';
 }
 
 
@@ -58,6 +58,7 @@ sub _fix_return_datetime {
 }
 
 sub iterate {
+    # deprecated method - use map() or grep() instead
     my ( $self, $callback ) = @_;
     my $class = ref( $self );
     my $return = $class->empty_set;
@@ -283,11 +284,14 @@ sub from_datetimes {
                        );
     my $self = {};
     $self->{set} = Set::Infinite::_recurrence->new;
-    # possible optimization: sort dates and use "push"
+    # possible optimization: sort datetimes and use "push"
     for( @{ $args{dates} } ) 
     {
-        carp "The 'dates' argument to from_datetimes() must be a ".
-             "DateTime object"
+        # DateTime::Infinite objects are not welcome here,
+        # but this is not enforced (it does't hurt)
+
+        carp "The 'dates' argument to from_datetimes() must only contain ".
+             "datetime objects"
             unless UNIVERSAL::can( $_, 'utc_rd_values' );
 
         $self->{set} = $self->{set}->union( $_->clone );
@@ -462,7 +466,7 @@ sub previous {
     return $head;
 }
 
-# "current" means less-or-equal to a DateTime
+# "current" means less-or-equal to a datetime
 sub current {
     my $self = shift;
 
@@ -696,11 +700,11 @@ DateTime::Set - Datetime sets and set math
 
 =head1 DESCRIPTION
 
-DateTime::Set is a module for date/time sets.  It can be used to
+DateTime::Set is a module for datetime sets.  It can be used to
 handle two different types of sets.
 
 The first is a fixed set of predefined datetime objects.  For example,
-if we wanted to create a set of dates containing the birthdays of
+if we wanted to create a set of datetimes containing the birthdays of
 people in our family.
 
 The second type of set that it can handle is one based on the idea of
@@ -717,9 +721,15 @@ time", or "every Wednesday after 2003-03-05 until the end of time", or
 
 =item * from_datetimes
 
-Creates a new set from a list of dates.
+Creates a new set from a list of datetimes.
 
    $dates = DateTime::Set->from_datetimes( dates => [ $dt1, $dt2, $dt3 ] );
+
+The datetimes can be objects from class C<DateTime>, or from a
+C<DateTime::Calendar::*> class.
+
+C<DateTime::Infinite::*> objects are not valid set members. 
+However, these datetimes are very useful as set boundaries.
 
 =item * from_recurrence
 
@@ -745,43 +755,42 @@ case, if there is a C<span> parameter it will be ignored.
         },
     );
 
-The recurrence will be passed a single parameter, a DateTime.pm
-object.  The recurrence must return the I<next> event 
-after that object.  There is no guarantee as to what the object will
-be set to, only that it will be greater than the object
+The recurrence function will be passed a single parameter, a datetime
+object. The parameter can be an object from class C<DateTime>, 
+or from one of the C<DateTime::Calendar::*> classes. 
+The parameter can also be a C<DateTime::Infinite::Future> or
+a C<DateTime::Infinite::Past> object.
+
+The recurrence must return the I<next> event 
+after that object.  There is no guarantee as to what the returned 
+object will be set to, only that it will be greater than the object
 passed to the recurrence.
+If there are no more datetimes after the given parameter, 
+then the recurrence function should return C<DateTime::Infinite::Future>.
 
-The recurrence function must return a valid DateTime object.
-
-The function must work if given C<DateTime::Infinite::Future> and 
-C<DateTime::Infinite::Past> parameters.
-
-It is ok to modify C<$_[0]> inside the recurrence function.
+It is ok to modify the parameter C<$_[0]> inside the recurrence function.
 There are no side-effects.
 
 For example, if you wanted a recurrence that generated datetimes in
-increments of 30 seconds would look like this:
+increments of 30 seconds, it would look like this:
 
   sub every_30_seconds {
       my $dt = shift;
-      return $dt if $dt->is_infinite;
-
-      $dt->truncate( to => 'seconds' );
-
       if ( $dt->second < 30 ) {
-          return $dt->add( seconds => 30 - $dt->second );
+          return $dt->truncate( to => 'minute' )->add( seconds => 30 );
       } else {
-          return $dt->add( seconds => 60 - $dt->second );
+          return $dt->truncate( to => 'minute' )->add( minutes => 1 );
       }
   }
 
-Of course, this recurrence ignores leap seconds, but we'll leave that
-as an exercise for the reader ;)
+Note that this recurrence takes leap seconds into account. 
+You should use datetime calendar methods whenever possible, 
+in order to avoid complicated arithmetic problems!
 
 It is also possible to create a recurrence by specifying either or both
-'next' and 'previous' callbacks.
+of 'next' and 'previous' callbacks.
 
-Callbacks can return C<DateTime::Infinite::Future> and 
+The callbacks can return C<DateTime::Infinite::Future> and 
 C<DateTime::Infinite::Past> objects, in order to define I<bounded recurrences>.
 In this case, both 'next' and 'previous' callbacks must be defined:
 
@@ -803,20 +812,11 @@ In this case, both 'next' and 'previous' callbacks must be defined:
         },
     );
 
-Bounded recurrences are is easier to write using span parameters:
-
-    # "monthly from $dt until forever"
-
-    $months = DateTime::Set->from_recurrence(
-        start => $dt,
-        recurrence => sub {
-            return $_[0]->truncate( to => 'month' )->add( months => 1 );
-        },
-    );
+Bounded recurrences are easier to write using C<span> parameters. See above.
 
 See also C<DateTime::Event::Recurrence> and the other C<DateTime::Event::*>
-modules for generating specialized recurrences, such as sunrise and sunset
-time, and holidays.
+factory modules for generating specialized recurrences, 
+such as sunrise and sunset times, and holidays.
 
 =item * empty_set
 
@@ -837,7 +837,7 @@ but you want to keep the previous value:
 
 =item * add_duration( $duration )
 
-This method adds the specified duration added to every element of the set.
+This method adds the specified duration to every element of the set.
 
     $dt_dur = new DateTime::Duration( year => 1 );
     $set->add_duration( $dt_dur );
@@ -865,29 +865,21 @@ method.
 
 =item * set_time_zone( $tz )
 
-This method can be used to change the time zone of a date time set.
-
-This method accepts either a time zone object or a string that can be
-passed as the "name" parameter to C<< DateTime::TimeZone->new() >>.
-If the new time zone's offset is different from the old time zone,
-then the I<local> time is adjusted accordingly.
-
-If the old time zone was a floating time zone, then no adjustments to
-the local time are made, except to account for leap seconds.  If the
-new time zone is floating, then the I<UTC> time is adjusted in order
-to leave the local time untouched.
+This method will attempt to apply the C<set_time_zone> method to every 
+datetime in the set.
 
 =item * set( locale => .. )
 
-This method can be used to change the C<locale> of a date time set.
+This method can be used to change the C<locale> of a datetime set.
 
 =item * min
 
 =item * max
 
-The first and last dates in the set.  These methods may return
+The first and last datetimes in the set.  These methods may return
 C<undef> if the set is empty.  It is also possible that these methods
-may return a C<DateTime::Infinite::Past> or C<DateTime::Infinite::Future> object.
+may return a C<DateTime::Infinite::Past> or C<DateTime::Infinite::Future> 
+object.
 
 =item * span
 
@@ -895,7 +887,7 @@ Returns the total span of the set, as a C<DateTime::Span> object.
 
 =item * iterator / next / previous
 
-These methods can be used to iterate over the dates in a set.
+These methods can be used to iterate over the datetimes in a set.
 
     $iter = $set1->iterator;
     while ( $dt = $iter->next ) {
@@ -1017,12 +1009,24 @@ it returns the closest event (previous or next).
 All of these methods may return C<undef> if there is no matching
 datetime in the set.
 
+These methods will try to set the returned value 
+to the same time zone as the argument, unless the argument
+has a 'floating' time zone.
+
 =item * map ( sub { ... } )
 
     # example: remove the hour:minute:second information
     $set = $set2->map( 
         sub {
             return $_->truncate( to => day );
+        }
+    );
+
+    # example: postpone or antecipate events which 
+    #          match datetimes within another set
+    $set = $set2->map(
+        sub {
+            return $_->add( days => 1 ) while $holidays->contains( $_ );
         }
     );
 
@@ -1041,12 +1045,15 @@ Unlike Perl "map", changing "$_" does not change
 the original set. This means that calling map
 in void context has no effect.
 
-The callback subroutine may not be called immediately.
-Don't count on subroutine side-effects. For example,
+The callback subroutine may be called later in the program,
+due to lazy evaluation.
+So don't count on subroutine side-effects. For example,
 a C<print> inside the subroutine may happen later than you expect.
 
 The callback return value is expected to be within the span of the
 C<previous> and the C<next> element in the original set.
+This is a limitation of the backtracking algorithm used in
+the C<Set::Infinite> library.
 
 For example: given the set C<[ 2001, 2010, 2015 ]>,
 the callback result for the value C<2010> is expected to be
@@ -1074,48 +1081,14 @@ in void context has no effect.
 
 Changing "$_" does change the resulting set.
 
-The callback subroutine may not be called immediately.
-Don't count on subroutine side-effects. For example,
+The callback subroutine may be called later in the program,
+due to lazy evaluation.
+So don't count on subroutine side-effects. For example,
 a C<print> inside the subroutine may happen later than you expect.
 
 =item * iterate ( sub { ... } )
 
-I<Internal method - use "map" or "grep" instead.>
-
-This function apply a callback subroutine to all elements of a set
-and returns the resulting set.
-
-    sub callback {
-        $_[0]->add( hours => 1 );
-    }
-
-    # $set2 elements are one hour after $set elements, and
-    # $set is unchanged
-    $set2 = $set->iterate( \&callback );  
-
-If the callback returns C<undef>, the datetime is removed from the set:
-
-    sub remove_sundays {
-        $_[0] unless $_[0]->day_of_week == 7;
-    }
-
-The callback can be used to postpone or anticipate
-events which collide with datetimes in another set:
-
-    sub after_holiday {
-        $_[0]->add( days => 1 ) while $holidays->contains( $_[0] );
-    }
-
-The callback return value is expected to be within the span of the 
-C<previous> and the C<next> element in the original set. 
-
-For example: given the set C<[ 2001, 2010, 2015 ]>, 
-the callback result for the value C<2010> is expected to be 
-within the span C<[ 2001 .. 2015 ]>.
-
-The callback subroutine may not be called immediately.
-Don't count on subroutine side-effects. For example,
-a C<print> inside the subroutine may happen later than you expect.
+I<deprecated method - please use "map" or "grep" instead.>
 
 =back
 
@@ -1133,7 +1106,7 @@ The API was developed together with Dave Rolsky and the DateTime Community.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003 Flavio Soibelmann Glock. All rights reserved.
+Copyright (c) 2003, 2004 Flavio Soibelmann Glock. All rights reserved.
 This program is free software; you can distribute it and/or
 modify it under the same terms as Perl itself.
 
