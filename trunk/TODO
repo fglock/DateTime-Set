@@ -1,0 +1,7 @@
+
+- redefine Set::Infinite::Arithmetic hashes, to use DateTime
+  functions instead of epoch-related internals.
+
+- modify new() to use clone() in the parameters,
+  such that they become immutable.
+

@@ -1,0 +1,12 @@
+0.03
+
+- Uses Set::Infinite as base class, instead of Date::Set::Timezone
+  This means some methods just disappeared, like event() and exclude().
+  RFC2445 support might come back in a later revision.
+
+- Removed experimental Autoload code
+
+- Added 'Changes' and 'README'
+
+- moved POD to end of source file.
+

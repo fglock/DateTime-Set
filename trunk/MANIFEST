@@ -1,0 +1,10 @@
+MANIFEST
+MANIFEST.SKIP
+LICENSE
+Changes
+TODO
+README
+Makefile.PL
+t/00load.t
+t/01sanity.t
+lib/DateTime/Set.pm
