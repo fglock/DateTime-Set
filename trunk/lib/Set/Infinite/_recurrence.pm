@@ -31,7 +31,7 @@ BEGIN {
             if ( ! ref($min) )
             {
                 if ( $min == NEG_INFINITY ) {
-                    $min = DateTime::Infinite::Past->new 
+                    $min = DateTime::Infinite::Past->new; 
                 }
                 elsif ( $min == INFINITY ) {
                     $min = DateTime::Infinite::Future->new 
@@ -65,7 +65,7 @@ BEGIN {
                     $max = DateTime::Infinite::Past->new 
                 }
                 elsif ( $max == INFINITY ) {
-                    $max = DateTime::Infinite::Future->new 
+                    $max = DateTime::Infinite::Future->new;
                 }
             }
 

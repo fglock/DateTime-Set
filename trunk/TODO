@@ -1,5 +1,15 @@
 TODO list for DT::Set, DT::Span, and DT::SpanSet
 
+- Test for errors, in case the "next/previous" spec
+  is not followed (detect infinite loop).
+
+  Give a message like:
+  "A recurrence loop was detected. Check that you are using
+   the latest DateTime::Event module version" 
+
+  Or, try to detect the error and automatically
+  "downgrade" DateTime::Set.
+
 - New methods: map / grep
   From a discussion with Andrew Pimlott and Dave Rolsky
 
