@@ -425,7 +425,7 @@ object.
     $set = $span->intersection( $set2 );  # like "AND", "while"
     $set = $span->complement;             # like "NOT", "negate", "invert"
 
-=item intersects / contains
+=item * intersects / contains
 
 These set functions return a boolean value.
 
