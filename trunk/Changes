@@ -1,5 +1,41 @@
 Changes for DateTime::Set
 
+0.15  2004-03-28
+  
+  [ ENHANCEMENTS from version 0.14 ]
+
+- Both "Makefile.PL" and "Build.PL" are provided.
+
+- New methods:
+  DateTime::SpanSet::current
+  DateTime::Spanset::closest
+  DateTime::Set::map / grep
+  DateTime::SpanSet::map / grep
+  DateTime::SpanSet::intersected_spans
+  DateTime::SpanSet::start_set / end_set 
+
+- Recurrences can be bounded sets.
+
+- Recurrences can be as small as 1 nanosecond.
+
+- DateTime::SpanSet::duration may return an 'infinite' 
+  DateTime::Duration (instead of scalar infinity).
+
+  [ *** BACKWARDS INCOMPATIBILITIES from version 0.14 *** ]
+
+- The next/previous functions used in DT::Set->from_recurrence()
+  MUST work with DateTime::Infinite::Future
+  and DateTime::Infinite::Past parameters. 
+
+  Failing to test for "infinity" values is known
+  to cause an infinite loop in some modules.
+
+- DateTime::Set and DateTime::SpanSet methods do not mutate the set.
+  This was the behaviour in version 0.13
+
+0.1413  2004-03-28
+- detect_bounded => 1 is deprecated.
+
 0.1412  2004-03-28
 - DateTime::Set->from_recurrence - Bounded recurrences are "optional".
   use " detect_bounded => 1 " to turn them on.

@@ -38,7 +38,7 @@ my $t2 = new DateTime( year => '1810', month => '11', day => '01' );
     my $months = DateTime::Set->from_recurrence(
         next =>     $_next_month,
         previous => $_previous_month,
-        detect_bounded => 1,
+        # detect_bounded => 1,
     );
 
     # contains datetime, semi-bounded set
@@ -88,7 +88,7 @@ my $t2 = new DateTime( year => '1810', month => '11', day => '01' );
     my $months = DateTime::Set->from_recurrence(
         next =>     $_next_month,
         previous => $_previous_month,
-        detect_bounded => 1,
+        # detect_bounded => 1,
     );
 
     $res = $months->min;
@@ -130,7 +130,7 @@ my $t2 = new DateTime( year => '1810', month => '11', day => '01' );
     my $months = DateTime::Set->from_recurrence(
         next =>     $_next_month,
         previous => $_previous_month,
-        detect_bounded => 1,
+        # detect_bounded => 1,
     );
 
     $res = $months->min;
@@ -165,7 +165,7 @@ my $t2 = new DateTime( year => '1810', month => '11', day => '01' );
             my $dt = $set->previous( $_[0] ); 
             defined $dt ? $dt : DateTime::Infinite::Past->new;
         },
-        detect_bounded => 1,
+        # detect_bounded => 1,
     );
 
     $res = $months->min;

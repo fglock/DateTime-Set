@@ -14,14 +14,14 @@ my $build = Module::Build->new(
         'Params::Validate' => 0,
     },
     conflicts => {
-        #'DateTime::Event::Recurrence' => '< 0.10',
-        #'DateTime::Event::ICal'       => '< 0.07',
-        #'DateTime::Event::Random'     => '< 0.03',
-        #'DateTime::Event::Cron'       => '<= 0.06',
-        #'DateTime::Event::Sunrise'    => '< 0.05',   # cvs ok; check CPAN
-        # 'DateTime-Event-Chinese'      =>  -- test!
-        # 'DateTime-Event-Lunar'        =>
-        # 'DateTime-Event-SolarTerm'    =>
+        'DateTime::Event::Recurrence' => '< 0.10',
+        'DateTime::Event::ICal'       => '< 0.07',
+        'DateTime::Event::Random'     => '< 0.03',
+        'DateTime::Event::Cron'       => '<= 0.06',
+        'DateTime::Event::Sunrise'    => '<= 0.05', # cvs ok; CPAN not ok
+        'DateTime::Event::Chinese'    => '< 0',     # untested
+        'DateTime::Event::Lunar'      => '< 0',     # untested
+        'DateTime::Event::SolarTerm'  => '< 0',     # untested
     },
     # sign               => 1,
     # create_makefile_pl => 'passthrough'

@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.1412';
+    $VERSION = '0.15';
 }
 
 sub iterate {
@@ -115,7 +115,7 @@ sub from_recurrence {
     $param{next} = delete $args{next};
     $param{previous} = $args{previous}  and  delete $args{previous};
 
-    $param{detect_bounded} = delete $args{detect_bounded} or 0;
+    ## $param{detect_bounded} = delete $args{detect_bounded} or 0;
 
     $param{span} = $args{span}  and  delete $args{span};
     # they might be specifying a span using begin / end
@@ -200,18 +200,20 @@ sub from_recurrence {
         }
 
         my ( $min, $max );
-        if ( $param{detect_bounded} )
+        ## if ( $param{detect_bounded} )
         {
             $max = $param{previous}->( DateTime::Infinite::Future->new );
             $min = $param{next}->( DateTime::Infinite::Past->new );
             $max = INFINITY if $max->is_infinite;
             $min = NEG_INFINITY if $min->is_infinite;
         }
-        else
-        {
-            $max = INFINITY;
-            $min = NEG_INFINITY;
-        }
+        
+        # else
+        # {
+        #    $max = INFINITY;
+        #    $min = NEG_INFINITY;
+        # }
+        
         my $base_set = Set::Infinite::_recurrence->new( $min, $max );
         $base_set = $base_set->intersection( $param{span}->{set} )
              if $param{span};
@@ -748,8 +750,7 @@ It is also possible to create a recurrence by specifying either or both
 
 Callbacks can return C<DateTime::Infinite::Future> and 
 C<DateTime::Infinite::Past> objects, in order to define I<bounded recurrences>.
-In this case, both 'next' and 'previous' callbacks must be defined,
-and the "detect_bounded" switch must be used:
+In this case, both 'next' and 'previous' callbacks must be defined:
 
     # "monthly from $dt until forever"
 
@@ -767,7 +768,6 @@ and the "detect_bounded" switch must be used:
             return $_[0] if $_[0] >= $dt;
             return DateTime::Infinite::Past->new;
         },
-        detect_bounded => 1,
     );
 
 Bounded recurrences are is easier to write using span parameters:
