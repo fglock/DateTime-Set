@@ -705,7 +705,7 @@ datetimes, then C<as_list> will return C<undef>.  Please note that
 this is explicitly not an empty list, since an empty list is a valid
 return value for empty sets!
 
-  my @dt = $set->as_list( $span );
+  my @dt = $set->as_list( span => $span );
 
 This builds a DateTime array of events that happen inside the span.
 
