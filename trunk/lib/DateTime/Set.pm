@@ -40,14 +40,14 @@ sub _add_callback {
 
 sub add {
     my ($self, %parm) = @_;
-    my $dt;
+    my $dur;
     if (exists $parm{duration}) {
-        $dt = $parm{duration}->clone;
+        $dur = $parm{duration}->clone;
     }
     else {
-        $dt = new DateTime::Duration( %parm );
+        $dur = new DateTime::Duration( %parm );
     }
-    my $result = $self->{set}->iterate( \&_add_callback, $dt );
+    my $result = $self->{set}->iterate( \&_add_callback, $dur );
 
     ### this code would enable 'subroutine method' behaviour
     # $self->{set} = $result;
