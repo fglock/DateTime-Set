@@ -11,10 +11,18 @@ use DateTime::Set;
 use DateTime::SpanSet;
 # use warnings;
 
-use constant INFINITY     =>       100 ** 100 ** 100 ;
-use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
+use constant INFINITY     => DateTime::INFINITY;
+use constant NEG_INFINITY => DateTime::NEG_INFINITY;
 
-sub str { ref($_[0]) ? $_[0]->datetime : $_[0] }
+sub str { 
+    if ( ref($_[0]) ) {
+        return $_[0]->datetime if $_[0]->is_finite;
+        return INFINITY if $_[0]->isa( "DateTime::Infinite::Future" );
+        return NEG_INFINITY;
+    }
+    return $_[0];
+}
+
 sub span_str { str($_[0]->min) . '..' . str($_[0]->max) }
 
 #======================================================================

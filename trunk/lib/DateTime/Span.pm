@@ -13,8 +13,8 @@ use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use Set::Infinite '0.44';
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
-use constant INFINITY     =>       100 ** 100 ** 100 ;
-use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
+use constant INFINITY     => DateTime::INFINITY;
+use constant NEG_INFINITY => DateTime::NEG_INFINITY;
 
 sub set_time_zone {
     my ( $self, $tz ) = @_;
@@ -234,14 +234,28 @@ sub complement {
 
 sub start { 
     my $tmp = $_[0]->{set}->min;
-    ref($tmp) ? $tmp->clone : $tmp; 
+    if ( ref($tmp) ) {
+        $tmp = $tmp->clone;
+    } 
+    else
+    {
+        $tmp = new DateTime::Infinite::Past if $tmp == NEG_INFINITY;
+    }
+    $tmp;
 }
 
 *min = \&start;
 
 sub end { 
     my $tmp = $_[0]->{set}->max;
-    ref($tmp) ? $tmp->clone : $tmp; 
+    if ( ref($tmp) ) {
+        $tmp = $tmp->clone;
+    } 
+    else
+    {
+        $tmp = new DateTime::Infinite::Future if $tmp == INFINITY;
+    }
+    $tmp;
 }
 
 *max = \&end;
@@ -377,9 +391,20 @@ Also available as C<size()>.
 
 =item * start / end
 
-First or last dates in the span.  It is possible that the return value
-from these methods may be a scalar containing either negative infinity
-or positive infinity.
+First or last dates in the span.  
+
+It is possible that the return value
+from these methods may be a 
+DateTime::Infinite::Future or a 
+DateTime::Infinite::Past object.
+
+If the set ends C<before> a date C<$dt>, it returns C<$dt>. Note that
+in this case C<$dt> is not a set element - but it is a set boundary.
+
+=cut
+
+# scalar containing either negative infinity
+# or positive infinity.
 
 =item * start_is_closed / end_is_closed
 
