@@ -1,4 +1,8 @@
 ^blib/
+Makefile.PL
+t/99-pod.t
+^Build
+^_build/
 ^Makefile$
 ^Makefile\.[a-z]+$
 ^pm_to_blib$
