@@ -280,7 +280,8 @@ sub end_is_closed { $_[0]->end_is_open ? 0 : 1 }
 # span == $self
 sub span { @_ }
 
-sub duration { my $dur = $_[0]->end - $_[0]->start; defined $dur ? $dur : INFINITY }
+sub duration { my $dur = $_[0]->end->subtract_datetime_absolute( $_[0]->start );
+	       defined $dur ? $dur : INFINITY }
 *size = \&duration;
 
 # unsupported Set::Infinite methods
