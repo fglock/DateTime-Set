@@ -7,12 +7,12 @@ package DateTime::Set;
 use strict;
 
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
-use Set::Infinite '0.44';
+use Set::Infinite '0.44_04';
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( @ISA $VERSION );
 
-$VERSION = '0.00_15';
+$VERSION = '0.00_17';
 
 use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
@@ -126,7 +126,7 @@ sub clone {
 #
 sub _recurrence_callback {
     # warn "_recurrence args: @_";
-    # note: $set is a Set::Infinite object
+    # note: $_[0] is a Set::Infinite object
     my ( $set, $callback ) = @_;    
 
     # test for the special case when we have an infinite recurrence
@@ -163,9 +163,9 @@ sub _setup_recurrence_with_infinity {
     # directly with this type of set generation.
     # Since this is a Set::Infinite "custom" function, the iterator 
     # will need some help.
-    # We are setting up the first() cache directly,
-    # because Set::Infinite has no hint of how to do it.
 
+    # Here we are setting up the first() cache directly,
+    # because Set::Infinite has no hint of how to do it.
     if ($set->min == INFINITY || $set->min == NEG_INFINITY) {
         # warn "RECURR: start in ".$set->min;
         $func->{first} = [ $set->new( $set->min ), $set ];
@@ -185,6 +185,32 @@ sub _setup_recurrence_with_infinity {
         # warn "RECURR: preparing first: $min ; $next; got @first";
         $func->{first} = \@first;
     }
+
+    # Now are setting up the last() cache directly
+    if ($set->max == INFINITY || $set->max == NEG_INFINITY) {
+        # warn "RECURR: end in ".$set->max;
+        $func->{last} = [ $set->new( $set->max ), $set ];
+    }
+    else {
+        my $max = $func->max;
+        # iterate to find previous value
+        my $previous = _callback_previous( $max, $callback );
+        # warn "previous: ".$previous->ymd;
+        my $previous2 = _callback_previous( $previous, $callback );
+        # my $previous3 = _callback_previous( $previous2, $callback );
+        # warn "RECURR: preparing last: ".$previous2->ymd." ; ".$previous3->ymd;
+        my $previous_set = $set->intersection( NEG_INFINITY, $previous2->clone );
+        # warn "previous_set max is ".$previous_set->max->ymd;
+        my @last = (
+            $set->new( $max->clone ),
+            $previous_set->_function( 'iterate',
+                sub {
+                    _recurrence_callback( $_[0], $callback );
+                } ) );
+        # warn "RECURR: preparing last: $max ; $previous; got @last";
+        $func->{last} = \@last;
+    }
+
     # -- end hack
 
     # warn "func parent is ". $func->{first}[1]{parent}{list}[0]{a}->ymd;
@@ -215,6 +241,27 @@ sub _setup_recurrence_without_infinity {
     return $result;
 }
 
+# returns the "previous" value in a callback recurrence
+sub _callback_previous {
+    my ($value, $callback) = @_; 
+    my $previous = $value->clone;
+    # go back at least an year...
+    # TODO: memoize.
+    # TODO: binary search to find out what's the best subtract() unit.
+    $previous->subtract( months => 13 );  
+    # warn "current is ".$value->ymd." previous is ".$previous->ymd;
+    $previous = &$callback( $previous );
+    if ($previous >= $value) {
+        die "_callback_previous iterator can't find a previous value, got ".$previous->ymd." before ".$value->ymd;
+    }
+    my $previous1;
+    while (1) {
+        $previous1 = $previous->clone;
+        $previous = &$callback( $previous );
+        return $previous1 if $previous >= $value;
+    }
+}
+
 # iterator() doesn't do much yet.
 # This might change as the API gets more complex.
 sub iterator {
@@ -224,9 +271,21 @@ sub iterator {
 # next() gets the next element from an iterator()
 sub next {
     my ($self) = shift;
+    return undef unless ref( $self->{set} );
     my ($head, $tail) = $self->{set}->first;
     $self->{set} = $tail;
-    return $head->min;
+    return $head->min if defined $head;
+    return $head;
+}
+
+# previous() gets the last element from an iterator()
+sub previous {
+    my ($self) = shift;
+    return undef unless ref( $self->{set} );
+    my ($head, $tail) = $self->{set}->last;
+    $self->{set} = $tail;
+    return $head->max if defined $head;
+    return $head;
 }
 
 # Set::Infinite methods
@@ -417,17 +476,17 @@ First or last dates in the set.
 
 The total span of the set, as a DateTime::Span.
 
-=item * iterator / next
-
-This method can be used to iterate over the dates in a set.
+These methods can be used to iterate over the dates in a set.
 
     $iter = $set1->iterator;
     while ( $dt = $iter->next ) {
         print $dt->ymd;
     }
 
-The C<next()> returns C<undef> when there are no more datetimes in the
-iterator.  Obviously, if a set is specified as a recurrence and has no
+The C<next()> or C<previous()> return C<undef> when there are no 
+more datetimes in the iterator.  
+
+Obviously, if a set is specified as a recurrence and has no
 fixed end datetime, then it may never stop returning datetimes.  User
 beware!
 

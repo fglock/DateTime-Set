@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.17
+- previous() method (quite untested)
+
 0.16
 - small API changes
 

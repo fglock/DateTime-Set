@@ -12,6 +12,7 @@ t/03add_duration.t
 t/04recurrence.t
 t/05iterator.t
 t/06backtrack.t
+t/07previous.t
 lib/DateTime/Set.pm
 lib/DateTime/Span.pm
 lib/DateTime/SpanSet.pm
