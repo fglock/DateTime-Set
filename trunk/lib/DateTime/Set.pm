@@ -22,11 +22,11 @@ use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 
 BEGIN {
-    # This doesn't work - might be a DT::Duration bug
-    # $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
+    # [FIXED] This doesn't work - might be a DT::Duration bug
+    $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 
-    $neg_nanosecond = DateTime::Duration->new( nanoseconds => 0 );
-    $neg_nanosecond->{nanoseconds} = -1;
+    # $neg_nanosecond = DateTime::Duration->new( nanoseconds => 0 );
+    # $neg_nanosecond->{nanoseconds} = -1;
 }
 
 # _add_callback( $set_infinite, $datetime_duration )
@@ -320,6 +320,8 @@ sub _callback_previous {
 
         my $previous = $callback_next->( $value->clone );
         my $next =     $callback_next->( $previous->clone );
+
+my $FIXED = <<'___END_REMOVE';
         $freq = $next - $previous;
         # my %freq = $freq->deltas;
         # $freq{$_} = - abs ( int( $freq{$_} * 2 ) ) for keys %freq; 
@@ -336,6 +338,9 @@ sub _callback_previous {
         # warn "freq 1 is @freq";
 
         # $freq = new DateTime::Duration( %freq );
+___END_REMOVE
+
+        $freq = 2 * ( $previous - $next );
 
         # save it for future use with this same recurrence
         $callback_info->{freq} = $freq;
