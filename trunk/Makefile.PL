@@ -14,17 +14,17 @@ sub conflicts {
 
 
 %conflicts = (
-                'DateTime::Event::Recurrence' => '0.10',
-		'DateTime::Event::ICal'       => '0.07',
-		'DateTime::Event::Random'     => '0.03',
-		'DateTime::Event::Cron'       => '0.0601',
-                'DateTime::Event::Sunrise'    => '0.0501',
-		# 'DateTime-Event-Chinese'      => ''  -- test!
-		# 'DateTime-Event-Lunar'        => ''
-		# 'DateTime-Event-SolarTerm'    => '' 
+        #'DateTime::Event::Recurrence' => '0.10',
+        #'DateTime::Event::ICal'       => '0.07',
+        #'DateTime::Event::Random'     => '0.03',
+        #'DateTime::Event::Cron'       => '0.0601',
+        #'DateTime::Event::Sunrise'    => '0.0501',
+        # 'DateTime-Event-Chinese'      => ''  -- test!
+        # 'DateTime-Event-Lunar'        => ''
+        # 'DateTime-Event-SolarTerm'    => '' 
 );
 
-for ( keys %conflicts ) 
+for ( keys %conflicts )    
 {
     conflicts ( $_, $conflicts{$_} );
 }
@@ -38,4 +38,4 @@ WriteMakefile( NAME         => 'DateTime::Set',
                                  'Set::Infinite' => 0.5503,
                                  'Test::More'  => 0,
                                },
-             );
+);

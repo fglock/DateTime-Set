@@ -1,5 +1,10 @@
 Changes for DateTime::Set
 
+0.1412  2004-03-28
+- DateTime::Set->from_recurrence - Bounded recurrences are "optional".
+  use " detect_bounded => 1 " to turn them on.
+  This fixes the backwards incompatibilities created by version 0.1402.
+
 0.1411  2004-03-27
 - Makefile.PL.  Suggested by Randal L. Schwartz.
 
