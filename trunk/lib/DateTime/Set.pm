@@ -413,7 +413,7 @@ sub as_list {
     $span = DateTime::Span->new( %args ) if %args;
 
     my $set = $self->{set};
-    $set = $set->intersection( $span ) if $span;
+    $set = $set->intersection( $span->{set} ) if $span;
 
     return undef if $set->is_too_complex;  # undef = no begin/end
     return if $set->is_null;  # nothing = empty
