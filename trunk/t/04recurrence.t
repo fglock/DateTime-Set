@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 9;
+plan tests => 10;
 
 use DateTime;
 use DateTime::Duration;
@@ -61,6 +61,8 @@ $res = $res->ymd if ref($res);
 is( $res, '1810-08-01',   
     "max()" );
 }
+
+is( $months->count, INFINITY, "count" );
 
 # "START+END"
 $months = DateTime::Set->from_recurrence(

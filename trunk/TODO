@@ -22,3 +22,6 @@ TODO list for DT::Set, DT::Span, and DT::SpanSet
 - functions like before(), after(), during() might be useful
   in DT::Span
 
+- tests for DT::Span and DT::SpanSet 'duration()'
+- duration() returns 'Inf' scalar - should be a DT::Duration::Infinite
+

@@ -1,13 +1,14 @@
 Changes for DateTime::Set
 
+0.09    2003-08-18
+- added DT::Set count() 
+- fixed DT::SpanSet duration()
 - methods that accepted a DT object, now accept a list of DT objects.
   Suggested by Ben Bennet, I think.
 - added _callback_next - "previous-only recurrences"
 
-0.0805
 - optimizes intersection of recurrence with span
 
-0.0802
 - internal 'S::I' recurrence class
 
 - small fix in DT::Set clone()

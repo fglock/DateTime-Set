@@ -20,6 +20,7 @@ t/11next.t
 t/12iterator_intersection.t
 t/13add_recurrence.t
 t/14complement.t
+t/15time_zone.t
 lib/DateTime/Set.pm
 lib/DateTime/Span.pm
 lib/DateTime/SpanSet.pm

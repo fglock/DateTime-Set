@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 4;
+plan tests => 5;
 
 use DateTime;
 use DateTime::Duration;
@@ -19,6 +19,8 @@ my $s1 = DateTime::Set->from_datetimes( dates => [ $t1, $t2 ] );
 
 my $dur1 = new DateTime::Duration ( years => 1 );
 my $s2 = $s1->add_duration( $dur1 );
+
+is( $s2->count, 2, "count" );
 
 is( $s2->min->ymd, '1811-11-22', 
     'got 1811-11-22 - min' );

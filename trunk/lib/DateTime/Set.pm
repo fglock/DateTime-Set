@@ -159,7 +159,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.0805';
+    $VERSION = '0.09';
     $neg_nanosecond = DateTime::Duration->new( nanoseconds => -1 );
 }
 
@@ -690,6 +690,20 @@ sub span {
   return $set;
 }
 
+sub count {
+    my ($self) = shift;
+    return undef unless ref( $self->{set} );
+
+    my %args = @_;
+    my $span;
+    $span = delete $args{span};
+    $span = DateTime::Span->new( %args ) if %args;
+
+    my $set = $self->clone;
+    $set = $set->intersection( $span ) if $span;
+    return $set->{set}->count;
+}
+
 # unsupported Set::Infinite methods
 # sub size { die "size() not supported - would be zero!"; }
 # sub offset { die "offset() not supported"; }
@@ -913,6 +927,17 @@ fixed begin and end datetimes, then C<as_list> will return C<undef>
 unless you limit it with a span.  Please note that this is explicitly
 not an empty list, since an empty list is a valid return value for
 empty sets!
+
+=item * count
+
+Returns a count of C<DateTime> objects in the set.
+
+  my $n = $set->count( span => $span );
+
+Just as with the C<iterator()> method, the C<count()> method can be
+limited by a span.  If a set is specified as a recurrence and has no
+fixed begin and end datetimes, then C<count> will return the C<infinity>
+scalar, unless you limit it with a span.
 
 =item * union / intersection / complement
 
