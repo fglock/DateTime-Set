@@ -641,7 +641,7 @@ sub complement {
     else {
         $tmp->{set} = $set1->{set}->complement;
     }
-    bless $tmp, 'DateTime::SpanSet' unless @_;
+    bless $tmp, 'DateTime::SpanSet' unless $_[1];
     return $tmp;
 }
 
@@ -900,6 +900,11 @@ and C<DateTime> objects.
 
 The C<union> of a C<DateTime::Set> with a C<DateTime::Span> or a
 C<DateTime::SpanSet> object returns a C<DateTime::SpanSet> object.
+
+If C<complement> is called without any arguments, then the result is a
+C<DateTime::SpanSet> object representing the spans between each of the
+set's elements.  If complement is given an argument, then the return
+value is a C<DateTime::Set> object.
 
 All other operations will always return a C<DateTime::Set>.
 
