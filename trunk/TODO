@@ -4,3 +4,8 @@
   Actually, it might be better to redo the implementations
   of offset() and quantize()
 
+- Define the new API. Without offset/quantize it is 
+  almost impossible to do things like 'every wednesday'.
+  It can be done with the iterate() method, but it is
+  too difficult.
+

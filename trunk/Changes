@@ -1,3 +1,12 @@
+0.05
+
+- improved SYNOPSYS
+
+- added 'immutability' tests
+
+- new() will not try to clone non-DateTime parameters (such as the
+  Infinity value)
+
 0.04
 
 - The program will die with an error message, 

@@ -7,4 +7,5 @@ README
 Makefile.PL
 t/00load.t
 t/01sanity.t
+t/02immutable.t
 lib/DateTime/Set.pm
