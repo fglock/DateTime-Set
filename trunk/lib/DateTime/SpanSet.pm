@@ -77,11 +77,19 @@ sub clone {
         }, ref $_[0];
 }
 
-# iterator() doesn't do much yet.
-# This might change as the API gets more complex.
+
 sub iterator {
-    return $_[0]->clone;
+    my $self = shift;
+
+    my %args = @_;
+    my $span;
+    $span = delete $args{span};
+    $span = DateTime::Span->new( @_ ) if @_;
+
+    return $self->intersection( $span ) if $span;
+    return $self->clone;
 }
+
 
 # next() gets the next element from an iterator()
 sub next {
@@ -311,6 +319,12 @@ This method can be used to iterate over the date-spans in a set.
         print $dt->min->ymd;   # first date of span
         print $dt->max->ymd;   # last date of span
     }
+
+The C<iterator()> method can optionally take parameters to control the
+range of the iteration.  These are C<start> or C<after>, and C<end> or
+C<before> (see C<DateTime::Span->from_datetime()> for full details).
+If a parameter is ommitted then there is no restriction on that side.
+So specifying only C<start> may iterate forever.
 
 The C<next()> method returns C<undef> when there are no more spans in
 the iterator.  Obviously, if a span set is specified as a recurrence

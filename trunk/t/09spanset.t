@@ -1,7 +1,7 @@
 use strict;
 
 use Test::More;
-plan tests => 19;
+plan tests => 22;
 
 use DateTime;
 use DateTime::Duration;
@@ -177,6 +177,35 @@ ok( $res eq '1813-12-23T00:00:00..'.INFINITY,
     $res = span_str( $iter->next );
     ok( $res eq '1810-09-21T00:00:00..1810-09-21T01:00:00',
         "start_set == end_set recurrence works properly - got $res" );
+}
+
+# test the iterator limits.  Ben Bennett.
+{
+    my $start1 = new DateTime( year => '1810', month => '9',  day => '20' );
+    my $end1   = new DateTime( year => '1811', month => '10', day => '21' );
+    my $start2 = new DateTime( year => '1812', month => '11', day => '22' );
+    my $end2   = new DateTime( year => '1813', month => '12', day => '23' );
+    my $end3   = new DateTime( year => '1813', month => '12', day => '1' );
+	
+    my $start_set = DateTime::Set->from_datetimes( dates => [ $start1, $start2 ] );
+    my $end_set   = DateTime::Set->from_datetimes( dates => [ $end1, $end2 ] );
+    
+    my $s1 = DateTime::SpanSet->from_sets( start_set => $start_set, end_set => $end_set );
+ 
+    my $iter_all   = $s1->iterator;
+    my $iter_limit = $s1->iterator(start => $start1, end => $end3);
+
+    my $res_a = span_str( $iter_all->next );
+    my $res_l = span_str( $iter_limit->next );
+    is( $res_a, $res_l,
+        "limited iterator got $res" );
+    
+    $res_a = span_str( $iter_all->next );
+    $res_l = span_str( $iter_limit->next );
+    is( $res_l, '1812-11-22T00:00:00..1813-12-01T00:00:00',
+        "limited iterator works properly" );
+    is( $res_a, '1812-11-22T00:00:00..1813-12-23T00:00:00',
+        "limited iterator doesn't break regular iterator" );
 }
 
 1;

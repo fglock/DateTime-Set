@@ -1,3 +1,7 @@
+- as_list in SpanSet.pm
+
+- tests for as_list in Set.pm
+- tests for span in Set.pm
 
 - discuss functions like 
     is_infinite

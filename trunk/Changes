@@ -1,6 +1,8 @@
 Changes for DateTime::Set
 
-0.03     2003-04-26
+0.03     2003-04-27
+- fixes in Set.pm as_list, span.
+- iterator accepts 'span' parameters.  Ben Bennett.
 - requires Set::Infinite 0.49
 
 0.02     2003-04-20

@@ -8,7 +8,7 @@ use strict;
 use Carp;
 use Params::Validate qw( validate SCALAR BOOLEAN OBJECT CODEREF ARRAYREF );
 use DateTime::Span;
-use Set::Infinite 0.45;   # 0.44_04 would be ok, but it is a devel version
+use Set::Infinite 0.49;  
 $Set::Infinite::PRETTY_PRINT = 1;   # enable Set::Infinite debug
 
 use vars qw( $VERSION );
@@ -332,11 +332,19 @@ sub _callback_previous {
     }
 }
 
-# iterator() doesn't do much yet.
-# This might change as the API gets more complex.
+
 sub iterator {
-    return $_[0]->clone;
+    my $self = shift;
+
+    my %args = @_;
+    my $span;
+    $span = delete $args{span};
+    $span = DateTime::Span->new( @_ ) if @_;
+
+    return $self->intersection( $span ) if $span;
+    return $self->clone;
 }
+
 
 # next() gets the next element from an iterator()
 # next( $dt ) returns the next element after a datetime.
@@ -411,7 +419,7 @@ sub as_list {
     $span = DateTime::Span->new( @_ ) if @_;
 
     my $set = $self->{set};
-    $set = $set->intersection( $span->{set} ) if $span;
+    $set = $set->intersection( $span ) if $span;
 
     return undef if $set->is_too_complex;  # undef = no begin/end
     return if $set->is_null;  # nothing = empty
@@ -490,7 +498,7 @@ sub max {
 # returns a DateTime::Span
 sub span {
   my $set = $_[0]->{set}->span;
-  bless $set, 'DateTime::Span';
+  bless { set => $set }, 'DateTime::Span';
   return $set;
 }
 
@@ -624,6 +632,10 @@ as an exercise for the reader ;)
 It is also possible to create a recurrence by specifying both
 'next' and 'previous' callbacks.
 
+See also C<DateTime::Event::Recurrence> and the other C<DateTime::Event>
+modules for generating specialized recurrences, such as sunrise and sunset time, 
+and holidays.
+
 =item * empty_set
 
 Creates a new empty set.
@@ -671,6 +683,12 @@ These methods can be used to iterate over the dates in a set.
     while ( $dt = $iter->next ) {
         print $dt->ymd;
     }
+
+The C<iterator()> method can optionally take parameters to control the
+range of the iteration.  These are C<start> or C<after>, and C<end> or
+C<before> (see C<DateTime::Span->from_datetime()> for full details).
+If a parameter is ommitted then there is no restriction on that side.
+So specifying only C<start> may iterate forever.
 
 The C<next()> or C<previous()> method will return C<undef> when there
 are no more datetimes in the iterator.
