@@ -8,4 +8,5 @@ Makefile.PL
 t/00load.t
 t/01sanity.t
 t/02immutable.t
+t/03add_duration.t
 lib/DateTime/Set.pm
