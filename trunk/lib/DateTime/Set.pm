@@ -94,7 +94,7 @@ sub from_recurrence {
 
             $param{previous} =
                 sub {
-                    _callback_previous ( $_[0], $param{next}, undef, $data );
+                    _callback_previous ( $_[0], $param{next}, $data );
                     }
         }
 
@@ -295,25 +295,21 @@ sub _setup_finite_recurrence {
     return $result;
 }
 
-# returns the "previous" value in a callback recurrence
-# This is used when then 'previous' argument in 'from_recurrence' is undef
+# returns the "previous" value in a callback recurrence.
+#
+# This is used to simulate a 'previous' callback,
+# when then 'previous' argument in 'from_recurrence' is missing.
+#
 sub _callback_previous {
-    my ($value, $callback_next, $callback_previous, $callback_info) = @_; 
+    my ($value, $callback_next, $callback_info) = @_; 
     my $previous = $value->clone;
-
-    if ( $callback_previous ) {
-        return $callback_previous->( $previous );
-    }
 
     # TODO: memoize.
     # TODO: binary search to find out what's the best subtract() unit.
 
     my $freq = $callback_info->{freq};
     unless (defined $freq) { 
-
         # This is called just once, to setup the recurrence frequency
-        # The use of 'next' to simulate 'previous' might be
-        # considered a hack. 
         # The program will warn() if it this is not working properly.
 
         my $next = $value->clone;
