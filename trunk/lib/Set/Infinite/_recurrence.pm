@@ -245,7 +245,7 @@ to define recurrences with arbitrary objects, such as dates.
 
 =over 4
 
-=item * _recurrence
+=item * _recurrence ( \&next, \&current, \&previous )
 
 Creates a recurrence set. The set is defined inside a 'base set'.
 
@@ -315,6 +315,18 @@ ranging from -Infinity to Infinity.
 Returns true if the set is an unbounded recurrence, 
 ranging from -Infinity to Infinity.
 
+=head1 CONSTANTS
+
+=over 4
+
+=item * INFINITY
+
+The C<Infinity> value.
+
+=item * NEG_INFINITY
+
+The C<-Infinity> value.
+
 =back
 
 =head1 SUPPORT
@@ -341,6 +353,8 @@ included with this module.
 =head1 SEE ALSO
 
 Set::Infinite
+
+DateTime::Set
 
 For details on the Perl DateTime Suite project please see
 L<http://datetime.perl.org>.

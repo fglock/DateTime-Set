@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 8;
+plan tests => 10;
 
 use DateTime;
 use DateTime::Set;
@@ -60,6 +60,18 @@ my $original = $t1->datetime . ' ' .
 is( $str, '2001-12-01T00:00:00 Asia/Taipei', 'recurrence with time zone' );
 is( $original, '2001-11-22T00:00:00 floating', 'does not mutate arg' );
 
+# set locale, add duration
+is ( $months->add( days => 1 )->
+              next( $t1 )->
+              strftime( "%a" ), 'Sun', 
+     'default locale' );
+
+is ( $months->add( days => 1 )->
+              set( locale => 'pt_BR' )->
+              next( $t1 )->
+              strftime( "%a" ), 
+     'Dom', 
+     'new locale' );
 }
 
 1;
