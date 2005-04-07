@@ -925,67 +925,43 @@ are no more datetimes in the iterator.
 =item * as_list
 
 Returns the set elements as a list of C<DateTime> objects.
-
-    my @dt = $set->as_list( span => $span );
-
 Just as with the C<iterator()> method, the C<as_list()> method can be
 limited by a span.  
 
+  my @dt = $set->as_list( span => $span );
+
 Applying C<as_list()> to a large recurrence set is a very expensive operation, both in 
 CPU time and in the memory used.
-
-For this reason, when C<as_list()> operates on large recurrence sets, it will return 
-at most approximately 200 datetimes. For larger sets, and for I<infinite> sets, 
-C<as_list()> will return C<undef>.
-
-Please note that this is explicitly not an empty list, since an empty list is a valid
-return value for empty sets!
-
-If you I<really> need to extract elements from a large set, you can:
-
-- limit the set with a shorter span:
+If you I<really> need to extract elements from a large set, you can
+limit the set with a shorter span:
 
     my @short_list = $large_set->as_list( span => $short_span );
 
-- use an iterator:
-
-    my @large_list;
-    my $iter = $large_set->iterator;
-    push @large_list, $dt while $dt = $iter->next;
+For I<infinite> sets, C<as_list()> will return C<undef>.
+Please note that this is explicitly not an empty list, since an empty list is a valid
+return value for empty sets!
 
 =item * count
 
 Returns a count of C<DateTime> objects in the set.
-
-  my $n = $set->count( span => $span );
-  die "can't count" unless defined $n;
-  
-  defined( my $n = $set->count) or die "can't count";
-  
 Just as with the C<iterator()> method, the C<count()> method can be
 limited by a span.  
 
+  defined( my $n = $set->count) or die "can't count";
+  
+  my $n = $set->count( span => $span );
+  die "can't count" unless defined $n;
+  
 Applying C<count()> to a large recurrence set is a very expensive operation, 
 both in CPU time and in the memory used.
-
-For this reason, when C<count()> operates on large recurrence sets, it will 
-return at most approximately C<200>. For larger sets, and for I<infinite> sets,
-C<count()> will return C<undef>.
-
-Please note that this is explicitly not a scalar zero, since a zero count
-is a valid return value for empty sets!
-
-If you I<really> need to count elements from a large set, you can:
-
-- limit the set with a shorter span:
+If you I<really> need to count elements from a large set, you can 
+limit the set with a shorter span:
 
     my $count = $large_set->count( span => $short_span );
 
-- use an iterator:
-
-    my $count = 0;
-    my $iter = $large_set->iterator;
-    $count++ while $iter->next;
+For I<infinite> sets, C<count()> will return C<undef>.
+Please note that this is explicitly not a scalar zero, since a zero count
+is a valid return value for empty sets!
 
 =item * union
 
