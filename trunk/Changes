@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.22   2005-05-06
+- DateTime::Set 0.21 dies when as_list is asked to produce a list from
+  outside the range of the set. Patch contributed by Stephen Gowing.
+
 0.21   2005-04-06
 - no hard limit in count() and as_list(); removed the warnings from the docs.
 

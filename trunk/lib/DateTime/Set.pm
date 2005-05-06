@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.21';
+    $VERSION = '0.22';
 }
 
 
@@ -501,6 +501,8 @@ sub as_list {
     my $set = $self->clone;
     $set = $set->intersection( $span ) if $span;
 
+    return if $set->{set}->is_null;  # nothing = empty
+
     # Note: removing this line means we may end up in an infinite loop!
     ## return undef if $set->{set}->is_too_complex;  # undef = no begin/end
  
@@ -508,7 +510,6 @@ sub as_list {
         if $set->max->is_infinite ||
            $set->min->is_infinite;
 
-    # return if $set->{set}->is_null;  # nothing = empty
     my @result;
     # we should extract _copies_ of the set elements,
     # such that the user can't modify the set indirectly
