@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.23   2005-10-03
+- _recurrence.pm died when the recurrence didn't have occurrences before
+  a given start date. Reported by Mark D. Anderson. 
+
 0.22   2005-05-06
 - DateTime::Set 0.21 dies when as_list is asked to produce a list from
   outside the range of the set. Patch contributed by Stephen Gowing.
