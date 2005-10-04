@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.24   2005-10-03
+- _recurrence.pm warned when the recurrence didn't have occurrences before
+  a given start date. Reported by Mark D. Anderson. 
+
 0.23   2005-10-03
 - _recurrence.pm died when the recurrence didn't have occurrences before
   a given start date. Reported by Mark D. Anderson. 

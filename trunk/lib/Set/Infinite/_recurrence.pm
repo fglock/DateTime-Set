@@ -116,7 +116,7 @@ sub _recurrence {
         if ( ! $min_open )
         {
                 $min2 = $callback_previous->( $min1 );
-                $min1 = $min2 if $min == $min2;
+                $min1 = $min2 if defined $min2 && $min == $min2;
         }
         
         $result = $set->new();
