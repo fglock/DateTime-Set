@@ -46,7 +46,11 @@ is( $span2->end->datetime, '2002-11-22T00:00:00',
 {
 my $months = DateTime::Set->from_recurrence(
                  recurrence => sub {
+                     my $tz = $_[0]->time_zone;
+                     $_[0]->set_time_zone( 'floating' );
                      $_[0]->truncate( to => 'month' )->add( months => 1 );
+                     $_[0]->set_time_zone( $tz );
+                     $_[0];
                  }
              )
              ->set_time_zone( 'Asia/Taipei' );
@@ -71,8 +75,12 @@ is( $original, '2001-11-22T00:00:00 floating', 'does not mutate arg' );
 
   my $set_floating = DateTime::Set->from_recurrence(
        recurrence => sub {
-                         $_[0]->truncate( to => 'month' )->add( months => 1 );
-                      }
+                     my $tz = $_[0]->time_zone;
+                     $_[0]->set_time_zone( 'floating' );
+                     $_[0]->truncate( to => 'month' )->add( months => 1 );
+                     $_[0]->set_time_zone( $tz );
+                     $_[0];
+                  }
   );
   my $set_with_tz = $set_floating->clone->set_time_zone( 'Asia/Taipei' );
 

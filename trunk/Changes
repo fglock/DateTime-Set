@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.25   2005-10-05
+- t/15time_zone.t does it's own time zone "add_duration" handling
+
 0.24   2005-10-03
 - _recurrence.pm warned when the recurrence didn't have occurrences before
   a given start date. Reported by Mark D. Anderson. 
