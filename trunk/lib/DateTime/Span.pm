@@ -331,7 +331,13 @@ DateTime::Span - Datetime spans
 
 =head1 DESCRIPTION
 
-DateTime::Span is a module for date/time spans or time-ranges. 
+C<DateTime::Span> is a module for handling datetime spans, otherwise
+known as ranges or periods ("from X to Y, inclusive of all datetimes
+in between").
+
+This is different from a C<DateTime::Set>, which is made of individual
+datetime points as opposed to a range. There is also a module
+C<DateTime::SpanSet> to handle sets of spans.
 
 =head1 METHODS
 
@@ -408,12 +414,10 @@ Also available as C<size()>.
 
 =item * end
 
-First or last dates in the span.  
+First or last dates in the span.
 
-It is possible that the return value
-from these methods may be a 
-DateTime::Infinite::Future or a 
-DateTime::Infinite::Past object.
+It is possible that the return value from these methods may be a
+C<DateTime::Infinite::Future> or a C<DateTime::Infinite::Past>xs object.
 
 If the set ends C<before> a date C<$dt>, it returns C<$dt>. Note that
 in this case C<$dt> is not a set element - but it is a set boundary.
@@ -479,9 +483,9 @@ The API was developed together with Dave Rolsky and the DateTime Community.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003 Flavio Soibelmann Glock. All rights reserved.
-This program is free software; you can distribute it and/or
-modify it under the same terms as Perl itself.
+Copyright (c) 2003-2006 Flavio Soibelmann Glock. All rights reserved.
+This program is free software; you can distribute it and/or modify it
+under the same terms as Perl itself.
 
 The full text of the license can be found in the LICENSE file
 included with this module.
