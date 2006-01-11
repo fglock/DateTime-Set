@@ -542,9 +542,12 @@ DateTime::SpanSet - set of DateTime spans
 
 =head1 DESCRIPTION
 
-DateTime::SpanSet is a class that represents sets of datetime spans.
-An example would be a recurring meeting that occurs from 13:00-15:00
-every Friday.
+C<DateTime::SpanSet> is a class that represents sets of datetime
+spans.  An example would be a recurring meeting that occurs from
+13:00-15:00 every Friday.
+
+This is different from a C<DateTime::Set>, which is made of individual
+datetime points as opposed to ranges.
 
 =head1 METHODS
 
@@ -658,11 +661,11 @@ This method is used to find the "current" span in the set,
 that intersects a given datetime or span. If no current span
 is found, then the "previous" span is returned.
 
-The return value is a C<DateTime::SpanSet>, or C<undef> if there is no matching
-span in the set.
+The return value is a C<DateTime::SpanSet>, or C<undef> if there is no
+matching span in the set.
 
-If a span parameter is given, it may happen that "current" 
-returns more than one span.
+If a span parameter is given, it may happen that "current" returns
+more than one span.
 
 See also: C<intersected_spans()> method.
 
@@ -670,14 +673,14 @@ See also: C<intersected_spans()> method.
 
   my $span = $set->closest( $dt );
 
-This method is used to find the "closest" span in the set,
-given a datetime or span. 
+This method is used to find the "closest" span in the set, given a
+datetime or span.
 
-The return value is a C<DateTime::SpanSet>, or C<undef> if the
-set is empty.
+The return value is a C<DateTime::SpanSet>, or C<undef> if the set is
+empty.
 
-If a span parameter is given, it may happen that "closest" 
-returns more than one span.
+If a span parameter is given, it may happen that "closest" returns
+more than one span.
 
 =item * as_list
 
@@ -688,15 +691,15 @@ Returns a list of C<DateTime::Span> objects.
 Just as with the C<iterator()> method, the C<as_list()> method can be
 limited by a span.
 
-Applying C<as_list()> to a large recurring spanset is a very expensive operation, 
-both in CPU time and in the memory used.
+Applying C<as_list()> to a large recurring spanset is a very expensive
+operation, both in CPU time and in the memory used.
 
-For this reason, when C<as_list()> operates on large recurrence sets, it will 
-return at most approximately 200 spans. For larger sets, and for I<infinite> 
-sets, C<as_list()> will return C<undef>.
+For this reason, when C<as_list()> operates on large recurrence sets,
+it will return at most approximately 200 spans. For larger sets, and
+for I<infinite> sets, C<as_list()> will return C<undef>.
 
-Please note that this is explicitly not an empty list, since an empty list is a 
-valid return value for empty sets!
+Please note that this is explicitly not an empty list, since an empty
+list is a valid return value for empty sets!
 
 If you I<really> need to extract spans from a large set, you can:
 
@@ -728,17 +731,16 @@ C<DateTime::SpanSet> object.
 
 =item * intersected_spans
 
-This method can accept a C<DateTime> list,
-a C<DateTime::Set>, a C<DateTime::Span>, or a C<DateTime::SpanSet>
-object as an argument.
+This method can accept a C<DateTime> list, a C<DateTime::Set>, a
+C<DateTime::Span>, or a C<DateTime::SpanSet> object as an argument.
 
     $set = $set1->intersected_spans( $set2 );
 
-The method always returns a C<DateTime::SpanSet> object,
-containing all spans that are intersected by the given set.
+The method always returns a C<DateTime::SpanSet> object, containing
+all spans that are intersected by the given set.
 
-Unlike the C<intersection> method, the spans are not modified.
-See diagram below:
+Unlike the C<intersection> method, the spans are not modified.  See
+diagram below:
 
                set1   [....]   [....]   [....]   [....]
                set2      [................]
@@ -781,8 +783,8 @@ Obviously, if the span you specify does is not restricted both at the
 start and end, then your iterator may iterate forever, depending on
 the nature of your set.  User beware!
 
-The C<next()> or C<previous()> methods will return C<undef> 
-when there are no more spans in the iterator.
+The C<next()> or C<previous()> methods will return C<undef> when there
+are no more spans in the iterator.
 
 =item * start_set
 
@@ -790,9 +792,11 @@ when there are no more spans in the iterator.
 
 These methods do the inverse of the C<from_sets> method:
 
-C<start_set> retrieves a DateTime::Set with the start datetime of each span.
+C<start_set> retrieves a DateTime::Set with the start datetime of each
+span.
 
-C<end_set> retrieves a DateTime::Set with the end datetime of each span.
+C<end_set> retrieves a DateTime::Set with the end datetime of each
+span.
 
 =item * map ( sub { ... } )
 
@@ -810,29 +814,26 @@ C<end_set> retrieves a DateTime::Set with the end datetime of each span.
 
 This method is the "set" version of Perl "map".
 
-It evaluates a subroutine for each element of
-the set (locally setting "$_" to each DateTime::Span)
-and returns the set composed of the results of
-each such evaluation.
+It evaluates a subroutine for each element of the set (locally setting
+"$_" to each DateTime::Span) and returns the set composed of the
+results of each such evaluation.
 
-Like Perl "map", each element of the set
-may produce zero, one, or more elements in the 
-returned value.
+Like Perl "map", each element of the set may produce zero, one, or
+more elements in the returned value.
 
-Unlike Perl "map", changing "$_" does not change
-the original set. This means that calling map
-in void context has no effect.
+Unlike Perl "map", changing "$_" does not change the original
+set. This means that calling map in void context has no effect.
 
-The callback subroutine may not be called immediately.
-Don't count on subroutine side-effects. For example,
-a C<print> inside the subroutine may happen later than you expect.
+The callback subroutine may not be called immediately.  Don't count on
+subroutine side-effects. For example, a C<print> inside the subroutine
+may happen later than you expect.
 
 The callback return value is expected to be within the span of the
 C<previous> and the C<next> element in the original set.
 
-For example: given the set C<[ 2001, 2010, 2015 ]>,
-the callback result for the value C<2010> is expected to be
-within the span C<[ 2001 .. 2015 ]>.
+For example: given the set C<[ 2001, 2010, 2015 ]>, the callback
+result for the value C<2010> is expected to be within the span C<[
+2001 .. 2015 ]>.
 
 =item * grep ( sub { ... } )
 
@@ -846,32 +847,31 @@ within the span C<[ 2001 .. 2015 ]>.
 
 This method is the "set" version of Perl "grep".
 
-It evaluates a subroutine for each element of
-the set (locally setting "$_" to each DateTime::Span)
-and returns the set consisting of those elements 
-for which the expression evaluated to true.
+It evaluates a subroutine for each element of the set (locally setting
+"$_" to each DateTime::Span) and returns the set consisting of those
+elements for which the expression evaluated to true.
 
-Unlike Perl "grep", changing "$_" does not change
-the original set. This means that calling grep
-in void context has no effect.
+Unlike Perl "grep", changing "$_" does not change the original
+set. This means that calling grep in void context has no effect.
 
 Changing "$_" does change the resulting set.
 
-The callback subroutine may not be called immediately.
-Don't count on subroutine side-effects. For example,
-a C<print> inside the subroutine may happen later than you expect.
+The callback subroutine may not be called immediately.  Don't count on
+subroutine side-effects. For example, a C<print> inside the subroutine
+may happen later than you expect.
 
 =item * iterate
 
 I<Internal method - use "map" or "grep" instead.>
 
-This function apply a callback subroutine to all elements of a set
-and returns the resulting set.
+This function apply a callback subroutine to all elements of a set and
+returns the resulting set.
 
-The parameter C<$_[0]> to the callback subroutine is a C<DateTime::Span>
-object.
+The parameter C<$_[0]> to the callback subroutine is a
+C<DateTime::Span> object.
 
-If the callback returns C<undef>, the datetime is removed from the set:
+If the callback returns C<undef>, the datetime is removed from the
+set:
 
     sub remove_sundays {
         $_[0] unless $_[0]->start->day_of_week == 7;
@@ -880,13 +880,13 @@ If the callback returns C<undef>, the datetime is removed from the set:
 The callback return value is expected to be within the span of the
 C<previous> and the C<next> element in the original set.
 
-For example: given the set C<[ 2001, 2010, 2015 ]>,
-the callback result for the value C<2010> is expected to be
-within the span C<[ 2001 .. 2015 ]>.
+For example: given the set C<[ 2001, 2010, 2015 ]>, the callback
+result for the value C<2010> is expected to be within the span C<[
+2001 .. 2015 ]>.
 
-The callback subroutine may not be called immediately.
-Don't count on subroutine side-effects. For example,
-a C<print> inside the subroutine may happen later than you expect.
+The callback subroutine may not be called immediately.  Don't count on
+subroutine side-effects. For example, a C<print> inside the subroutine
+may happen later than you expect.
 
 =back
 
