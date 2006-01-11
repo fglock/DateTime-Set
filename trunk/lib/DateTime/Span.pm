@@ -363,8 +363,12 @@ These spans end, or start, in an imaginary 'forever' date:
    $span = DateTime::Span->from_datetimes( before => $dt2 );
 
 You cannot give both a "start" and "after" argument, nor can you give
-both an "end" and "before" argument.  Either of these conditions 
-will cause the C<from_datetimes()> method to die.
+both an "end" and "before" argument.  Either of these conditions will
+cause the C<from_datetimes()> method to die.
+
+To summarize, a datetime passed as either "start" or "end" is included
+in the span.  A datetime passed as either "after" or "before" is
+excluded from the span.
 
 =item * from_datetime_and_duration
 
