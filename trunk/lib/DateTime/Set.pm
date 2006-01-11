@@ -706,20 +706,28 @@ DateTime::Set - Datetime sets and set math
 
 =head1 DESCRIPTION
 
-DateTime::Set is a module for datetime sets.  It can be used to
-handle two different types of sets.
+DateTime::Set is a module for datetime sets.  It can be used to handle
+two different types of sets.
 
 The first is a fixed set of predefined datetime objects.  For example,
 if we wanted to create a set of datetimes containing the birthdays of
-people in our family.
+people in our family for the current year.
 
-The second type of set that it can handle is one based on the idea of
-a recurrence, such as "every Wednesday", or "noon on the 15th day of
+The second type of set that it can handle is one based on a
+recurrence, such as "every Wednesday", or "noon on the 15th day of
 every month".  This type of set can have fixed starting and ending
 datetimes, but neither is required.  So our "every Wednesday set"
 could be "every Wednesday from the beginning of time until the end of
 time", or "every Wednesday after 2003-03-05 until the end of time", or
 "every Wednesday between 2003-03-05 and 2004-01-07".
+
+This module also supports set math operations, so you do things like
+create a new set from the union or difference of two sets, check
+whether a datetime is a member of a given set, etc.
+
+This is different from a C<DateTime::Span>, which handles a continuous
+range as opposed to individual datetime points. There is also a module
+C<DateTime::SpanSet> to handle sets of spans.
 
 =head1 METHODS
 
@@ -734,8 +742,7 @@ Creates a new set from a list of datetimes.
 The datetimes can be objects from class C<DateTime>, or from a
 C<DateTime::Calendar::*> class.
 
-C<DateTime::Infinite::*> objects are not valid set members. 
-However, these datetimes are very useful as set boundaries.
+C<DateTime::Infinite::*> objects are not valid set members.
 
 =item * from_recurrence
 
@@ -762,20 +769,20 @@ case, if there is a C<span> parameter it will be ignored.
     );
 
 The recurrence function will be passed a single parameter, a datetime
-object. The parameter can be an object from class C<DateTime>, 
-or from one of the C<DateTime::Calendar::*> classes. 
-The parameter can also be a C<DateTime::Infinite::Future> or
-a C<DateTime::Infinite::Past> object.
+object. The parameter can be an object from class C<DateTime>, or from
+one of the C<DateTime::Calendar::*> classes.  The parameter can also
+be a C<DateTime::Infinite::Future> or a C<DateTime::Infinite::Past>
+object.
 
-The recurrence must return the I<next> event 
-after that object.  There is no guarantee as to what the returned 
-object will be set to, only that it will be greater than the object
-passed to the recurrence.
-If there are no more datetimes after the given parameter, 
-then the recurrence function should return C<DateTime::Infinite::Future>.
+The recurrence must return the I<next> event after that object.  There
+is no guarantee as to what the returned object will be set to, only
+that it will be greater than the object passed to the recurrence.
 
-It is ok to modify the parameter C<$_[0]> inside the recurrence function.
-There are no side-effects.
+If there are no more datetimes after the given parameter, then the
+recurrence function should return C<DateTime::Infinite::Future>.
+
+It is ok to modify the parameter C<$_[0]> inside the recurrence
+function.  There are no side-effects.
 
 For example, if you wanted a recurrence that generated datetimes in
 increments of 30 seconds, it would look like this:
@@ -789,16 +796,17 @@ increments of 30 seconds, it would look like this:
       }
   }
 
-Note that this recurrence takes leap seconds into account. 
-You should use datetime calendar methods whenever possible, 
-in order to avoid complicated arithmetic problems!
+Note that this recurrence takes leap seconds into account.  Consider
+using C<truncate()> in this manner to avoid complicated arithmetic
+problems!
 
 It is also possible to create a recurrence by specifying either or both
 of 'next' and 'previous' callbacks.
 
-The callbacks can return C<DateTime::Infinite::Future> and 
-C<DateTime::Infinite::Past> objects, in order to define I<bounded recurrences>.
-In this case, both 'next' and 'previous' callbacks must be defined:
+The callbacks can return C<DateTime::Infinite::Future> and
+C<DateTime::Infinite::Past> objects, in order to define I<bounded
+recurrences>.  In this case, both 'next' and 'previous' callbacks must
+be defined:
 
     # "monthly from $dt until forever"
 
@@ -820,9 +828,9 @@ In this case, both 'next' and 'previous' callbacks must be defined:
 
 Bounded recurrences are easier to write using C<span> parameters. See above.
 
-See also C<DateTime::Event::Recurrence> and the other C<DateTime::Event::*>
-factory modules for generating specialized recurrences, 
-such as sunrise and sunset times, and holidays.
+See also C<DateTime::Event::Recurrence> and the other
+C<DateTime::Event::*> factory modules for generating specialized
+recurrences, such as sunrise and sunset times, and holidays.
 
 =item * empty_set
 
@@ -884,8 +892,8 @@ This method can be used to change the C<locale> of a datetime set.
 
 The first and last C<DateTime> in the set.  These methods may return
 C<undef> if the set is empty.  It is also possible that these methods
-may return a C<DateTime::Infinite::Past> or C<DateTime::Infinite::Future> 
-object.
+may return a C<DateTime::Infinite::Past> or
+C<DateTime::Infinite::Future> object.
 
 These methods return just a I<copy> of the actual boundary value.
 If you modify the result, the set will not be modified.
@@ -916,62 +924,61 @@ you can pass any parameters that would work for one of the
 C<DateTime::Span> class's constructors, and an object will be created
 for you.
 
-Obviously, if the span you specify is not restricted both at the
-start and end, then your iterator may iterate forever, depending on
-the nature of your set.  User beware!
+Obviously, if the span you specify is not restricted both at the start
+and end, then your iterator may iterate forever, depending on the
+nature of your set.  User beware!
 
 The C<next()> or C<previous()> method will return C<undef> when there
 are no more datetimes in the iterator.
 
 =item * as_list
 
-Returns the set elements as a list of C<DateTime> objects.
-Just as with the C<iterator()> method, the C<as_list()> method can be
-limited by a span.  
+Returns the set elements as a list of C<DateTime> objects.  Just as
+with the C<iterator()> method, the C<as_list()> method can be limited
+by a span.
 
   my @dt = $set->as_list( span => $span );
 
-Applying C<as_list()> to a large recurrence set is a very expensive operation, both in 
-CPU time and in the memory used.
-If you I<really> need to extract elements from a large set, you can
-limit the set with a shorter span:
+Applying C<as_list()> to a large recurrence set is a very expensive
+operation, both in CPU time and in the memory used.  If you I<really>
+need to extract elements from a large set, you can limit the set with
+a shorter span:
 
     my @short_list = $large_set->as_list( span => $short_span );
 
-For I<infinite> sets, C<as_list()> will return C<undef>.
-Please note that this is explicitly not an empty list, since an empty list is a valid
-return value for empty sets!
+For I<infinite> sets, C<as_list()> will return C<undef>.  Please note
+that this is explicitly not an empty list, since an empty list is a
+valid return value for empty sets!
 
 =item * count
 
-Returns a count of C<DateTime> objects in the set.
-Just as with the C<iterator()> method, the C<count()> method can be
-limited by a span.  
+Returns a count of C<DateTime> objects in the set.  Just as with the
+C<iterator()> method, the C<count()> method can be limited by a span.
 
   defined( my $n = $set->count) or die "can't count";
-  
+
   my $n = $set->count( span => $span );
   die "can't count" unless defined $n;
-  
-Applying C<count()> to a large recurrence set is a very expensive operation, 
-both in CPU time and in the memory used.
-If you I<really> need to count elements from a large set, you can 
-limit the set with a shorter span:
+
+Applying C<count()> to a large recurrence set is a very expensive
+operation, both in CPU time and in the memory used.  If you I<really>
+need to count elements from a large set, you can limit the set with a
+shorter span:
 
     my $count = $large_set->count( span => $short_span );
 
-For I<infinite> sets, C<count()> will return C<undef>.
-Please note that this is explicitly not a scalar zero, since a zero count
-is a valid return value for empty sets!
+For I<infinite> sets, C<count()> will return C<undef>.  Please note
+that this is explicitly not a scalar zero, since a zero count is a
+valid return value for empty sets!
 
 =item * union
 
-=item * intersection 
+=item * intersection
 
 =item * complement
 
-These set operation methods can accept a C<DateTime> list, 
-a C<DateTime::Set>, a C<DateTime::Span>, or a C<DateTime::SpanSet> 
+These set operation methods can accept a C<DateTime> list, a
+C<DateTime::Set>, a C<DateTime::Span>, or a C<DateTime::SpanSet>
 object as an argument.
 
     $set = $set1->union( $set2 );         # like "OR", "insert", "both"
@@ -985,8 +992,8 @@ C<DateTime::SpanSet> object returns a C<DateTime::SpanSet> object.
 If C<complement> is called without any arguments, then the result is a
 C<DateTime::SpanSet> object representing the spans between each of the
 set's elements.  If complement is given an argument, then the return
-value is a C<DateTime::Set> object representing the
-I<set difference> between the sets.
+value is a C<DateTime::Set> object representing the I<set difference>
+between the sets.
 
 All other operations will always return a C<DateTime::Set>.
 
@@ -999,8 +1006,8 @@ These set operations result in a boolean value.
     if ( $set1->intersects( $set2 ) ) { ...  # like "touches", "interferes"
     if ( $set1->contains( $dt ) ) { ...    # like "is-fully-inside"
 
-These methods can accept a C<DateTime> list, a C<DateTime::Set>,
-a C<DateTime::Span>, or a C<DateTime::SpanSet> object as an argument.
+These methods can accept a C<DateTime> list, a C<DateTime::Set>, a
+C<DateTime::Span>, or a C<DateTime::SpanSet> object as an argument.
 
 =item * previous
 
@@ -1027,9 +1034,8 @@ it returns the closest event (previous or next).
 All of these methods may return C<undef> if there is no matching
 datetime in the set.
 
-These methods will try to set the returned value 
-to the same time zone as the argument, unless the argument
-has a 'floating' time zone.
+These methods will try to set the returned value to the same time zone
+as the argument, unless the argument has a 'floating' time zone.
 
 =item * map ( sub { ... } )
 
@@ -1050,32 +1056,29 @@ has a 'floating' time zone.
 
 This method is the "set" version of Perl "map".
 
-It evaluates a subroutine for each element of
-the set (locally setting "$_" to each datetime)
-and returns the set composed of the results of
+It evaluates a subroutine for each element of the set (locally setting
+"$_" to each datetime) and returns the set composed of the results of
 each such evaluation.
 
-Like Perl "map", each element of the set
-may produce zero, one, or more elements in the 
-returned value.
+Like Perl "map", each element of the set may produce zero, one, or
+more elements in the returned value.
 
-Unlike Perl "map", changing "$_" does not change
-the original set. This means that calling map
-in void context has no effect.
+Unlike Perl "map", changing "$_" does not change the original
+set. This means that calling map in void context has no effect.
 
-The callback subroutine may be called later in the program,
-due to lazy evaluation.
-So don't count on subroutine side-effects. For example,
-a C<print> inside the subroutine may happen later than you expect.
+The callback subroutine may be called later in the program, due to
+lazy evaluation.  So don't count on subroutine side-effects. For
+example, a C<print> inside the subroutine may happen later than you
+expect.
 
 The callback return value is expected to be within the span of the
-C<previous> and the C<next> element in the original set.
-This is a limitation of the backtracking algorithm used in
-the C<Set::Infinite> library.
+C<previous> and the C<next> element in the original set.  This is a
+limitation of the backtracking algorithm used in the C<Set::Infinite>
+library.
 
-For example: given the set C<[ 2001, 2010, 2015 ]>,
-the callback result for the value C<2010> is expected to be
-within the span C<[ 2001 .. 2015 ]>.
+For example: given the set C<[ 2001, 2010, 2015 ]>, the callback
+result for the value C<2010> is expected to be within the span C<[
+2001 .. 2015 ]>.
 
 =item * grep ( sub { ... } )
 
@@ -1088,21 +1091,19 @@ within the span C<[ 2001 .. 2015 ]>.
 
 This method is the "set" version of Perl "grep".
 
-It evaluates a subroutine for each element of
-the set (locally setting "$_" to each datetime)
-and returns the set consisting of those elements 
-for which the expression evaluated to true.
+It evaluates a subroutine for each element of the set (locally setting
+"$_" to each datetime) and returns the set consisting of those
+elements for which the expression evaluated to true.
 
-Unlike Perl "grep", changing "$_" does not change
-the original set. This means that calling grep
-in void context has no effect.
+Unlike Perl "grep", changing "$_" does not change the original
+set. This means that calling grep in void context has no effect.
 
 Changing "$_" does change the resulting set.
 
-The callback subroutine may be called later in the program,
-due to lazy evaluation.
-So don't count on subroutine side-effects. For example,
-a C<print> inside the subroutine may happen later than you expect.
+The callback subroutine may be called later in the program, due to
+lazy evaluation.  So don't count on subroutine side-effects. For
+example, a C<print> inside the subroutine may happen later than you
+expect.
 
 =item * iterate ( sub { ... } )
 
@@ -1120,16 +1121,17 @@ Please report bugs using rt.cpan.org
 
 Flavio Soibelmann Glock <fglock@pucrs.br>
 
-The API was developed together with Dave Rolsky and the DateTime Community.
+The API was developed together with Dave Rolsky and the DateTime
+Community.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2003, 2004 Flavio Soibelmann Glock. All rights reserved.
-This program is free software; you can distribute it and/or
-modify it under the same terms as Perl itself.
+Copyright (c) 2003-2006 Flavio Soibelmann Glock. All rights reserved.
+This program is free software; you can distribute it and/or modify it
+under the same terms as Perl itself.
 
-The full text of the license can be found in the LICENSE file
-included with this module.
+The full text of the license can be found in the LICENSE file included
+with this module.
 
 =head1 SEE ALSO
 
