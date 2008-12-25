@@ -85,12 +85,12 @@ sub set_time_zone {
             if ( ref($min) )
             {
                 $min = $min->clone;
-                $min->set_time_zone( $tz );
+                $min->set_time_zone( 'floating' );
             }
             if ( ref($max) )
             {
                 $max = $max->clone;
-                $max->set_time_zone( $tz );
+                $max->set_time_zone( 'floating' ); 
             }
             return Set::Infinite::_recurrence->new( $min, $max );
         },
@@ -292,10 +292,30 @@ sub previous {
 sub current {
     my $self = shift;
 
-    my $return = $self->intersected_spans( $_[0] );
+    my $previous;
+    my $next;
+    {
+        my $min;
+        $min = $_[0]->min if UNIVERSAL::can( $_[0], 'union' );
+        $min = $_[0] if ! defined $min;
+        return undef if ! ref( $min ) && $min == INFINITY;
+        my $span = DateTime::Span->from_datetimes( end => $min );
+        my $iterator = $self->intersection( $span );
+        $previous = $iterator->previous;
+        $span = DateTime::Span->from_datetimes( start => $min );
+        $iterator = $self->intersection( $span );
+        $next = $iterator->next;
+    }
+    return $previous unless defined $next;
 
-    $return = $self->previous( $_[0] )
-        if ( ! defined $return->max );
+    my $dt1 = defined $previous
+        ? $next->union( $previous )
+        : $next;
+
+    my $return = $dt1->intersected_spans( $_[0] );
+
+    $return = $previous
+        if !defined $return->max;
 
     bless $return, 'DateTime::SpanSet'
         if defined $return;

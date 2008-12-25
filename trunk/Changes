@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.26   2008-12-25
+- fixed DateTime::Spanset current() and set_time_zone() methods. 
+  Report and tests by Elliot Shank.
+
 0.25   2005-10-05
 - t/15time_zone.t does it's own time zone "add_duration" handling
 
