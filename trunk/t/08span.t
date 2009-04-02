@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 7;
+plan tests => 8;
 
 use DateTime;
 use DateTime::Duration;
@@ -50,6 +50,18 @@ use DateTime::Set;
     ok( $span->min->is_infinite, "infinite start" );
     ok( $span->max->is_infinite, "infinite end" );
     is( $span->duration->seconds , DateTime::Set::INFINITY, "infinite duration" );
+}
+
+{
+    # empty span
+    my $span1 = DateTime::Span->from_datetimes( 
+                    start => DateTime->new( year => 2000 ), 
+                    end   => DateTime->new( year => 2001 ) );
+    my $span2 = DateTime::Span->from_datetimes( 
+                    start => DateTime->new( year => 2003 ), 
+                    end   => DateTime->new( year => 2004 ) );
+    my $empty = $span1->intersection($span2);
+    is( $empty->duration->seconds , 0, "null duration" );
 }
 
 1;

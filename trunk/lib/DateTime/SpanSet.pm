@@ -516,11 +516,14 @@ sub span {
 sub duration { 
     my $dur; 
 
+    return DateTime::Duration->new( seconds => 0 ) 
+        if $_[0]->{set}->is_empty;
+
+    local $@;
     eval { 
         local $SIG{__DIE__};   # don't want to trap this (rt ticket 5434)
         $dur = $_[0]->{set}->size 
     };
-    $@ = undef;  # clear the eval() error message
 
     return $dur if defined $dur && ref( $dur );
     return DateTime::Infinite::Future->new -

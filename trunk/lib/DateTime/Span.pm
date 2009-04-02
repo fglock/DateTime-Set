@@ -286,11 +286,11 @@ sub span { @_ }
 sub duration { 
     my $dur;
 
+    local $@;
     eval {
         local $SIG{__DIE__};   # don't want to trap this (rt ticket 5434)
         $dur = $_[0]->end->subtract_datetime_absolute( $_[0]->start )
     };
-    $@ = undef;  # clear the eval() error message
     
     return $dur if defined $dur;
 

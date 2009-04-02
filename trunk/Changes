@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.27   2009-04-02
+- fixed DateTime::Spanset duration() method.
+  Reported by Anton Berezin <tobez@tobez.org>
+
 0.26   2008-12-25
 - fixed DateTime::Spanset current() and set_time_zone() methods. 
   Report and tests by Elliot Shank.
