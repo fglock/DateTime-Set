@@ -1,0 +1,16 @@
+--- #YAML:1.0
+name:                DateTime-Set
+version:             0.28
+abstract:            DateTime set objects
+license:             ~
+author:              
+    - Flavio S. Glock <fglock@pucrs.br>
+generated_by:        ExtUtils::MakeMaker version 6.44
+distribution_type:   module
+requires:     
+    DateTime:                      0.12
+    Set::Infinite:                 0.59
+    Test::More:                    0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3
