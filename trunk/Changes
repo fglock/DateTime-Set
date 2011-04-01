@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.30   2011-04-11
+- new test file t/21from_recurrence.t 
+  Contributed by Olivier Mengue
+
 0.29   2011-04-01 
 - new method is_empty_set - bug #50750
 
