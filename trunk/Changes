@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.29   2011-04-01 
+- new method is_empty_set - bug #50750
+
 0.28   2009-07-19
 - optimized DateTime::Set->as_list().
   This works around a segfault reported by Nils Grunwald.

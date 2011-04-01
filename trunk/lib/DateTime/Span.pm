@@ -150,6 +150,11 @@ sub new {
     return $class->from_datetimes(%args);
 }
 
+sub is_empty_set {
+    my $set = $_[0];
+    $set->{set}->is_null;
+}
+
 sub clone { 
     bless { 
         set => $_[0]->{set}->copy,

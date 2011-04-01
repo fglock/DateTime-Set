@@ -198,6 +198,11 @@ sub empty_set {
     return bless { set => Set::Infinite::_recurrence->new }, $class;
 }
 
+sub is_empty_set {
+    my $set = $_[0];
+    $set->{set}->is_null;
+}
+
 sub clone { 
     bless { 
         set => $_[0]->{set}->copy,
@@ -618,6 +623,12 @@ a span like C<[$dt, inf)>.
 =item * empty_set
 
 Creates a new empty set.
+
+=item * is_empty_set
+
+Returns true is the set is empty; false otherwise.
+
+    print "nothing" if $set->is_empty_set;
 
 =item * clone
 

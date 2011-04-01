@@ -16,7 +16,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.28';
+    $VERSION = '0.29';
 }
 
 
@@ -296,6 +296,11 @@ sub empty_set {
     my $class = shift;
 
     return bless { set => Set::Infinite::_recurrence->new }, $class;
+}
+
+sub is_empty_set {
+    my $set = $_[0];
+    $set->{set}->is_null;
 }
 
 sub clone { 
@@ -843,6 +848,12 @@ Creates a new empty set.
 
     $set = DateTime::Set->empty_set;
     print "empty set" unless defined $set->max;
+
+=item * is_empty_set
+
+Returns true is the set is empty; false otherwise.
+
+    print "nothing" if $set->is_empty_set;
 
 =item * clone
 
