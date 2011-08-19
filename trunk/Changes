@@ -1,5 +1,7 @@
 Changes for DateTime::Set
 
+- more tests of intersections with open/closed ended spans
+
 0.30   2011-04-11
 - new test file t/21from_recurrence.t 
   Contributed by Olivier Mengue

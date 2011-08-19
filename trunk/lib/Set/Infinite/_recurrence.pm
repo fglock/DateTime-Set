@@ -26,6 +26,7 @@ BEGIN {
             my $self = $_[0];
             my ($callback_next, $callback_previous) = @{ $self->{param} };
             my ($min, $min_open) = $self->{parent}->min_a;
+            # my ($max, $max_open) = $self->{parent}->max_a;
 
             my ( $min1, $min2 );
             $min1 = $callback_next->( $min );
@@ -51,6 +52,7 @@ BEGIN {
 
             return ( $self->new( $min1 ),
                      $self->new( $start, $end )->
+                     # $self->new( {a => $start, b => $end, open_end => $max_open} )->
                           _function( '_recurrence', @{ $self->{param} } ) );
         };
     $Set::Infinite::_last{_recurrence} =

@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 8;
+plan tests => 12;
 
 use DateTime;
 use DateTime::Duration;
@@ -177,6 +177,84 @@ is( $res, '1810-09-01 1810-10-01 1810-11-01',
   }
 }
  
+
+{
+    # test intersections with open/closed ended spans
+
+    # Make a recurrence that returns all months
+    my $all_months = DateTime::Set->from_recurrence( recurrence => $month_callback );
+
+    my $t1 = new DateTime( year => '1810', month => '9',  day => '1' );
+    my $t2 = new DateTime( year => '1810', month => '11', day => '1' );
+
+    {
+        my $span = DateTime::Span->from_datetimes( start => $t1, end => $t2 );
+
+        # make an iterator with an explicit span argument
+        my $iter = $all_months->iterator( span => $span );
+        
+        # And make sure that we run on the correct months only
+        my $limit = 4; # Make sure we don't hit an infinite iterator
+        my @res = ();
+        while ( my $dt = $iter->next() and $limit--) {
+            push @res, $dt->ymd();
+        }
+        my $res = join( ' ', @res);
+        is( $res, '1810-09-01 1810-10-01 1810-11-01',
+            "limited iterator give $res" );
+    }
+
+    {
+        my $span = DateTime::Span->from_datetimes( start => $t1, before => $t2 );
+
+        # make an iterator with an explicit span argument
+        my $iter = $all_months->iterator( span => $span );
+        
+        # And make sure that we run on the correct months only
+        my $limit = 4; # Make sure we don't hit an infinite iterator
+        my @res = ();
+        while ( my $dt = $iter->next() and $limit--) {
+            push @res, $dt->ymd();
+        }
+        my $res = join( ' ', @res);
+        is( $res, '1810-09-01 1810-10-01',
+            "limited iterator give $res" );
+    }
+
+    {
+        my $span = DateTime::Span->from_datetimes( after => $t1, end => $t2 );
+
+        # make an iterator with an explicit span argument
+        my $iter = $all_months->iterator( span => $span );
+        
+        # And make sure that we run on the correct months only
+        my $limit = 4; # Make sure we don't hit an infinite iterator
+        my @res = ();
+        while ( my $dt = $iter->next() and $limit--) {
+            push @res, $dt->ymd();
+        }
+        my $res = join( ' ', @res);
+        is( $res, '1810-10-01 1810-11-01',
+            "limited iterator give $res" );
+    }
+
+    {
+        my $span = DateTime::Span->from_datetimes( after => $t1, before => $t2 );
+
+        # make an iterator with an explicit span argument
+        my $iter = $all_months->iterator( span => $span );
+        
+        # And make sure that we run on the correct months only
+        my $limit = 4; # Make sure we don't hit an infinite iterator
+        my @res = ();
+        while ( my $dt = $iter->next() and $limit--) {
+            push @res, $dt->ymd();
+        }
+        my $res = join( ' ', @res);
+        is( $res, '1810-10-01',
+            "limited iterator give $res" );
+    }
+}
 
 1;
 
