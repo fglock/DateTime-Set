@@ -4,7 +4,7 @@ use Module::Build;
 my $build = Module::Build->new(
     module_name   => 'DateTime::Set',
     dist_name     => 'DateTime-Set',
-        dist_author   => 'Flavio S. Glock <fglock@pucrs.br>',
+        dist_author   => 'Flavio S. Glock <fglock@gmail.com>',
         dist_abstract => 'DateTime set objects',
     license       => 'perl',
     requires      => {

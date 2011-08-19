@@ -380,7 +380,7 @@ Please report bugs using rt.cpan.org
 
 =head1 AUTHOR
 
-Flavio Soibelmann Glock <fglock@pucrs.br>
+Flavio Soibelmann Glock <fglock@gmail.com>
 
 The recurrence generation algorithm is based on an idea from Dave Rolsky.
 

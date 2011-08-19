@@ -482,7 +482,7 @@ Please report bugs using rt.cpan.org
 
 =head1 AUTHOR
 
-Flavio Soibelmann Glock <fglock@pucrs.br>
+Flavio Soibelmann Glock <fglock@gmail.com>
 
 The API was developed together with Dave Rolsky and the DateTime Community.
 

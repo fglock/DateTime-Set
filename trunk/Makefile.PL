@@ -39,7 +39,7 @@ if ( $has_conflicts )
 
 WriteMakefile( NAME         => 'DateTime::Set',
                VERSION_FROM => 'lib/DateTime/Set.pm',
-               AUTHOR       => 'Flavio S. Glock <fglock@pucrs.br>',
+               AUTHOR       => 'Flavio S. Glock <fglock@gmail.com>',
                ABSTRACT     => 'DateTime set objects',
 
                PREREQ_PM    => { 'DateTime' => 0.12,

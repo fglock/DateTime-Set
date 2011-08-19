@@ -211,7 +211,7 @@ from the cache are stored in the hash, for faster access.
 
 =head1 AUTHOR
 
-Flavio S. Glock <fglock@pucrs.br>
+Flavio S. Glock <fglock@gmail.com>
 
 =head1 COPYRIGHT
 
