@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More;
-plan tests => 8;
+plan tests => 12;
 
 use DateTime;
 use DateTime::Duration;
@@ -62,6 +62,32 @@ use DateTime::Set;
                     end   => DateTime->new( year => 2004 ) );
     my $empty = $span1->intersection($span2);
     is( $empty->duration->seconds , 0, "null duration" );
+}
+
+{
+    my $t2 = new DateTime( year => 1900, month => 11, day => 22 );
+    my $s1 = DateTime::Span->from_datetime_and_duration( end => $t2, years => -1 );
+
+    my $res = $s1->min->ymd.'T'.$s1->min->hms;
+    ok( $res eq '1899-11-22T00:00:00',
+        "got $res - min" );
+
+    $res = $s1->max->ymd.'T'.$s1->max->hms;
+    ok( $res eq '1900-11-22T00:00:00',
+        "got $res - max" );
+}
+
+{
+    my $t2 = new DateTime( year => 1900, month => 11, day => 22 );
+    my $s1 = DateTime::Span->from_datetime_and_duration( end => $t2, years => 1 );
+
+    my $res = $s1->min->ymd.'T'.$s1->min->hms;
+    ok( $res eq '1899-11-22T00:00:00',
+        "got $res - min" );
+
+    $res = $s1->max->ymd.'T'.$s1->max->hms;
+    ok( $res eq '1900-11-22T00:00:00',
+        "got $res - max" );
 }
 
 1;

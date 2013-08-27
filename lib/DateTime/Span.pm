@@ -113,21 +113,29 @@ sub from_datetime_and_duration {
         $dt_duration = DateTime::Duration->new( %args );
     }
     # warn "Creating span from $key => ".$dt->datetime." and $dt_duration";
-    my $other_date = $dt->clone->add_duration( $dt_duration );
-    # warn "Creating span from $key => ".$dt->datetime." and ".$other_date->datetime;
+    my $other_date;
     my $other_key;
     if ( $dt_duration->is_positive ) {
-        # check if have to invert keys
-        $key = 'after' if $key eq 'end';
-        $key = 'start' if $key eq 'before';
-        $other_key = 'before';
+        if ( $key eq 'end' || $key eq 'before' ) {
+            $other_key = 'start';
+            $other_date = $dt->clone->subtract_duration( $dt_duration );
+        }
+        else {
+            $other_key = 'before';
+            $other_date = $dt->clone->add_duration( $dt_duration );
+        }
     }
     else {
-        # check if have to invert keys
-        $other_key = 'end' if $key eq 'after';
-        $other_key = 'before' if $key eq 'start';
-        $key = 'start';
+        if ( $key eq 'end' || $key eq 'before' ) {
+            $other_key = 'start';
+            $other_date = $dt->clone->add_duration( $dt_duration );
+        }
+        else {
+            $other_key = 'before';
+            $other_date = $dt->clone->subtract_duration( $dt_duration );
+        }
     }
+    # warn "Creating span from $key => ".$dt->datetime." and ".$other_date->datetime;
     return $class->new( $key => $dt, $other_key => $other_date ); 
 }
 
