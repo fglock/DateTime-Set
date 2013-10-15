@@ -1,5 +1,8 @@
 Changes for DateTime::Set
 
+0.33   2013-09-15
+- bugfix in SpanSet->grep. Reported by Andreas Isberg
+
 0.32   2013-08-27
 - ignore duration signal in DateTime::Span->from_datetime_and_duration()
   and use the 'end'/'start' parameters as a cue for the time direction,

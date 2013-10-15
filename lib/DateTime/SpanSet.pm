@@ -61,7 +61,7 @@ sub grep {
         sub {
             local $_ = bless { set => $_[0]->clone }, 'DateTime::Span';
             my $result = $callback->();
-            return $_ if $result;
+            return $_->{set} if $result && $_;
             return;
         }
     );
