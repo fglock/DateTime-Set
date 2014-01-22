@@ -47,4 +47,13 @@ WriteMakefile( NAME         => 'DateTime::Set',
                                  'Test::More'  => 0,
                                },
                PL_FILES     => { },  # ignore Build.PL
+               META_MERGE   => { 'meta-spec' => { version => 2 },
+                                 resources => {
+                                     repository => {
+                                         type => 'git',
+                                         url => 'https://github.com/fglock/DateTime-Set.git',
+                                         web => 'https://github.com/fglock/DateTime-Set',
+                                     },
+                                 },
+                               },
 );
