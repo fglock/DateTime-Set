@@ -301,7 +301,7 @@ Creates a recurrence set. The set is defined inside a 'base set'.
    $recurrence = $base_set->_recurrence ( \&next, \&previous );
 
 The recurrence functions take one argument, and return the 'next' or 
-the 'previous' occurence. 
+the 'previous' occurrence. 
 
 Example: defines the set of all 'integer numbers':
 

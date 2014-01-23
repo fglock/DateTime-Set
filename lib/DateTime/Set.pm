@@ -1,4 +1,3 @@
-
 package DateTime::Set;
 
 use strict;
@@ -336,7 +335,7 @@ sub _callback_previous {
     $previous = $callback_next->( $previous );
     if ($previous >= $value) 
     {
-        # This error happens if the event frequency oscilates widely
+        # This error happens if the event frequency oscillates widely
         # (more than 100% of difference from one interval to next)
         my @freq = $freq->deltas;
         print STDERR "_callback_previous: Delta components are: @freq\n";
@@ -379,7 +378,7 @@ sub _callback_next {
     $next = $callback_previous->( $next );
     if ($next <= $value) 
     {
-        # This error happens if the event frequency oscilates widely
+        # This error happens if the event frequency oscillates widely
         # (more than 100% of difference from one interval to next)
         my @freq = $freq->deltas;
         print STDERR "_callback_next: Delta components are: @freq\n";
