@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.3400 2014-02-12
+- documentation and packaging fixes - by David Steinbrunner.
+- version number using 4 digits - requested by David Marshall.
+
 0.33   2013-09-15
 - bugfix in SpanSet->grep. Reported by Andreas Isberg
 
