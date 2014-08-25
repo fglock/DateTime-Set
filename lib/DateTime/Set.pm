@@ -766,9 +766,9 @@ Creates a new set specified via a "recurrence" callback.
 
 The C<span> parameter is optional. It must be a C<DateTime::Span> object.
 
-The span can also be specified using C<begin> / C<after> and C<before>
-/ C<end> parameters, as in the C<DateTime::Span> constructor.  In this
-case, if there is a C<span> parameter it will be ignored.
+The span can also be specified using C<start> / C<after> and C<end> /
+C<before> parameters, as in the C<DateTime::Span> constructor.  In
+this case, if there is a C<span> parameter it will be ignored.
 
     $months = DateTime::Set->from_recurrence(
         after => $dt_now,
