@@ -198,7 +198,7 @@ sub from_recurrence {
     $param{previous} = delete $args{previous};
 
     $param{span} = delete $args{span};
-    # they might be specifying a span using begin / end
+    # they might be specifying a span using start / end
     $param{span} = DateTime::Span->new( %args ) if keys %args;
 
     my $self = {};
@@ -507,7 +507,7 @@ sub as_list {
     return if $set->{set}->is_null;  # nothing = empty
 
     # Note: removing this line means we may end up in an infinite loop!
-    ## return undef if $set->{set}->is_too_complex;  # undef = no begin/end
+    ## return undef if $set->{set}->is_too_complex;  # undef = no start/end
  
     return undef
         if $set->max->is_infinite ||

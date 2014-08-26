@@ -363,7 +363,7 @@ sub as_list {
     $set = $set->intersection( $span ) if $span;
 
     # Note: removing this line means we may end up in an infinite loop!
-    return undef if $set->{set}->is_too_complex;  # undef = no begin/end
+    return undef if $set->{set}->is_too_complex;  # undef = no start/end
 
     # return if $set->{set}->is_null;  # nothing = empty
     my @result;

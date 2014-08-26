@@ -373,7 +373,7 @@ A 'semi-open' span includes one of its end-dates:
    $span = DateTime::Span->from_datetimes( start => $dt1, before => $dt2 );
    $span = DateTime::Span->from_datetimes( after => $dt1, end => $dt2 );
 
-A span might have just a beginning date, or just an ending date.
+A span might have just a starting date, or just an ending date.
 These spans end, or start, in an imaginary 'forever' date:
 
    $span = DateTime::Span->from_datetimes( start => $dt1 );
@@ -444,13 +444,13 @@ in this case C<$dt> is not a set element - but it is a set boundary.
 
 =item * end_is_closed
 
-Returns true if the first or last dates belong to the span ( begin <= x <= end ).
+Returns true if the first or last dates belong to the span ( start <= x <= end ).
 
 =item * start_is_open
 
 =item * end_is_open
 
-Returns true if the first or last dates are excluded from the span ( begin < x < end ).
+Returns true if the first or last dates are excluded from the span ( start < x < end ).
 
 =item * union
 
