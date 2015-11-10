@@ -1024,6 +1024,10 @@ These set operations result in a boolean value.
 These methods can accept a C<DateTime> list, a C<DateTime::Set>, a
 C<DateTime::Span>, or a C<DateTime::SpanSet> object as an argument.
 
+intersects() returns 1 for true, and 0 for false. In a few cases
+the algorithm can't decide if the sets intersect at all, and 
+intersects() will return C<undef>.
+
 =item * previous
 
 =item * next

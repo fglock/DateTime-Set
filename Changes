@@ -3,6 +3,8 @@ Changes for DateTime::Set
 0.3500 2015-11-10
 - [rt.cpan.org #108633] Recurrent event does not intersect indefinite future,
   test contributed by Brett Watson.
+- documentation - intersects() returns 0 for false, and 'undef' for
+  undecidable.
 
 0.3400 2014-02-12
 - documentation and packaging fixes - by David Steinbrunner.

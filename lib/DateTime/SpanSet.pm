@@ -795,6 +795,10 @@ These set functions return a boolean value.
 These methods can accept a C<DateTime>, C<DateTime::Set>,
 C<DateTime::Span>, or C<DateTime::SpanSet> object as an argument.
 
+intersects() returns 1 for true, and 0 for false. In a few cases
+the algorithm can't decide if the sets intersect at all, and 
+intersects() will return C<undef>.
+
 =item * iterator / next / previous
 
 This method can be used to iterate over the spans in a set.
