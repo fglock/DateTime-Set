@@ -200,6 +200,35 @@ sub _is_recurrence
     $_[0]->{parent}->is_forever
 }
 
+sub intersects
+{
+    my ($s1, $s2) = (shift,shift);
+
+    if ( exists $s1->{method} && $s1->{method} eq '_recurrence' )
+    {
+        # recurrence && span
+        unless ( ref($s2) && exists $s2->{method} ) {
+            my $intersection = $s1->intersection($s2, @_);
+            my $min = $intersection->min;
+            return 1 if defined $min && $min != NEG_INFINITY && $min != INFINITY;
+            my $max = $intersection->max;
+            return 1 if defined $max && $max != NEG_INFINITY && $max != INFINITY;
+        }
+
+        # recurrence && recurrence
+        if ( $s1->{parent}->is_forever && 
+            ref($s2) && _is_recurrence( $s2 ) )
+        {
+            my $intersection = $s1->intersection($s2, @_);
+            my $min = $intersection->min;
+            return 1 if defined $min && $min != NEG_INFINITY && $min != INFINITY;
+            my $max = $intersection->max;
+            return 1 if defined $max && $max != NEG_INFINITY && $max != INFINITY;
+        }
+    }
+    return $s1->SUPER::intersects( $s2, @_ );
+}
+
 sub intersection
 {
     my ($s1, $s2) = (shift,shift);
