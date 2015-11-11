@@ -1,8 +1,15 @@
-use DateTime::Event::Recurrence;
 use Test::More;
 use strict;
 use warnings;
-plan tests => 3;
+
+BEGIN {
+    if (eval 'use DateTime::Event::Recurrence; 1') {
+        plan tests => 3;
+    }
+    else {
+        plan skip_all => 'DateTime::Event::Recurrence required for this test.';
+    }
+}
 
 my $hourly   = DateTime::Event::Recurrence->hourly;
 my $next_day = DateTime::Span->from_datetimes(
