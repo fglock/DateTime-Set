@@ -28,7 +28,6 @@ t/18as_list_empty.t
 t/19spanset_daylight_savings.t       
 t/20spanset_week_wrapped_recurrence.t
 t/21from_recurrence.t
-t/22intersects.t
 lib/DateTime/Set.pm
 lib/DateTime/Span.pm
 lib/DateTime/SpanSet.pm
