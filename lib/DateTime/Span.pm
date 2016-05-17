@@ -423,9 +423,9 @@ scalar containing infinity.
 
 Also available as C<size()>.
 
-=item * start
+=item * start, min
 
-=item * end
+=item * end, max
 
 First or last dates in the span.
 
@@ -434,6 +434,9 @@ C<DateTime::Infinite::Future> or a C<DateTime::Infinite::Past>xs object.
 
 If the set ends C<before> a date C<$dt>, it returns C<$dt>. Note that
 in this case C<$dt> is not a set element - but it is a set boundary.
+
+These methods return just a I<copy> of the actual boundary value.
+If you modify the result, the set will not be modified.
 
 =cut
 

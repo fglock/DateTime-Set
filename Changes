@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+0.3700 2016-05-17
+- end() / max() and start() / min() are aliases to the same method in all classes.
+  Added docs and tests. Reported by Vincent Berger.
+
 0.3600 2015-11-11
 - move t/22intersects.t to DT::Event::Recurrence module
 

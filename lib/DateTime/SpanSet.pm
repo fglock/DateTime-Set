@@ -502,13 +502,17 @@ sub complement {
     return $tmp;
 }
 
-sub min {
+sub start {
     return DateTime::Set::_fix_datetime( $_[0]->{set}->min );
 }
 
-sub max { 
+*min = \&start;
+
+sub end { 
     return DateTime::Set::_fix_datetime( $_[0]->{set}->max );
 }
+
+*max = \&end;
 
 # returns a DateTime::Span
 sub span { 
@@ -646,13 +650,24 @@ the local time are made, except to account for leap seconds.  If the
 new time zone is floating, then the I<UTC> time is adjusted in order
 to leave the local time untouched.
 
-=item * min
 
-=item * max
+=item * start, min
 
-First or last dates in the set.  These methods may return C<undef> if
-the set is empty.  It is also possible that these methods may return a
-scalar containing infinity or negative infinity.
+=item * end, max
+
+First or last dates in the set.
+
+It is possible that the return value from these methods may be a
+C<DateTime::Infinite::Future> or a C<DateTime::Infinite::Past> object.
+
+If the set ends C<before> a date C<$dt>, it returns C<$dt>. Note that
+in this case C<$dt> is not a set element - but it is a set boundary.
+
+These methods may return C<undef> if the set is empty.
+
+These methods return just a I<copy> of the actual boundary value.
+If you modify the result, the set will not be modified.
+
 
 =item * duration
 

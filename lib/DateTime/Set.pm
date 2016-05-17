@@ -15,7 +15,7 @@ use constant INFINITY     =>       100 ** 100 ** 100 ;
 use constant NEG_INFINITY => -1 * (100 ** 100 ** 100);
 
 BEGIN {
-    $VERSION = '0.3600';
+    $VERSION = '0.3700';
 }
 
 
@@ -620,13 +620,17 @@ sub complement {
     return $tmp;
 }
 
-sub min { 
+sub start {
     return _fix_datetime( $_[0]->{set}->min );
 }
 
-sub max { 
+*min = \&start;
+
+sub end { 
     return _fix_datetime( $_[0]->{set}->max );
 }
+
+*max = \&end;
 
 # returns a DateTime::Span
 sub span {
@@ -901,17 +905,21 @@ datetime in the set.
 
 This method can be used to change the C<locale> of a datetime set.
 
-=item * min
 
-=item * max
+=item * start, min
 
-The first and last C<DateTime> in the set.  These methods may return
-C<undef> if the set is empty.  It is also possible that these methods
-may return a C<DateTime::Infinite::Past> or
-C<DateTime::Infinite::Future> object.
+=item * end, max
 
-These methods return just a I<copy> of the actual boundary value.
+The first and last C<DateTime> in the set.
+
+These methods may return C<undef> if the set is empty.
+
+It is also possible that these methods
+may return a C<DateTime::Infinite::Past> or C<DateTime::Infinite::Future> object.
+
+These methods return just a I<copy> of the actual value.
 If you modify the result, the set will not be modified.
+
 
 =item * span
 
