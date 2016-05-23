@@ -361,17 +361,17 @@ Example: defines the set of all 'integer numbers':
 
     {
         my $x = 234.567;
-        print "next occurence after $x = ", 
+        print "next occurrence after $x = ",
               $recurrence->{param}[0]->( $x ), "\n";  # 235
-        print "previous occurence before $x = ",
+        print "previous occurrence before $x = ",
               $recurrence->{param}[2]->( $x ), "\n";  # 234
     }
 
     {
         my $x = 234;
-        print "next occurence after $x = ",
+        print "next occurrence after $x = ",
               $recurrence->{param}[0]->( $x ), "\n";  # 235
-        print "previous occurence before $x = ",
+        print "previous occurrence before $x = ",
               $recurrence->{param}[2]->( $x ), "\n";  # 233
     }
 
