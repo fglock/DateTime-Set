@@ -514,17 +514,8 @@ sub as_list {
            $set->min->is_infinite;
 
     my @result;
-    my $next = $self->min;
-    if ( $span ) {
-        my $next1 = $span->min;
-        $next = $next1 if $next1 && $next1 > $next;
-        $next = $self->current( $next );
-    }
-    my $last = $self->max;
-    if ( $span ) {
-        my $last1 = $span->max;
-        $last = $last1 if $last1 && $last1 < $last;
-    }
+    my $next = $set->min;
+    my $last = $set->max;
     do {
         push @result, $next if !$span || $span->contains($next);
         $next = $self->next( $next );
