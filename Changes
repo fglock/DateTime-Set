@@ -1,5 +1,9 @@
 Changes for DateTime::Set
 
+dev 2020-10-10
+- add set_locale(), following the DateTime API
+  Adjusted t/15time_zone.t and docs.
+
 0.3900 2016-10-09
 - require Params::Validate
 

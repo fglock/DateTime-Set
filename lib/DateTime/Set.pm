@@ -170,6 +170,17 @@ sub set_time_zone {
     $self;
 }
 
+sub set_locale {
+    my ($self, $locale) = @_;
+    $self->{set} = $self->{set}->iterate( 
+        sub {
+            my $min = $_[0]->min;
+            $min->clone->set_locale( $locale ) if ref($min);
+        },
+    );
+    $self;
+}
+
 sub set {
     my $self = shift;
     my %args = validate( @_,
@@ -901,10 +912,17 @@ method.
 This method will attempt to apply the C<set_time_zone> method to every 
 datetime in the set.
 
-=item * set( locale => .. )
+=item * set_locale( $locale )
 
-This method can be used to change the C<locale> of a datetime set.
+This method will attempt to apply the C<set_locale> method to every 
+datetime in the set.
 
+=item * set( minute => 0, second => 0 )
+
+This method can be used to change the local components of a date time set. This
+method accepts any parameter allowed by the C<< DateTime->new() >> method except for
+"locale" or "time_zone". Use C<set_locale()> and C<set_time_zone()> for those
+instead.
 
 =item * start, min
 
