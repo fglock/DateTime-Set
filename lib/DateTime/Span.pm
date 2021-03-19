@@ -74,11 +74,12 @@ sub from_datetimes {
     ( $end,   $open_end   ) = ( $args{end},    0 ) if exists $args{end};
     ( $end,   $open_end   ) = ( $args{before}, 1 ) if exists $args{before};
 
-    if ( $start > $end ) {
+    my $cmpres = $start <=> $end;
+    if ( $cmpres > 0 ) { # $start > $end
         die "Span cannot start after the end in DateTime::Span->from_datetimes\n";
     }
     $set = Set::Infinite::_recurrence->new( $start, $end );
-    if ( $start != $end ) {
+    if ( $cmpres != 0 ) { # $start != $end
         # remove start, such that we have ">" instead of ">="
         $set = $set->complement( $start ) if $open_start;  
         # remove end, such that we have "<" instead of "<="
